@@ -1,18 +1,18 @@
 #include <iostream>
 #include <cmath>
 #include <fstream>
-#include <complex>
+#include <errno.h>
 
 const double gamma = 1.4;
+const double TOL = 1 * pow(10, -6);
 
 class Point
 {
 public:
     double p, rho, u, a;
 
-    Point(double p)
+    Point()
     {
-        this->p = p;
     }
 
     Point(double p, double rho, double u)
@@ -37,62 +37,109 @@ int main()
     Point sides[] = {Point(1.0, 1.0, 0.0), Point(0.1, 0.125, 0)}; // Test case 1
     //Point sides[] = {Point(0.4, 1.0, -2.0), Point(0.4, 1.0, 2.0)}; // Test case 2
 
-    Point star(0.5 * (sides[0].p + sides[1].p)); // Point at the star region
+    Point star; // Point at the star region
 
     double change;
     int count = 0;
+    int errorStage = 0;
+    bool iterate = true;
     double fs[2];
-    do
+    double d_fs[2];
+
+    while (iterate) // add the right number lol
     {
+        std::cout << "errorStage: " << errorStage << std::endl;
 
-        double d_fs[2];
-
-        for (int side = 0; side < 2; side++)
+        if (errorStage == 0)
         {
+            star.p = pow((sides[0].a + sides[1].a - 0.5 * (gamma - 1) * (sides[1].u - sides[0].u)) / (sides[0].a / pow(sides[0].p, (gamma - 1) / (2 * gamma)) + sides[1].a / pow(sides[1].p, (gamma - 1) / (2 * gamma))), (2 * gamma) / (gamma - 1));
+        }
+        else if (errorStage == 1)
+        {
+            star.p = 0.5 * (sides[0].p + sides[1].p);
+        }
+        else if (errorStage == 2)
+        {
+            double p_PV = 0.5 * (sides[0].p + sides[1].p) + 0.5 * (sides[0].u - sides[1].u) * 0.5 * (sides[0].rho + sides[1].rho) * 0.5 * (sides[0].a + sides[1].a);
+            if (p_PV > TOL)
+                star.p = p_PV;
+            else
+                star.p = TOL;
+        }
+        else if (errorStage == 3)
+        {
+        }
+        else if (errorStage == 4)
+        {
+        }
+        else if (errorStage == 5)
+        {
+            star.p = 1 * pow(10, -6);
+        }
+        else
+        {
+            std::cout << "rip bozo" << std::endl;
+            return 0;
+        }
+        count = 0;
+        while (iterate)
+        {
+            errno = 0;
+            std::cout << "p* start: " << star.p << std::endl;
 
-            double A = 2 / ((gamma + 1) * sides[side].rho);
-            double B = sides[side].p * (gamma - 1) / (gamma + 1);
-
-            if (star.p > sides[side].p) // shock
+            for (int side = 0; side < 2; side++)
             {
-                fs[side] = (star.p - sides[side].p) * (pow(std::complex<double>(A / (star.p + B), 0), 0.5)).real();
-                d_fs[side] = (pow(std::complex<double>(A / (star.p + B), 0), 0.5)).real() * (1 - (star.p - sides[side].p) / (2 * (B + star.p)));
+
+                double A = 2 / ((gamma + 1) * sides[side].rho);
+                double B = sides[side].p * (gamma - 1) / (gamma + 1);
+
+                if (star.p > sides[side].p) // shock
+                {
+                    fs[side] = (star.p - sides[side].p) * pow(A / (star.p + B), 0.5);
+                    d_fs[side] = pow(A / (star.p + B), 0.5) * (1 - (star.p - sides[side].p) / (2 * (B + star.p)));
+                }
+                else // expansion
+                {
+                    fs[side] = 2 * sides[side].a / (gamma - 1) * (pow(star.p / sides[side].p, (gamma - 1) / (2 * gamma)) - 1);
+                    d_fs[side] = 1 / (sides[side].p * sides[side].a) * pow(star.p / sides[side].p, -(gamma + 1) / (2 * gamma));
+                }
             }
-            else // expansion
+            if (errno != 0)
             {
-                fs[side] = 2 * sides[side].a / (gamma - 1) * ((pow(std::complex<double>(star.p / sides[side].p, 0), (gamma - 1) / (2 * gamma))).real() - 1);
-                d_fs[side] = 1 / (sides[side].p * sides[side].a) * (pow(std::complex<double>(star.p / sides[side].p, 0), -(gamma + 1) / (2 * gamma))).real();
+                std::cout << "error occured \n" << std::endl;
+
+                errorStage++;
+                break;
+            }
+
+            double f = fs[0] + fs[1] - sides[0].u + sides[1].u;
+            double d_f = d_fs[0] + d_fs[1];
+
+            change = f / d_f;
+
+            star.p = star.p - change; // Update new estimate of p*
+
+            std::cout << "f: " << f << std::endl;
+            std::cout << "d_f: " << d_f << std::endl;
+            std::cout << "change: " << change << std::endl;
+            std::cout << "p*: " << star.p << std::endl;
+
+            count++;
+
+            std::cout << "End of iteration " << count << "\n" << std::endl;
+
+            // if (count == 5) {return 0;} // pause iteration and exit
+
+            if (TOL >= 2 * fabs(change / (change + 2 * star.p))) // iteration limit (slightly different to notes as abs of entire rhs)
+            {
+                std::cout << "iterate false" << std::endl;
+                iterate = false;
             }
         }
-
-        double f = fs[0] + fs[1] - sides[0].u + sides[1].u;
-        double d_f = d_fs[0] + d_fs[1];
-
-        change = f / d_f;
-
-        std::cout << "p* start: "<<star.p << std::endl;
-
-        star.p = star.p - change; // Update new estimate of p*
-
-        std::cout << "f: "<<f << std::endl;
-        std::cout << "d_f: "<<d_f << std::endl;
-        std::cout << "change: "<<change << std::endl;
-        std::cout << "p*: "<<star.p << std::endl;
-
-        count++;
-
-        std::cout << "End of iteration " << count << "\n" << std::endl;
-
-        //if (count == 5) {return 0;} // pause iteration and exit
-
-    } while (!(pow(10, -6) >= 2 * fabs(change / (change + 2 * star.p)))); // iteration limit (slightly different to notes as abs of entire rhs)
-    std::cout << "loop ended count = " << count << std::endl;
-    std::cout << star.p << std::endl;
-    std::cout << count << std::endl;
+    }
+    std::cout << "loop ended count = " << count << ", reached errorStage " << errorStage << std::endl;
 
     star.u = 0.5 * (sides[0].u + sides[1].u) + 0.5 * (fs[1] - fs[0]); // u*
-
-    std::cout << star.u << std::endl;
 
     double starRhos[2];
     double uShock, uHead, uTail;
