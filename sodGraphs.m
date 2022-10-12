@@ -1,4 +1,4 @@
-points = readmatrix('fortran\graph1.csv');
+points = readmatrix('graph1.csv');
 pStar = points(1);
 uStar = points(2);
 rhoStarL = points(3);
@@ -9,14 +9,14 @@ uTail = points(7);
 
 xtRange = [-2 2 0 1];
 
-pL = 1;
-rhoL = 1;
-uL = 0;
-pR = 0.1;
-rhoR = 0.125;
-uR = 0;
+pL = points(8);
+rhoL = points(9);
+uL = points(10);
+pR = points(11);
+rhoR = points(12);
+uR = points(13);
 
-fan = readmatrix('fortran\graph2.csv');
+fan = readmatrix('graph2.csv');
 xtFan = fan(:,1);
 rhoFan = fan(:,2);
 uFan = fan(:,3);

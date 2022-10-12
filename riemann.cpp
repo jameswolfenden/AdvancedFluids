@@ -42,7 +42,7 @@ int main()
     double change;
     int count = 0;
     double fs[2];
-    do 
+    do
     {
 
         double d_fs[2];
@@ -55,13 +55,13 @@ int main()
 
             if (star.p > sides[side].p) // shock
             {
-                fs[side] = (star.p - sides[side].p) * abs(pow(std::complex<double>(A / (star.p + B), 0), 0.5));
-                d_fs[side] = abs(pow(std::complex<double>(A / (star.p + B), 0), 0.5)) * (1 - (star.p - sides[side].p) / (2 * (B + star.p)));
+                fs[side] = (star.p - sides[side].p) * (pow(std::complex<double>(A / (star.p + B), 0), 0.5)).real();
+                d_fs[side] = (pow(std::complex<double>(A / (star.p + B), 0), 0.5)).real() * (1 - (star.p - sides[side].p) / (2 * (B + star.p)));
             }
             else // expansion
             {
-                fs[side] = 2 * sides[side].a / (gamma - 1) * (abs(pow(std::complex<double>(star.p / sides[side].p, 0), (gamma - 1) / (2 * gamma))) - 1);
-                d_fs[side] = 1 / (sides[side].p * sides[side].a) * abs(pow(std::complex<double>(star.p / sides[side].p, 0), -(gamma - 1) / (2 * gamma)));
+                fs[side] = 2 * sides[side].a / (gamma - 1) * ((pow(std::complex<double>(star.p / sides[side].p, 0), (gamma - 1) / (2 * gamma))).real() - 1);
+                d_fs[side] = 1 / (sides[side].p * sides[side].a) * (pow(std::complex<double>(star.p / sides[side].p, 0), -(gamma + 1) / (2 * gamma))).real();
             }
         }
 
@@ -70,13 +70,20 @@ int main()
 
         change = f / d_f;
 
+        std::cout << "p* start: "<<star.p << std::endl;
+
         star.p = star.p - change; // Update new estimate of p*
 
-        std::cout << star.p << std::endl;
+        std::cout << "f: "<<f << std::endl;
+        std::cout << "d_f: "<<d_f << std::endl;
+        std::cout << "change: "<<change << std::endl;
+        std::cout << "p*: "<<star.p << std::endl;
 
         count++;
 
-        // if (count == 5) {return 0;}
+        std::cout << "End of iteration " << count << "\n" << std::endl;
+
+        //if (count == 5) {return 0;} // pause iteration and exit
 
     } while (!(pow(10, -6) >= 2 * fabs(change / (change + 2 * star.p)))); // iteration limit (slightly different to notes as abs of entire rhs)
     std::cout << "loop ended count = " << count << std::endl;
@@ -121,9 +128,9 @@ int main()
             {
                 S = 1;
             }
-            uHead = sides[side].u + S * sides[side].a; // head of expansion fan speed
+            uHead = sides[side].u + S * sides[side].a;                  // head of expansion fan speed
             double aStarSide = sqrt((gamma * star.p) / starRhos[side]); // get speed of sound for the side but close to *
-            uTail = star.u + S * aStarSide; // tail of expansion fan speed
+            uTail = star.u + S * aStarSide;                             // tail of expansion fan speed
 
             // Get 100 points for ploting properties within expansion fan
             for (int i = 0; i < 100; i++)
@@ -165,6 +172,12 @@ int main()
     csvFileGraph1 << uShock << "\n";
     csvFileGraph1 << uHead << "\n";
     csvFileGraph1 << uTail << "\n";
+    csvFileGraph1 << sides[0].p << "\n";
+    csvFileGraph1 << sides[0].rho << "\n";
+    csvFileGraph1 << sides[0].u << "\n";
+    csvFileGraph1 << sides[1].p << "\n";
+    csvFileGraph1 << sides[1].rho << "\n";
+    csvFileGraph1 << sides[1].u << "\n";
     csvFileGraph1.close();
 
     // write the fan values to csv for matlab
