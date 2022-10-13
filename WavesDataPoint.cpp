@@ -15,7 +15,8 @@ void WavesDataPoint::findStar(Point *sides[])
 
     while (iterate)
     {
-        std::cout << "errorStage: " << errorStage << std::endl;
+        if (waveOutput)
+            std::cout << "errorStage: " << errorStage << std::endl;
 
         if (errorStage == 0)
         {
@@ -52,7 +53,8 @@ void WavesDataPoint::findStar(Point *sides[])
         while (iterate)
         {
             errno = 0;
-            std::cout << "p* start: " << p << std::endl;
+            if (waveOutput)
+                std::cout << "p* start: " << p << std::endl;
 
             for (int side = 0; side < 2; side++)
             {
@@ -73,8 +75,8 @@ void WavesDataPoint::findStar(Point *sides[])
             }
             if (errno != 0)
             {
-                std::cout << "error occured \n"
-                          << std::endl;
+                if (waveOutput)
+                    std::cout << "error occured \n" << std::endl;
 
                 errorStage++;
                 break;
@@ -87,28 +89,38 @@ void WavesDataPoint::findStar(Point *sides[])
 
             p = p - change; // Update new estimate of p*
 
+            if (waveOutput)
+            {
             std::cout << "f: " << f << std::endl;
             std::cout << "d_f: " << d_f << std::endl;
             std::cout << "change: " << change << std::endl;
             std::cout << "p*: " << p << std::endl;
-
+            }
             count++;
-
-            std::cout << "End of iteration " << count << "\n"
-                      << std::endl;
+            
+            if (waveOutput)
+                std::cout << "End of iteration " << count << "\n" << std::endl;
 
             // if (count == 5) {return 0;} // pause iteration and exit
 
             if (TOL >= 2 * fabs(change / (change + 2 * p))) // iteration limit (slightly different to notes as abs of entire rhs)
             {
-                std::cout << "iterate false" << std::endl;
+                if (waveOutput)
+                    std::cout << "iterate false" << std::endl;
                 iterate = false;
             }
         }
     }
-    std::cout << "loop ended count = " << count << ", reached errorStage " << errorStage << std::endl;
+    if (domainOutput)
+        std::cout << "loop ended count = " << count << ", reached errorStage " << errorStage << std::endl;
 
     u = 0.5 * (sides[0]->u + sides[1]->u) + 0.5 * (fs[1] - fs[0]); // u*
+
+    if (u>=0) // pick rho value depending on the side of the discontinuity
+        rho = sides[0]->rho * (((p / sides[0]->p) + ((gamma - 1) / (gamma + 1))) / (((gamma - 1) / (gamma + 1)) * (p / sides[0]->p) + 1));
+    else
+        rho = sides[1]->rho * (((p / sides[1]->p) + ((gamma - 1) / (gamma + 1))) / (((gamma - 1) / (gamma + 1)) * (p / sides[1]->p) + 1));
+    aCalc();
     return;
 }
 

@@ -5,6 +5,7 @@
 #include "Point.h"
 #include "fluidConsts.h"
 #include "WavesDataPoint.h"
+#include "Domain.h"
 
 void saveToCSV(WavesDataPoint star, Point *sides[2])
 {
@@ -56,21 +57,48 @@ void saveToCSV(WavesDataPoint star, Point *sides[2])
     csvFileGraph2.close();
 }
 
-int main()
+void sodTests(int caseTest)
 {
+    Point left;
+    Point right;
+    Point* _left = &left;
+    Point* _right = &right;
+    if (caseTest == 1)
+    {
+        _left->updatePrimatives(1.0, 1.0, 0.0);
+        _right->updatePrimatives(0.1, 0.125, 0);
+    }
+    else if (caseTest==2)
+    {
+        _left->updatePrimatives(0.4, 1.0, -2.0);
+        _right->updatePrimatives(0.4, 1.0, 2.0);
 
-    Point left(1.0, 1.0, 0.0);
-    Point right(0.1, 0.125, 0);
-
-    // Point left(0.4, 1.0, -2.0);
-    // Point right(0.4, 1.0, 2.0);
-
+    }
     Point *sides[2];
-    sides[0] = &left;
-    sides[1] = &right;
+    sides[0] = _left;
+    sides[1] = _right;
 
     WavesDataPoint star;
     star.findStar(sides);
     star.waveData(sides);
     saveToCSV(star, sides);
+
+}
+
+void domainTest()
+{
+    Domain domain(1);
+    for (int i = 0; i < 1000; i++)
+    {
+        domain.updatePoints();
+        std::cout << domain.points[0].p << std::endl;
+    }
+    
+
+}
+
+int main()
+{
+    //sodTests(2);
+    domainTest();
 }

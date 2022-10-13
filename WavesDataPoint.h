@@ -12,6 +12,7 @@ public:
 
     void findStar(Point *sides[]);
     void waveData(Point *sides[]);
+    using Point::Point;
 };
 
 
