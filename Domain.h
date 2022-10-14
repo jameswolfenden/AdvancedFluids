@@ -2,8 +2,9 @@
 #define DOMAIN_H
 
 #include "WavesDataPoint.h"
+#include <vector>
 
-const int pointsSize = 32;
+const int pointsSize = 2048;
 const int halfSize = pointsSize-1;
 
 class Domain{
@@ -11,8 +12,9 @@ class Domain{
     int xPhysical;
     double xBox;
     double minT;
-    Point points[pointsSize];
-    WavesDataPoint halfPoints[halfSize];
+    double elapsedTime;
+    std::vector<Point> points;
+    std::vector<WavesDataPoint> halfPoints;
     Domain(double xPhysical);
     void updatePoints();
     void findHalfs();
