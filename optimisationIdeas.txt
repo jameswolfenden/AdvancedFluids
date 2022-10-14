@@ -1,0 +1,2 @@
+Optimisation ideas:
+write to file after every x iterations so save on memory

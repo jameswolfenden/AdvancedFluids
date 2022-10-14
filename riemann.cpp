@@ -89,8 +89,8 @@ void sodTests(int caseTest)
 void domainTest()
 {
     std::cout << "domaintest" << std::endl;
-    Domain domain(0.1);
-    int iterations = 10000;
+    Domain domain(1);
+    int iterations = 7500;
     std::vector<std::vector<double>> rhos;
     rhos.resize(iterations, std::vector<double>(pointsSize,1));
     std::vector<std::vector<double>> us;
@@ -99,7 +99,7 @@ void domainTest()
     ps.resize(iterations, std::vector<double>(pointsSize,0));
     std::vector<double> ts;
     ts.resize(iterations, 0);
-    std::cout << "done creating arrays" << std::endl;
+    std::cout << "done creating arrays, starting iteration..." << std::endl;
 
 
     for (int i = 0; i < iterations; i++)
@@ -113,6 +113,8 @@ void domainTest()
         }
         ts[i] = domain.elapsedTime;
     }
+
+    std::cout << "writing to files..." << std::endl;
 
     std::ofstream rhoCSV, uCSV, pCSV, tCSV;
     rhoCSV.open("rho.csv");

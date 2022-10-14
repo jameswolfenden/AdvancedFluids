@@ -4,7 +4,7 @@
 #include "WavesDataPoint.h"
 #include <vector>
 
-const int pointsSize = 2048;
+const int pointsSize = 1000;
 const int halfSize = pointsSize-1;
 
 class Domain{
