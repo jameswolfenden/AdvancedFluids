@@ -1,0 +1,5 @@
+todo
+
+implement time steps
+improve the xyyx shit (xy atm)
+test more

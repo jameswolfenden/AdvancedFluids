@@ -1,11 +1,8 @@
 #ifndef DOMAIN_H
 #define DOMAIN_H
 
-#include "WavesDataPoint.h"
+#include "Point.h"
 #include <vector>
-
-const int pointsSize = 1000;
-const int halfSize = pointsSize-1;
 
 class Domain{
     public:
@@ -13,9 +10,10 @@ class Domain{
     double xBox;
     double minT;
     double elapsedTime;
+    int pointsSize, halfSize;
     std::vector<Point> points;
-    std::vector<WavesDataPoint> halfPoints;
-    Domain(double xPhysical);
+    std::vector<Point> halfPoints;
+    Domain(double xPhysical, int pointsSize);
     void updatePoints();
     void findHalfs();
 };

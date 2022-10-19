@@ -1,0 +1,6 @@
+Optimisation ideas:
+write to file after every x iterations so save on memory
+get rid of wavedatapoint class
+use pointer to array of struct 
+check timestep so try to get the exact image in notes
+check all vectors initialised fully

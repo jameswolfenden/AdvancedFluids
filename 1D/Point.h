@@ -10,6 +10,7 @@ public:
     Point(double p, double rho, double u);
     void updatePrimatives(double p, double rho, double u);
     void updateConservatives(double u1, double u2, double u3);
+    void findStar(Point *sides[]);
 };
 
 #endif

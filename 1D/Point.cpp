@@ -1,9 +1,57 @@
-#include "WavesDataPoint.h"
+#include "Point.h"
 #include <cmath>
 #include "fluidConsts.h"
 #include <iostream>
 
-void WavesDataPoint::findStar(Point *sides[])
+
+Point::Point(double p, double rho, double u)
+{
+    updatePrimatives(p,rho,u);
+}
+double Point::aCalc()
+{
+    a = sqrt((gamma * p) / rho);
+    return a;
+}
+double Point::u1()
+{
+    return rho;
+}
+double Point::u2()
+{
+    return rho*u;
+}
+double Point::u3()
+{
+    return rho*(0.5*u*u+p/((gamma-1)*rho));
+}
+double Point::f1()
+{
+    return rho*u;
+}
+double Point::f2()
+{
+    return rho*u*u+p;
+}
+double Point::f3()
+{
+    return u*(rho*(0.5*u*u+p/((gamma-1)*rho))+p);
+}
+void Point::updateConservatives(double u1, double u2, double u3)
+{
+    rho = u1;
+    u = u2/u1;
+    p = (gamma-1)*(u3-0.5*((u2*u2)/u1));
+    aCalc();
+}
+void Point::updatePrimatives(double p, double rho, double u)
+{
+    this->p = p;
+    this->rho = rho;
+    this->u = u;
+    aCalc();
+}
+void Point::findStar(Point *sides[])
 {
 
     double change;
@@ -121,55 +169,5 @@ void WavesDataPoint::findStar(Point *sides[])
     else
         rho = sides[1]->rho * (((p / sides[1]->p) + ((gamma - 1) / (gamma + 1))) / (((gamma - 1) / (gamma + 1)) * (p / sides[1]->p) + 1));
     aCalc();
-    return;
-}
-
-void WavesDataPoint::waveData(Point *sides[])
-{
-    for (int side = 0; side < 2; side++)
-    {
-        if (p > sides[side]->p) // shock
-        {
-            // Find the rho* for both sides of the discontinuity for outside wave shock
-            rhos[side] = sides[side]->rho * (((p / sides[side]->p) + ((gamma - 1) / (gamma + 1))) / (((gamma - 1) / (gamma + 1)) * (p / sides[side]->p) + 1));
-            int S;
-            if (side == 0)
-            {
-                S = -1;
-            }
-            else
-            {
-                S = 1;
-            }
-            // Find the shock speed
-            uShock = sides[side]->u + S * sides[side]->a * pow((gamma + 1) / (2 * gamma) * p / sides[side]->p + (gamma - 1) / (2 * gamma), 0.5);
-        }
-        else // expansion
-        {
-            // rho*s in case outside wave is expansion
-            rhos[side] = sides[side]->rho * pow((p / sides[side]->p), 1 / gamma);
-            int S;
-            if (side == 0)
-            {
-                S = -1;
-            }
-            else
-            {
-                S = 1;
-            }
-            uHead = sides[side]->u + S * sides[side]->a;       // head of expansion fan speed
-            double aStarSide = sqrt((gamma * p) / rhos[side]); // get speed of sound for the side but close to *
-            uTail = u + S * aStarSide;                         // tail of expansion fan speed
-
-            // Get 100 points for ploting properties within expansion fan
-            for (int i = 0; i < 100; i++)
-            {
-                us[i] = (uHead - uTail) / 100 * i + uTail; // linear distribution of velocities within the fan
-                rhoFan[i] = sides[side]->rho * pow(2 / (gamma + 1) - S * (gamma - 1) / (gamma + 1) * (sides[side]->u - us[i]) / sides[side]->a, 2 / (gamma - 1));
-                uFan[i] = 2 / (gamma + 1) * (-S * sides[side]->a + ((gamma - 1) / 2) * sides[side]->u + us[i]);
-                pFan[i] = sides[side]->p * pow(2 / (gamma + 1) - S * (gamma - 1) / (gamma + 1) * (sides[side]->u - us[i]) / sides[side]->a, (2 * gamma) / (gamma - 1));
-            }
-        }
-    }
     return;
 }
