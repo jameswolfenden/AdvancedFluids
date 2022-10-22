@@ -16,6 +16,7 @@ Domain2D::Domain2D(double xPhysical, double yPhysical, int xCellCount, int yCell
     yBox = yPhysical / yCellCount;
 
     elapsedTime = 0;
+    minT=0.0001; // small first time step to check waves speed is slow, should replace this with some lower bound estimate probably
     cells.resize(xCellCount, std::vector<Cell>(yCellCount));
     xFaces.resize(xFaceCount, std::vector<Cell>(yCellCount)); // the faces vectors are oversized, faces with ghost cells on both sides, makes indexing easier
     yFaces.resize(xCellCount, std::vector<Cell>(yFaceCount));
@@ -30,7 +31,7 @@ Domain2D::Domain2D(double xPhysical, double yPhysical, int xCellCount, int yCell
 
     for (int x = 1; x < (xCellCount/2); x++) // exclude ghost cells
     {
-        for (int y = 1; y < yCellCount/2; y++)
+        for (int y = 1; y < yCellCount/6; y++)
         {
             cells[x][y].updatePrimatives(0.1, 0.125, 0, 0);
         }
@@ -54,9 +55,6 @@ void Domain2D::xfindFaces()
             //std::cout << "x face between " << x << ", " << y << " and "<< x+1 << ", " << y << std::endl;
 
             xFaces[x][y].xFindStar(xSides); // find the star values for the half point
-
-            if (0.49 * xBox / (xFaces[x][y].u + xFaces[x][y].a) < minT) // change minT if the time step for this iteration should be smaller
-                minT = 0.49 * xBox / (xFaces[x][y].u + xFaces[x][y].a);
         }
     }
 }
@@ -76,9 +74,6 @@ void Domain2D::yFindFaces()
 
 
             yFaces[x][y].yFindStar(ySides); // find the star values for the half point
-
-            if (0.49 * yBox / (yFaces[x][y].u + yFaces[x][y].a) < minT) // change minT if the time step for this iteration should be smaller
-                minT = 0.49 * yBox / (yFaces[x][y].u + yFaces[x][y].a);
         }
     }
 }
@@ -86,7 +81,6 @@ void Domain2D::yFindFaces()
 void Domain2D::updateCells()
 {
     xfindFaces();
-    minT=0.001;
     for (int y = 1; y < (yCellCount - 1); y++)
     {
         for (int x = 1; x < xCellCount - 1; x++)
@@ -97,13 +91,12 @@ void Domain2D::updateCells()
             double u3 = cells[x][y].u3() + minT / xBox * (xFaces[x - 1][y].f3() - xFaces[x][y].f3());
             double u4 = cells[x][y].u4() + minT / xBox * (xFaces[x - 1][y].f4() - xFaces[x][y].f4());
             cells[x][y].updateConservatives(u1, u2, u3, u4); // update the primatives in the points array from the conservatives found
-            elapsedTime += minT;
             //std::cout << xFaces[x - 1][y].p <<" difference in p  on x face "<< xFaces[x][y].p << std::endl;
         }
     }
     setGhostCells();
     yFindFaces();
-    minT=0.001;
+    double nextMinT = 9999;
     for (int x = 1; x < (xCellCount - 1); x++)
     {
         for (int y = 1; y < yCellCount - 1; y++)
@@ -114,23 +107,28 @@ void Domain2D::updateCells()
             double u3 = cells[x][y].u3() + minT / yBox * (yFaces[x][y - 1].g3() - yFaces[x][y].g3());
             double u4 = cells[x][y].u4() + minT / yBox * (yFaces[x][y - 1].g4() - yFaces[x][y].g4());
             cells[x][y].updateConservatives(u1, u2, u3, u4); // update the primatives in the points array from the conservatives found
-            elapsedTime += minT;
               //          std::cout << yFaces[x][y-1].p <<" difference in p  on y face "<< yFaces[x][y].p << std::endl;
+            if (0.9*yBox/(std::abs(yFaces[x][y].u)+yFaces[x][y].a)<nextMinT) // change minT if the time step for this iteration should be smaller
+                nextMinT = 0.9*yBox/(std::abs(yFaces[x][y].u)+yFaces[x][y].a);
+            if (0.9*xBox/(std::abs(xFaces[x][y].u)+xFaces[x][y].a)<nextMinT) // change minT if the time step for this iteration should be smaller
+                nextMinT = 0.9*xBox/(std::abs(xFaces[x][y].u)+xFaces[x][y].a);
         }
     }
     setGhostCells();
+    elapsedTime += minT;
+    minT=nextMinT;
 }
 
 void Domain2D::setGhostCells()
 {
     for (int x = 1; x < (xCellCount - 1); x++) // ghost cells
     {
-        cells[x][0].updatePrimatives(cells[x][1].p, cells[x][1].rho, -cells[x][1].u, -cells[x][1].v);
-        cells[x][yCellCount - 1].updatePrimatives(cells[x][yCellCount - 2].p, cells[x][yCellCount - 2].rho, -cells[x][yCellCount - 2].u, -cells[x][yCellCount - 2].v);
+        cells[x][0].updatePrimatives(cells[x][1].p, cells[x][1].rho, cells[x][1].u, -cells[x][1].v);
+        cells[x][yCellCount - 1].updatePrimatives(cells[x][yCellCount - 2].p, cells[x][yCellCount - 2].rho, cells[x][yCellCount - 2].u, -cells[x][yCellCount - 2].v);
     }
     for (int y = 1; y < (yCellCount - 1); y++) // ghost cells
     {
-        cells[0][y].updatePrimatives(cells[1][y].p, cells[1][y].rho, -cells[1][y].u, -cells[1][y].v);
-        cells[xCellCount - 1][y].updatePrimatives(cells[xCellCount - 2][y].p, cells[xCellCount - 2][y].rho, -cells[xCellCount - 2][y].u, -cells[xCellCount - 2][y].v);
+        cells[0][y].updatePrimatives(cells[1][y].p, cells[1][y].rho, -cells[1][y].u, cells[1][y].v);
+        cells[xCellCount - 1][y].updatePrimatives(cells[xCellCount - 2][y].p, cells[xCellCount - 2][y].rho, -cells[xCellCount - 2][y].u, cells[xCellCount - 2][y].v);
     }
 }

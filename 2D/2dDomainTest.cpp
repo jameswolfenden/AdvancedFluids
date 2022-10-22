@@ -3,9 +3,9 @@
 #include <fstream>
 
 int main(){
-    int xCellCount = 256;
-    int yCellCount = 256;
-    int iterations = 1000;
+    int xCellCount = 64;
+    int yCellCount = 64;
+    int iterations = 100;
     Domain2D domain(1,1,xCellCount,yCellCount);
 
     std::ofstream pStartCells, pStartxFaces, pStartyFaces, pEndCells, pEndxFaces, pEndyFaces; // create 4 file writers for the output
@@ -45,6 +45,7 @@ int main(){
 
     for (int i = 0; i < iterations; i++)
     {
+            //std::cout << domain.minT << std::endl;
             domain.updateCells();
     }
     
@@ -81,6 +82,5 @@ int main(){
     pEndxFaces.close();
     pEndyFaces.close();
 
-    std::cout << domain.xBox << std::endl;
-    std::cout << domain.minT << std::endl;
+    std::cout << domain.elapsedTime << std::endl;
 }
