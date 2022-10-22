@@ -3,18 +3,15 @@
 #include <fstream>
 
 int main(){
-    int xCellCount = 4;
-    int yCellCount = 4;
-    int iterations = 1;
+    int xCellCount = 256;
+    int yCellCount = 256;
+    int iterations = 1000;
     Domain2D domain(1,1,xCellCount,yCellCount);
 
     std::ofstream pStartCells, pStartxFaces, pStartyFaces, pEndCells, pEndxFaces, pEndyFaces; // create 4 file writers for the output
     pStartCells.open("pStartCells.csv");
     pStartxFaces.open("pStartxFaces.csv");
     pStartyFaces.open("pStartyFaces.csv");
-    pEndCells.open("pEndCells.csv");
-    pEndxFaces.open("pEndxFaces.csv");
-    pEndyFaces.open("pEndyFaces.csv");
 
     for (int y = 0; y < (yCellCount); y++)
     {
@@ -41,6 +38,9 @@ int main(){
         pStartyFaces << "\n";
     }
 
+    pStartCells.close();
+    pStartxFaces.close();
+    pStartyFaces.close();
 
 
     for (int i = 0; i < iterations; i++)
@@ -48,6 +48,9 @@ int main(){
             domain.updateCells();
     }
     
+    pEndCells.open("pEndCells.csv");
+    pEndxFaces.open("pEndxFaces.csv");
+    pEndyFaces.open("pEndyFaces.csv");
 
     for (int y = 0; y < (yCellCount); y++)
     {
@@ -74,9 +77,6 @@ int main(){
         pEndyFaces << "\n";
     }
 
-    pStartCells.close();
-    pStartxFaces.close();
-    pStartyFaces.close();
     pEndCells.close();
     pEndxFaces.close();
     pEndyFaces.close();

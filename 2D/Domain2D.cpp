@@ -51,7 +51,7 @@ void Domain2D::xfindFaces()
             xSides[0] = &cells[x][y];
             xSides[1] = &cells[x + 1][y];
 
-            std::cout << "x face between " << x << ", " << y << " and "<< x+1 << ", " << y << std::endl;
+            //std::cout << "x face between " << x << ", " << y << " and "<< x+1 << ", " << y << std::endl;
 
             xFaces[x][y].xFindStar(xSides); // find the star values for the half point
 
@@ -72,7 +72,7 @@ void Domain2D::yFindFaces()
             ySides[0] = &cells[x][y];
             ySides[1] = &cells[x][y + 1];
 
-            std::cout << "y face between " << x << ", " << y << " and "<< x << ", " << y+1 << std::endl;
+            //std::cout << "y face between " << x << ", " << y << " and "<< x << ", " << y+1 << std::endl;
 
 
             yFaces[x][y].yFindStar(ySides); // find the star values for the half point
@@ -86,7 +86,7 @@ void Domain2D::yFindFaces()
 void Domain2D::updateCells()
 {
     xfindFaces();
-    minT=0.01;
+    minT=0.001;
     for (int y = 1; y < (yCellCount - 1); y++)
     {
         for (int x = 1; x < xCellCount - 1; x++)
@@ -98,12 +98,12 @@ void Domain2D::updateCells()
             double u4 = cells[x][y].u4() + minT / xBox * (xFaces[x - 1][y].f4() - xFaces[x][y].f4());
             cells[x][y].updateConservatives(u1, u2, u3, u4); // update the primatives in the points array from the conservatives found
             elapsedTime += minT;
-            std::cout << xFaces[x - 1][y].p <<" difference in p  on x face "<< xFaces[x][y].p << std::endl;
+            //std::cout << xFaces[x - 1][y].p <<" difference in p  on x face "<< xFaces[x][y].p << std::endl;
         }
     }
     setGhostCells();
     yFindFaces();
-    minT=0.01;
+    minT=0.001;
     for (int x = 1; x < (xCellCount - 1); x++)
     {
         for (int y = 1; y < yCellCount - 1; y++)
@@ -115,7 +115,7 @@ void Domain2D::updateCells()
             double u4 = cells[x][y].u4() + minT / yBox * (yFaces[x][y - 1].g4() - yFaces[x][y].g4());
             cells[x][y].updateConservatives(u1, u2, u3, u4); // update the primatives in the points array from the conservatives found
             elapsedTime += minT;
-                        std::cout << yFaces[x][y-1].p <<" difference in p  on y face "<< yFaces[x][y].p << std::endl;
+              //          std::cout << yFaces[x][y-1].p <<" difference in p  on y face "<< yFaces[x][y].p << std::endl;
         }
     }
     setGhostCells();

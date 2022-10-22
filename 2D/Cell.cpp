@@ -164,7 +164,7 @@ void Cell::yFindStar(Cell *sides[])
     double fs[2];
     double d_fs[2];  
 
-std::cout << sides[0]->p <<" pressues in y " << sides[1]->p << std::endl;
+//std::cout << sides[0]->p <<" pressues in y " << sides[1]->p << std::endl;
 
     while (iterate)
     {

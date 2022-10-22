@@ -1,0 +1,7 @@
+help2d
+
+need to have array G as well as F see textbook
+u,f,g will all have 4 components instead of 3
+need to work out way of storing faces in x and y, i used 2 arrays but the indexing is a pain
+with the x y array of cells, due to ghost cells you will have 4 useless cells in the corners
+i have kept 

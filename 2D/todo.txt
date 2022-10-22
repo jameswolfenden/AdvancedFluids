@@ -3,3 +3,4 @@ todo
 implement time steps
 improve the xyyx shit (xy atm)
 test more
+get rid of the faces arrays (you just need to store the 4 around the current cell, keeping the 'furthest' for the next iteration to speed it up) although idk if this would be faster - this is why ramon said to just be storing rho and rho' etc in mem and nothing about the faces
