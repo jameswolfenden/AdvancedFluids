@@ -3,9 +3,9 @@
 #include <fstream>
 
 int main(){
-    int xCellCount = 64;
-    int yCellCount = 64;
-    int iterations = 100;
+    int xCellCount = 512;
+    int yCellCount = 512;
+    int iterations = 1000;
     Domain2D domain(1,1,xCellCount,yCellCount);
 
     std::ofstream pStartCells, pStartxFaces, pStartyFaces, pEndCells, pEndxFaces, pEndyFaces; // create 4 file writers for the output
