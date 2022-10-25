@@ -7,25 +7,25 @@ Domain2D::Domain2D(double xPhysical, double yPhysical, int xCellCount, int yCell
 {
     this->xPhysical = xPhysical; // set physical size
     this->yPhysical = yPhysical; // set physical size
-    this->xCellCount = xCellCount;
-    this->yCellCount = yCellCount;
-    xFaceCount = xCellCount - 1;
+    this->xCellCount = xCellCount; // set number of x cells
+    this->yCellCount = yCellCount; // set number of y cells
+    xFaceCount = xCellCount - 1; // 1 less face than cells 
     yFaceCount = yCellCount - 1;
-
     xBox = xPhysical / xCellCount; // work out size of each box
     yBox = yPhysical / yCellCount;
 
     elapsedTime = 0;
     minT=0.0001; // small first time step to check waves speed is slow, should replace this with some lower bound estimate probably
+
     cells.resize(xCellCount, std::vector<Cell>(yCellCount));
-    xFaces.resize(xFaceCount, std::vector<Cell>(yCellCount)); // the faces vectors are oversized, faces with ghost cells on both sides, makes indexing easier
+    xFaces.resize(xFaceCount, std::vector<Cell>(yCellCount)); // the faces vectors are 'oversized', there are some faces with ghost cells on both sides but makes indexing easier
     yFaces.resize(xCellCount, std::vector<Cell>(yFaceCount));
 
     for (int x = 1; x < (xCellCount - 1); x++) // exclude ghost cells
     {
         for (int y = 1; y < yCellCount - 1; y++)
         {
-            cells[x][y].updatePrimatives(1, 1, 0, 0);
+            cells[x][y].updatePrimatives(1, 1, 0, 0); // set inital conditions for entire domain
         }
     }
 
@@ -33,11 +33,10 @@ Domain2D::Domain2D(double xPhysical, double yPhysical, int xCellCount, int yCell
     {
         for (int y = 1; y < yCellCount/6; y++)
         {
-            cells[x][y].updatePrimatives(0.1, 0.125, 0, 0);
+            cells[x][y].updatePrimatives(0.1, 0.125, 0, 0); // set some different inital conditions for some of the cells
         }
     }
 
-    std::cout << "i have no idea if the ghost cells are being set right (should both velocity be inverted?)" << std::endl;
     setGhostCells();
 }
 
@@ -51,9 +50,6 @@ void Domain2D::xfindFaces()
             Cell *xSides[2];
             xSides[0] = &cells[x][y];
             xSides[1] = &cells[x + 1][y];
-
-            //std::cout << "x face between " << x << ", " << y << " and "<< x+1 << ", " << y << std::endl;
-
             xFaces[x][y].xFindStar(xSides); // find the star values for the half point
         }
     }
@@ -69,19 +65,15 @@ void Domain2D::yFindFaces()
             Cell *ySides[2];
             ySides[0] = &cells[x][y];
             ySides[1] = &cells[x][y + 1];
-
-            //std::cout << "y face between " << x << ", " << y << " and "<< x << ", " << y+1 << std::endl;
-
-
             yFaces[x][y].yFindStar(ySides); // find the star values for the half point
         }
     }
 }
 
-void Domain2D::updateCells()
+void Domain2D::updateCells() // currently using XY, should change to XYYX or better for more accuracy
 {
     xfindFaces();
-    for (int y = 1; y < (yCellCount - 1); y++)
+    for (int y = 1; y < (yCellCount - 1); y++) // loop through all non-ghost cells
     {
         for (int x = 1; x < xCellCount - 1; x++)
         {
@@ -91,13 +83,12 @@ void Domain2D::updateCells()
             double u3 = cells[x][y].u3() + minT / xBox * (xFaces[x - 1][y].f3() - xFaces[x][y].f3());
             double u4 = cells[x][y].u4() + minT / xBox * (xFaces[x - 1][y].f4() - xFaces[x][y].f4());
             cells[x][y].updateConservatives(u1, u2, u3, u4); // update the primatives in the points array from the conservatives found
-            //std::cout << xFaces[x - 1][y].p <<" difference in p  on x face "<< xFaces[x][y].p << std::endl;
         }
     }
     setGhostCells();
     yFindFaces();
     double nextMinT = 9999;
-    for (int x = 1; x < (xCellCount - 1); x++)
+    for (int x = 1; x < (xCellCount - 1); x++) // loop through all non-ghost cells
     {
         for (int y = 1; y < yCellCount - 1; y++)
         {
@@ -107,19 +98,19 @@ void Domain2D::updateCells()
             double u3 = cells[x][y].u3() + minT / yBox * (yFaces[x][y - 1].g3() - yFaces[x][y].g3());
             double u4 = cells[x][y].u4() + minT / yBox * (yFaces[x][y - 1].g4() - yFaces[x][y].g4());
             cells[x][y].updateConservatives(u1, u2, u3, u4); // update the primatives in the points array from the conservatives found
-              //          std::cout << yFaces[x][y-1].p <<" difference in p  on y face "<< yFaces[x][y].p << std::endl;
-            if (0.9*yBox/(std::abs(yFaces[x][y].u)+yFaces[x][y].a)<nextMinT) // change minT if the time step for this iteration should be smaller
+
+            if (0.9*yBox/(std::abs(yFaces[x][y].u)+yFaces[x][y].a)<nextMinT) // set the deltaT for the next iteration being 0.9 * the min time step for this iteration
                 nextMinT = 0.9*yBox/(std::abs(yFaces[x][y].u)+yFaces[x][y].a);
-            if (0.9*xBox/(std::abs(xFaces[x][y].u)+xFaces[x][y].a)<nextMinT) // change minT if the time step for this iteration should be smaller
+            if (0.9*xBox/(std::abs(xFaces[x][y].u)+xFaces[x][y].a)<nextMinT)
                 nextMinT = 0.9*xBox/(std::abs(xFaces[x][y].u)+xFaces[x][y].a);
         }
     }
     setGhostCells();
     elapsedTime += minT;
-    minT=nextMinT;
+    minT=nextMinT; // change minT for the next iteration
 }
 
-void Domain2D::setGhostCells()
+void Domain2D::setGhostCells() // set the ghost cells on all 4 sides, invert the velocities that collide with the wall
 {
     for (int x = 1; x < (xCellCount - 1); x++) // ghost cells
     {

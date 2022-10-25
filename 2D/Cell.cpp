@@ -8,11 +8,12 @@ Cell::Cell(double p, double rho, double u, double v)
 {
     updatePrimatives(p,rho,u,v);
 }
-double Cell::aCalc()
+double Cell::aCalc() // find speed of sound
 {
     a = sqrt((gamma * p) / rho);
     return a;
 }
+// the following are to get the conservatives and fluxes from the primatives
 double Cell::u1()
 {
     return rho;
@@ -61,7 +62,8 @@ double Cell::g4()
 {
     return v*(rho*(0.5*(u*u+v*v)+p/((gamma-1)*rho))+p);
 }
-void Cell::updateConservatives(double u1, double u2, double u3, double u4)
+
+void Cell::updateConservatives(double u1, double u2, double u3, double u4) // update the primatives from new conservative values
 {
     rho = u1;
     u = u2/u1;
@@ -77,7 +79,7 @@ void Cell::updatePrimatives(double p, double rho, double u, double v)
     this->v = v;
     aCalc();
 }
-void Cell::xFindStar(Cell *sides[])
+void Cell::xFindStar(Cell *sides[]) // find the values at the faces between 2 cells adjacent in x
 {  
 
     double change;
@@ -87,8 +89,9 @@ void Cell::xFindStar(Cell *sides[])
     double fs[2];
     double d_fs[2];
 
-    while (iterate)
+    while (iterate) // loop to try all the initial p values
     {
+        // different guesses for p
         if (errorStage == 0)
         {
             p = pow((sides[0]->a + sides[1]->a - 0.5 * (gamma - 1) * (sides[1]->u - sides[0]->u)) / (sides[0]->a / pow(sides[0]->p, (gamma - 1) / (2 * gamma)) + sides[1]->a / pow(sides[1]->p, (gamma - 1) / (2 * gamma))), (2 * gamma) / (gamma - 1));
@@ -107,11 +110,11 @@ void Cell::xFindStar(Cell *sides[])
         }
         else
         {
-            std::cout << "rip bozo" << std::endl;
-            return;
+            std::cout << "Error converging on p" << std::endl;
+            return; // this doesnt actually stop the program but if you see that in the console the timestep is probably too small
         }
         count = 0;
-        while (iterate)
+        while (iterate) // loop to iterate the p value
         {
             errno = 0;
             for (int side = 0; side < 2; side++)
@@ -129,19 +132,21 @@ void Cell::xFindStar(Cell *sides[])
                     d_fs[side] = 1 / (sides[side]->p * sides[side]->a) * pow(p / sides[side]->p, -(gamma + 1) / (2 * gamma));
                 }
             }
-            if (errno != 0)
+            if (errno != 0) // p is probably negative giving an issue with pow, we need the next guess of p
             {
                 errorStage++;
-                break;
+                break; // exit the iterate loop to try next p
             }
+
             double f = fs[0] + fs[1] - sides[0]->u + sides[1]->u;
             double d_f = d_fs[0] + d_fs[1];
             change = f / d_f;
             p = p - change; // Update new estimate of p*
             count++;
+
             if (TOL >= 2 * fabs(change / (change + 2 * p))) // iteration limit (slightly different to notes as abs of entire rhs)
             {
-                iterate = false;
+                iterate = false; // we have converged
             }
         }
     }
@@ -154,7 +159,7 @@ void Cell::xFindStar(Cell *sides[])
     return;
 }
 
-void Cell::yFindStar(Cell *sides[])
+void Cell::yFindStar(Cell *sides[]) // same as the x but with x and y and u and v swapped, could probably combine somehow but it works, see comments on x
 {  
 
     double change;
@@ -163,8 +168,6 @@ void Cell::yFindStar(Cell *sides[])
     bool iterate = true;
     double fs[2];
     double d_fs[2];  
-
-//std::cout << sides[0]->p <<" pressues in y " << sides[1]->p << std::endl;
 
     while (iterate)
     {
@@ -186,7 +189,7 @@ void Cell::yFindStar(Cell *sides[])
         }
         else
         {
-            std::cout << "rip bozo, count: " << count << std::endl;
+            std::cout << "Error converging on p" << std::endl;
             return;
         }
 
