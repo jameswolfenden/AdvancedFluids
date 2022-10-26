@@ -16,6 +16,7 @@ class Domain2D{
     std::vector<std::vector<Cell>> cells;
     std::vector<std::vector<Cell>> xFaces;
     std::vector<std::vector<Cell>> yFaces;
+    std::vector<std::vector<bool>> calcCells;
     Domain2D(double xPhysical, double yPhysical, int xCellCount, int yCellCount);
     void updateCells();
     void xfindFaces();

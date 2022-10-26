@@ -110,7 +110,7 @@ void Cell::xFindStar(Cell *sides[]) // find the values at the faces between 2 ce
         }
         else
         {
-            std::cout << "Error converging on p" << std::endl;
+            std::cout << "Error converging on p in x" << std::endl;
             return; // this doesnt actually stop the program but if you see that in the console the timestep is probably too small
         }
         count = 0;
@@ -189,7 +189,7 @@ void Cell::yFindStar(Cell *sides[]) // same as the x but with x and y and u and 
         }
         else
         {
-            std::cout << "Error converging on p" << std::endl;
+            std::cout << "Error converging on p in y" << std::endl;
             return;
         }
 
