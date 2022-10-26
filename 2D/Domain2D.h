@@ -10,18 +10,19 @@ class Domain2D{
     int yPhysical;
     double xBox;
     double yBox;
-    double minT;
-    double elapsedTime;
     int xCellCount, xFaceCount, yCellCount, yFaceCount;
     std::vector<std::vector<Cell>> cells;
     std::vector<std::vector<Cell>> xFaces;
     std::vector<std::vector<Cell>> yFaces;
-    std::vector<std::vector<bool>> calcCells;
-    Domain2D(double xPhysical, double yPhysical, int xCellCount, int yCellCount);
-    void updateCells();
+    std::vector<bool> ghostFaces;
+    Domain2D(double xPhysical, double yPhysical, int xCellCount, int yCellCount, std::vector<bool> ghostFaces, double p, double rho, double u, double v);
+    void updateCells(std::vector<Domain2D*> domain, double timeStep);
     void xfindFaces();
     void yFindFaces();
-    void setGhostCells();
+    void setGhostCells(std::vector<Domain2D*> domain);
+    double timeStep();
+    void xUpdateCells(double minT, std::vector<Domain2D*> domain);
+    void yUpdateCells(double minT, std::vector<Domain2D*> domain);
 };
 
 
