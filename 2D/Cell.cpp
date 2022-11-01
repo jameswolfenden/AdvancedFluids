@@ -3,10 +3,9 @@
 #include "..\fluidConsts.h"
 #include <iostream>
 
-
 Cell::Cell(double p, double rho, double u, double v)
 {
-    updatePrimatives(p,rho,u,v);
+    updatePrimatives(p, rho, u, v);
 }
 double Cell::aCalc() // find speed of sound
 {
@@ -20,55 +19,55 @@ double Cell::u1()
 }
 double Cell::u2()
 {
-    return rho*u;
+    return rho * u;
 }
 double Cell::u3()
 {
-    return rho*v;
+    return rho * v;
 }
 double Cell::u4()
 {
-    return rho*(0.5*(u*u+v*v)+p/((gamma-1)*rho));
+    return rho * (0.5 * (u * u + v * v) + p / ((gamma - 1) * rho));
 }
 double Cell::f1()
 {
-    return rho*u;
+    return rho * u;
 }
 double Cell::f2()
 {
-    return rho*u*u+p;
+    return rho * u * u + p;
 }
 double Cell::f3()
 {
-    return rho*v*u;
+    return rho * v * u;
 }
 double Cell::f4()
 {
-    return u*(rho*(0.5*(u*u+v*v)+p/((gamma-1)*rho))+p);
+    return u * (rho * (0.5 * (u * u + v * v) + p / ((gamma - 1) * rho)) + p);
 }
 double Cell::g1()
 {
-    return rho*v;
+    return rho * v;
 }
 double Cell::g2()
 {
-    return rho*v*u;
+    return rho * v * u;
 }
 double Cell::g3()
 {
-    return rho*v*v+p;
+    return rho * v * v + p;
 }
 double Cell::g4()
 {
-    return v*(rho*(0.5*(u*u+v*v)+p/((gamma-1)*rho))+p);
+    return v * (rho * (0.5 * (u * u + v * v) + p / ((gamma - 1) * rho)) + p);
 }
 
 void Cell::updateConservatives(double u1, double u2, double u3, double u4) // update the primatives from new conservative values
 {
     rho = u1;
-    u = u2/u1;
-    v = u3/u1;
-    p = (gamma-1)*(u4-0.5*((u2*u2+u3*u3)/u1)); // these all need checking i guessed it ngl
+    u = u2 / u1;
+    v = u3 / u1;
+    p = (gamma - 1) * (u4 - 0.5 * ((u2 * u2 + u3 * u3) / u1)); // these all need checking i guessed it ngl
     aCalc();
 }
 void Cell::updatePrimatives(double p, double rho, double u, double v)
@@ -80,7 +79,7 @@ void Cell::updatePrimatives(double p, double rho, double u, double v)
     aCalc();
 }
 void Cell::xFindStar(Cell *sides[]) // find the values at the faces between 2 cells adjacent in x
-{  
+{
 
     double change;
     int count = 0;
@@ -151,23 +150,29 @@ void Cell::xFindStar(Cell *sides[]) // find the values at the faces between 2 ce
         }
     }
     u = 0.5 * (sides[0]->u + sides[1]->u) + 0.5 * (fs[1] - fs[0]); // u*
-    if (u>=0) // pick rho value depending on the side of the discontinuity
+    if (u >= 0)                                                    // pick rho value depending on the side of the discontinuity
+    {
         rho = sides[0]->rho * (((p / sides[0]->p) + ((gamma - 1) / (gamma + 1))) / (((gamma - 1) / (gamma + 1)) * (p / sides[0]->p) + 1));
+        v = sides[0]->v;
+    }
     else
+    {
         rho = sides[1]->rho * (((p / sides[1]->p) + ((gamma - 1) / (gamma + 1))) / (((gamma - 1) / (gamma + 1)) * (p / sides[1]->p) + 1));
+        v = sides[1]->v;
+    }
     aCalc();
     return;
 }
 
 void Cell::yFindStar(Cell *sides[]) // same as the x but with x and y and u and v swapped, could probably combine somehow but it works, see comments on x
-{  
+{
 
     double change;
     int count = 0;
     int errorStage = 0;
     bool iterate = true;
     double fs[2];
-    double d_fs[2];  
+    double d_fs[2];
 
     while (iterate)
     {
@@ -229,11 +234,16 @@ void Cell::yFindStar(Cell *sides[]) // same as the x but with x and y and u and 
         }
     }
     v = 0.5 * (sides[0]->v + sides[1]->v) + 0.5 * (fs[1] - fs[0]); // u*
-    if (v>=0) // pick rho value depending on the side of the discontinuity
+    if (v >= 0)                                                    // pick rho value depending on the side of the discontinuity
+    {
         rho = sides[0]->rho * (((p / sides[0]->p) + ((gamma - 1) / (gamma + 1))) / (((gamma - 1) / (gamma + 1)) * (p / sides[0]->p) + 1));
+        u = sides[0]->u;
+    }
     else
+    {
         rho = sides[1]->rho * (((p / sides[1]->p) + ((gamma - 1) / (gamma + 1))) / (((gamma - 1) / (gamma + 1)) * (p / sides[1]->p) + 1));
+        u = sides[1]->u;
+    }
     aCalc();
     return;
 }
-

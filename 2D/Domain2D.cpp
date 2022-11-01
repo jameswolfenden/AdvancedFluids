@@ -73,7 +73,7 @@ void Domain2D::updateCells(std::vector<Domain2D*> sideDomains, double minT) // c
 void Domain2D::xUpdateCells(double minT, std::vector<Domain2D*> sideDomains)
 {
     xfindFaces();
-    for (int y = 1; y < (yCellCount - 1); y++) // loop through all non-ghost cells
+    for (int y = 1; y < (yCellCount - 1); y++) // loop through all non edge cells
     {
         for (int x = 1; x < xCellCount - 1; x++)
         {
@@ -91,7 +91,7 @@ void Domain2D::yUpdateCells(double minT, std::vector<Domain2D*> sideDomains)
 
     {
     yFindFaces();
-    for (int x = 1; x < (xCellCount - 1); x++) // loop through all non-ghost cells
+    for (int x = 1; x < (xCellCount - 1); x++) // loop through all non edge cells
     {
         for (int y = 1; y < yCellCount - 1; y++)
         {
@@ -134,9 +134,17 @@ void Domain2D::setGhostCells(std::vector<Domain2D*> sideDomains) // set the ghos
         {
             cells[0][y].updatePrimatives(cells[1][y].p, cells[1][y].rho, -cells[1][y].u, cells[1][y].v);
         }
+        else
+        {
+            cells[0][y].updatePrimatives(sideDomains[2]->cells[sideDomains[2]->xCellCount-2][y].p, sideDomains[2]->cells[sideDomains[2]->xCellCount-2][y].rho, sideDomains[2]->cells[sideDomains[2]->xCellCount-2][y].u, sideDomains[2]->cells[sideDomains[2]->xCellCount-2][y].v);
+        }
         if (ghostFaces[3])
         {
             cells[xCellCount - 1][y].updatePrimatives(cells[xCellCount - 2][y].p, cells[xCellCount - 2][y].rho, -cells[xCellCount - 2][y].u, cells[xCellCount - 2][y].v);
+        }
+        else
+        {
+            cells[xCellCount - 1][y].updatePrimatives(sideDomains[3]->cells[1][y].p, sideDomains[3]->cells[1][y].rho, sideDomains[3]->cells[1][y].u, sideDomains[3]->cells[1][y].v);
         }
     }
 }
