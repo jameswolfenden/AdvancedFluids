@@ -1,6 +1,6 @@
 #include "Cell.h"
 #include <cmath>
-#include "..\fluidConsts.h"
+#include "../fluidConsts.h"
 #include <iostream>
 
 Cell::Cell(double p, double rho, double u, double v)

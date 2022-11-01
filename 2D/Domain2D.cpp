@@ -1,7 +1,7 @@
 #include <cmath>
 #include <iostream>
 #include "Domain2D.h"
-#include "..\fluidConsts.h"
+#include "../fluidConsts.h"
 
 Domain2D::Domain2D(double xPhysical, double yPhysical, int xCellCount, int yCellCount, std::vector<bool> ghostFaces, double p, double rho, double u, double v)
 {
