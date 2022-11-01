@@ -1,7 +1,7 @@
 #include <cmath>
 #include <iostream>
 #include "Domain.h"
-#include "fluidConsts.h"
+#include "../fluidConsts.h"
 
 Domain::Domain(double xPhysical, int pointsSize)
 {

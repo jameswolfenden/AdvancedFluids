@@ -110,6 +110,7 @@ void Cell::xFindStar(Cell *sides[]) // find the values at the faces between 2 ce
         else
         {
             std::cout << "Error converging on p in x" << std::endl;
+            std::cout << "pL: " << sides[0]->p << ", rhoL: " << sides[0]->rho << ", uL: " << sides[0]->u << ", pR: " << sides[1]->p << ", rhoR: " << sides[1]->rho << ", uR: " << sides[1]->u << std::endl;
             return; // this doesnt actually stop the program but if you see that in the console the timestep is probably too small
         }
         count = 0;
@@ -152,12 +153,26 @@ void Cell::xFindStar(Cell *sides[]) // find the values at the faces between 2 ce
     u = 0.5 * (sides[0]->u + sides[1]->u) + 0.5 * (fs[1] - fs[0]); // u*
     if (u >= 0)                                                    // pick rho value depending on the side of the discontinuity
     {
-        rho = sides[0]->rho * (((p / sides[0]->p) + ((gammma - 1) / (gammma + 1))) / (((gammma - 1) / (gammma + 1)) * (p / sides[0]->p) + 1));
+        if (p > sides[0]->p)
+        {
+            rho = sides[0]->rho * (((p / sides[0]->p) + ((gammma - 1) / (gammma + 1))) / (((gammma - 1) / (gammma + 1)) * (p / sides[0]->p) + 1));
+        }
+        else
+        {
+            rho = sides[0]->rho * pow((p / sides[0]->p), 1 / gammma);
+        }
         v = sides[0]->v;
     }
     else
     {
-        rho = sides[1]->rho * (((p / sides[1]->p) + ((gammma - 1) / (gammma + 1))) / (((gammma - 1) / (gammma + 1)) * (p / sides[1]->p) + 1));
+        if (p > sides[1]->p)
+        {
+            rho = sides[1]->rho * (((p / sides[1]->p) + ((gammma - 1) / (gammma + 1))) / (((gammma - 1) / (gammma + 1)) * (p / sides[1]->p) + 1));
+        }
+        else
+        {
+            rho = sides[1]->rho * pow((p / sides[1]->p), 1 / gammma);
+        }
         v = sides[1]->v;
     }
     aCalc();
@@ -236,12 +251,26 @@ void Cell::yFindStar(Cell *sides[]) // same as the x but with x and y and u and 
     v = 0.5 * (sides[0]->v + sides[1]->v) + 0.5 * (fs[1] - fs[0]); // u*
     if (v >= 0)                                                    // pick rho value depending on the side of the discontinuity
     {
-        rho = sides[0]->rho * (((p / sides[0]->p) + ((gammma - 1) / (gammma + 1))) / (((gammma - 1) / (gammma + 1)) * (p / sides[0]->p) + 1));
+        if (p > sides[0]->p)
+        {
+            rho = sides[0]->rho * (((p / sides[0]->p) + ((gammma - 1) / (gammma + 1))) / (((gammma - 1) / (gammma + 1)) * (p / sides[0]->p) + 1));
+        }
+        else
+        {
+            rho = sides[0]->rho * pow((p / sides[0]->p), 1 / gammma);
+        }
         u = sides[0]->u;
     }
     else
     {
-        rho = sides[1]->rho * (((p / sides[1]->p) + ((gammma - 1) / (gammma + 1))) / (((gammma - 1) / (gammma + 1)) * (p / sides[1]->p) + 1));
+        if (p > sides[1]->p)
+        {
+            rho = sides[1]->rho * (((p / sides[1]->p) + ((gammma - 1) / (gammma + 1))) / (((gammma - 1) / (gammma + 1)) * (p / sides[1]->p) + 1));
+        }
+        else
+        {
+            rho = sides[1]->rho * pow((p / sides[1]->p), 1 / gammma);
+        }
         u = sides[1]->u;
     }
     aCalc();

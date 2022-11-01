@@ -1,6 +1,6 @@
 #include "WavesDataPoint.h"
 #include <cmath>
-#include "fluidConsts.h"
+#include "../fluidConsts.h"
 #include <iostream>
 
 void WavesDataPoint::waveData(Point *sides[])

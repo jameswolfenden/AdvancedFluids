@@ -1,12 +1,11 @@
 #include "Point.h"
 #include <cmath>
-#include "fluidConsts.h"
+#include "../fluidConsts.h"
 #include <iostream>
-
 
 Point::Point(double p, double rho, double u)
 {
-    updatePrimatives(p,rho,u);
+    updatePrimatives(p, rho, u);
 }
 double Point::aCalc()
 {
@@ -19,29 +18,29 @@ double Point::u1()
 }
 double Point::u2()
 {
-    return rho*u;
+    return rho * u;
 }
 double Point::u3()
 {
-    return rho*(0.5*u*u+p/((gammma-1)*rho));
+    return rho * (0.5 * u * u + p / ((gammma - 1) * rho));
 }
 double Point::f1()
 {
-    return rho*u;
+    return rho * u;
 }
 double Point::f2()
 {
-    return rho*u*u+p;
+    return rho * u * u + p;
 }
 double Point::f3()
 {
-    return u*(rho*(0.5*u*u+p/((gammma-1)*rho))+p);
+    return u * (rho * (0.5 * u * u + p / ((gammma - 1) * rho)) + p);
 }
 void Point::updateConservatives(double u1, double u2, double u3)
 {
     rho = u1;
-    u = u2/u1;
-    p = (gammma-1)*(u3-0.5*((u2*u2)/u1));
+    u = u2 / u1;
+    p = (gammma - 1) * (u3 - 0.5 * ((u2 * u2) / u1));
     aCalc();
 }
 void Point::updatePrimatives(double p, double rho, double u)
@@ -124,7 +123,8 @@ void Point::findStar(Point *sides[])
             if (errno != 0)
             {
                 if (waveOutput)
-                    std::cout << "error occured \n" << std::endl;
+                    std::cout << "error occured \n"
+                              << std::endl;
 
                 errorStage++;
                 break;
@@ -139,15 +139,16 @@ void Point::findStar(Point *sides[])
 
             if (waveOutput)
             {
-            std::cout << "f: " << f << std::endl;
-            std::cout << "d_f: " << d_f << std::endl;
-            std::cout << "change: " << change << std::endl;
-            std::cout << "p*: " << p << std::endl;
+                std::cout << "f: " << f << std::endl;
+                std::cout << "d_f: " << d_f << std::endl;
+                std::cout << "change: " << change << std::endl;
+                std::cout << "p*: " << p << std::endl;
             }
             count++;
-            
+
             if (waveOutput)
-                std::cout << "End of iteration " << count << "\n" << std::endl;
+                std::cout << "End of iteration " << count << "\n"
+                          << std::endl;
 
             // if (count == 5) {return 0;} // pause iteration and exit
 
@@ -164,10 +165,29 @@ void Point::findStar(Point *sides[])
 
     u = 0.5 * (sides[0]->u + sides[1]->u) + 0.5 * (fs[1] - fs[0]); // u*
 
-    if (u>=0) // pick rho value depending on the side of the discontinuity
-        rho = sides[0]->rho * (((p / sides[0]->p) + ((gammma - 1) / (gammma + 1))) / (((gammma - 1) / (gammma + 1)) * (p / sides[0]->p) + 1));
+    if (u >= 0) // pick rho value depending on the side of the discontinuity
+    {
+        if (p > sides[0]->p)
+        {
+            rho = sides[0]->rho * (((p / sides[0]->p) + ((gammma - 1) / (gammma + 1))) / (((gammma - 1) / (gammma + 1)) * (p / sides[0]->p) + 1));
+        }
+        else
+        {
+            rho = sides[0]->rho * pow((p / sides[0]->p), 1 / gammma);
+        }
+    }
     else
-        rho = sides[1]->rho * (((p / sides[1]->p) + ((gammma - 1) / (gammma + 1))) / (((gammma - 1) / (gammma + 1)) * (p / sides[1]->p) + 1));
+    {
+        if (p > sides[1]->p)
+        {
+            rho = sides[1]->rho * (((p / sides[1]->p) + ((gammma - 1) / (gammma + 1))) / (((gammma - 1) / (gammma + 1)) * (p / sides[1]->p) + 1));
+        }
+        else
+        {
+            rho = sides[1]->rho * pow((p / sides[1]->p), 1 / gammma);
+        }
+    }
+
     aCalc();
     return;
 }

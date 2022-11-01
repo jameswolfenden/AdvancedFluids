@@ -3,7 +3,7 @@
 #include <fstream>
 #include <errno.h>
 #include "Point.h"
-#include "fluidConsts.h"
+#include "../fluidConsts.h"
 #include "WavesDataPoint.h"
 #include "Domain.h"
 #include <vector>
@@ -74,6 +74,11 @@ void sodTests(int caseTest) // run a sod test case and get the results to csv
     {
         _left->updatePrimatives(0.4, 1.0, -2.0);
         _right->updatePrimatives(0.4, 1.0, 2.0);
+    }
+    else
+    {
+        _left->updatePrimatives(0.1, 0.1, -0.16625);
+        _right->updatePrimatives(0.1, 0.1, 0.195244);  
     }
     Point *sides[2];
     sides[0] = _left;
@@ -178,8 +183,8 @@ void domainTest() // run a test on a domain (1d)
 
 int main()
 {
-    // sodTests(2);
-    std::cout << "running" << std::endl;
+        std::cout << "running" << std::endl;
+  //  sodTests(1);
 
     domainTest();
 }
