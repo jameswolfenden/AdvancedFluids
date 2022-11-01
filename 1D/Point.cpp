@@ -10,7 +10,7 @@ Point::Point(double p, double rho, double u)
 }
 double Point::aCalc()
 {
-    a = sqrt((gamma * p) / rho);
+    a = sqrt((gammma * p) / rho);
     return a;
 }
 double Point::u1()
@@ -23,7 +23,7 @@ double Point::u2()
 }
 double Point::u3()
 {
-    return rho*(0.5*u*u+p/((gamma-1)*rho));
+    return rho*(0.5*u*u+p/((gammma-1)*rho));
 }
 double Point::f1()
 {
@@ -35,13 +35,13 @@ double Point::f2()
 }
 double Point::f3()
 {
-    return u*(rho*(0.5*u*u+p/((gamma-1)*rho))+p);
+    return u*(rho*(0.5*u*u+p/((gammma-1)*rho))+p);
 }
 void Point::updateConservatives(double u1, double u2, double u3)
 {
     rho = u1;
     u = u2/u1;
-    p = (gamma-1)*(u3-0.5*((u2*u2)/u1));
+    p = (gammma-1)*(u3-0.5*((u2*u2)/u1));
     aCalc();
 }
 void Point::updatePrimatives(double p, double rho, double u)
@@ -68,7 +68,7 @@ void Point::findStar(Point *sides[])
 
         if (errorStage == 0)
         {
-            p = pow((sides[0]->a + sides[1]->a - 0.5 * (gamma - 1) * (sides[1]->u - sides[0]->u)) / (sides[0]->a / pow(sides[0]->p, (gamma - 1) / (2 * gamma)) + sides[1]->a / pow(sides[1]->p, (gamma - 1) / (2 * gamma))), (2 * gamma) / (gamma - 1));
+            p = pow((sides[0]->a + sides[1]->a - 0.5 * (gammma - 1) * (sides[1]->u - sides[0]->u)) / (sides[0]->a / pow(sides[0]->p, (gammma - 1) / (2 * gammma)) + sides[1]->a / pow(sides[1]->p, (gammma - 1) / (2 * gammma))), (2 * gammma) / (gammma - 1));
         }
         else if (errorStage == 1)
         {
@@ -107,8 +107,8 @@ void Point::findStar(Point *sides[])
             for (int side = 0; side < 2; side++)
             {
 
-                double A = 2 / ((gamma + 1) * sides[side]->rho);
-                double B = sides[side]->p * (gamma - 1) / (gamma + 1);
+                double A = 2 / ((gammma + 1) * sides[side]->rho);
+                double B = sides[side]->p * (gammma - 1) / (gammma + 1);
 
                 if (p > sides[side]->p) // shock
                 {
@@ -117,8 +117,8 @@ void Point::findStar(Point *sides[])
                 }
                 else // expansion
                 {
-                    fs[side] = 2 * sides[side]->a / (gamma - 1) * (pow(p / sides[side]->p, (gamma - 1) / (2 * gamma)) - 1);
-                    d_fs[side] = 1 / (sides[side]->p * sides[side]->a) * pow(p / sides[side]->p, -(gamma + 1) / (2 * gamma));
+                    fs[side] = 2 * sides[side]->a / (gammma - 1) * (pow(p / sides[side]->p, (gammma - 1) / (2 * gammma)) - 1);
+                    d_fs[side] = 1 / (sides[side]->p * sides[side]->a) * pow(p / sides[side]->p, -(gammma + 1) / (2 * gammma));
                 }
             }
             if (errno != 0)
@@ -165,9 +165,9 @@ void Point::findStar(Point *sides[])
     u = 0.5 * (sides[0]->u + sides[1]->u) + 0.5 * (fs[1] - fs[0]); // u*
 
     if (u>=0) // pick rho value depending on the side of the discontinuity
-        rho = sides[0]->rho * (((p / sides[0]->p) + ((gamma - 1) / (gamma + 1))) / (((gamma - 1) / (gamma + 1)) * (p / sides[0]->p) + 1));
+        rho = sides[0]->rho * (((p / sides[0]->p) + ((gammma - 1) / (gammma + 1))) / (((gammma - 1) / (gammma + 1)) * (p / sides[0]->p) + 1));
     else
-        rho = sides[1]->rho * (((p / sides[1]->p) + ((gamma - 1) / (gamma + 1))) / (((gamma - 1) / (gamma + 1)) * (p / sides[1]->p) + 1));
+        rho = sides[1]->rho * (((p / sides[1]->p) + ((gammma - 1) / (gammma + 1))) / (((gammma - 1) / (gammma + 1)) * (p / sides[1]->p) + 1));
     aCalc();
     return;
 }

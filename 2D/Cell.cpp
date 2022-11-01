@@ -9,7 +9,7 @@ Cell::Cell(double p, double rho, double u, double v)
 }
 double Cell::aCalc() // find speed of sound
 {
-    a = sqrt((gamma * p) / rho);
+    a = sqrt((gammma * p) / rho);
     return a;
 }
 // the following are to get the conservatives and fluxes from the primatives
@@ -27,7 +27,7 @@ double Cell::u3()
 }
 double Cell::u4()
 {
-    return rho * (0.5 * (u * u + v * v) + p / ((gamma - 1) * rho));
+    return rho * (0.5 * (u * u + v * v) + p / ((gammma - 1) * rho));
 }
 double Cell::f1()
 {
@@ -43,7 +43,7 @@ double Cell::f3()
 }
 double Cell::f4()
 {
-    return u * (rho * (0.5 * (u * u + v * v) + p / ((gamma - 1) * rho)) + p);
+    return u * (rho * (0.5 * (u * u + v * v) + p / ((gammma - 1) * rho)) + p);
 }
 double Cell::g1()
 {
@@ -59,7 +59,7 @@ double Cell::g3()
 }
 double Cell::g4()
 {
-    return v * (rho * (0.5 * (u * u + v * v) + p / ((gamma - 1) * rho)) + p);
+    return v * (rho * (0.5 * (u * u + v * v) + p / ((gammma - 1) * rho)) + p);
 }
 
 void Cell::updateConservatives(double u1, double u2, double u3, double u4) // update the primatives from new conservative values
@@ -67,7 +67,7 @@ void Cell::updateConservatives(double u1, double u2, double u3, double u4) // up
     rho = u1;
     u = u2 / u1;
     v = u3 / u1;
-    p = (gamma - 1) * (u4 - 0.5 * ((u2 * u2 + u3 * u3) / u1)); // these all need checking i guessed it ngl
+    p = (gammma - 1) * (u4 - 0.5 * ((u2 * u2 + u3 * u3) / u1)); // these all need checking i guessed it ngl
     aCalc();
 }
 void Cell::updatePrimatives(double p, double rho, double u, double v)
@@ -93,7 +93,7 @@ void Cell::xFindStar(Cell *sides[]) // find the values at the faces between 2 ce
         // different guesses for p
         if (errorStage == 0)
         {
-            p = pow((sides[0]->a + sides[1]->a - 0.5 * (gamma - 1) * (sides[1]->u - sides[0]->u)) / (sides[0]->a / pow(sides[0]->p, (gamma - 1) / (2 * gamma)) + sides[1]->a / pow(sides[1]->p, (gamma - 1) / (2 * gamma))), (2 * gamma) / (gamma - 1));
+            p = pow((sides[0]->a + sides[1]->a - 0.5 * (gammma - 1) * (sides[1]->u - sides[0]->u)) / (sides[0]->a / pow(sides[0]->p, (gammma - 1) / (2 * gammma)) + sides[1]->a / pow(sides[1]->p, (gammma - 1) / (2 * gammma))), (2 * gammma) / (gammma - 1));
         }
         else if (errorStage == 1)
         {
@@ -118,8 +118,8 @@ void Cell::xFindStar(Cell *sides[]) // find the values at the faces between 2 ce
             errno = 0;
             for (int side = 0; side < 2; side++)
             {
-                double A = 2 / ((gamma + 1) * sides[side]->rho);
-                double B = sides[side]->p * (gamma - 1) / (gamma + 1);
+                double A = 2 / ((gammma + 1) * sides[side]->rho);
+                double B = sides[side]->p * (gammma - 1) / (gammma + 1);
                 if (p > sides[side]->p) // shock
                 {
                     fs[side] = (p - sides[side]->p) * pow(A / (p + B), 0.5);
@@ -127,8 +127,8 @@ void Cell::xFindStar(Cell *sides[]) // find the values at the faces between 2 ce
                 }
                 else // expansion
                 {
-                    fs[side] = 2 * sides[side]->a / (gamma - 1) * (pow(p / sides[side]->p, (gamma - 1) / (2 * gamma)) - 1);
-                    d_fs[side] = 1 / (sides[side]->p * sides[side]->a) * pow(p / sides[side]->p, -(gamma + 1) / (2 * gamma));
+                    fs[side] = 2 * sides[side]->a / (gammma - 1) * (pow(p / sides[side]->p, (gammma - 1) / (2 * gammma)) - 1);
+                    d_fs[side] = 1 / (sides[side]->p * sides[side]->a) * pow(p / sides[side]->p, -(gammma + 1) / (2 * gammma));
                 }
             }
             if (errno != 0) // p is probably negative giving an issue with pow, we need the next guess of p
@@ -152,12 +152,12 @@ void Cell::xFindStar(Cell *sides[]) // find the values at the faces between 2 ce
     u = 0.5 * (sides[0]->u + sides[1]->u) + 0.5 * (fs[1] - fs[0]); // u*
     if (u >= 0)                                                    // pick rho value depending on the side of the discontinuity
     {
-        rho = sides[0]->rho * (((p / sides[0]->p) + ((gamma - 1) / (gamma + 1))) / (((gamma - 1) / (gamma + 1)) * (p / sides[0]->p) + 1));
+        rho = sides[0]->rho * (((p / sides[0]->p) + ((gammma - 1) / (gammma + 1))) / (((gammma - 1) / (gammma + 1)) * (p / sides[0]->p) + 1));
         v = sides[0]->v;
     }
     else
     {
-        rho = sides[1]->rho * (((p / sides[1]->p) + ((gamma - 1) / (gamma + 1))) / (((gamma - 1) / (gamma + 1)) * (p / sides[1]->p) + 1));
+        rho = sides[1]->rho * (((p / sides[1]->p) + ((gammma - 1) / (gammma + 1))) / (((gammma - 1) / (gammma + 1)) * (p / sides[1]->p) + 1));
         v = sides[1]->v;
     }
     aCalc();
@@ -178,7 +178,7 @@ void Cell::yFindStar(Cell *sides[]) // same as the x but with x and y and u and 
     {
         if (errorStage == 0)
         {
-            p = pow((sides[0]->a + sides[1]->a - 0.5 * (gamma - 1) * (sides[1]->v - sides[0]->v)) / (sides[0]->a / pow(sides[0]->p, (gamma - 1) / (2 * gamma)) + sides[1]->a / pow(sides[1]->p, (gamma - 1) / (2 * gamma))), (2 * gamma) / (gamma - 1));
+            p = pow((sides[0]->a + sides[1]->a - 0.5 * (gammma - 1) * (sides[1]->v - sides[0]->v)) / (sides[0]->a / pow(sides[0]->p, (gammma - 1) / (2 * gammma)) + sides[1]->a / pow(sides[1]->p, (gammma - 1) / (2 * gammma))), (2 * gammma) / (gammma - 1));
         }
         else if (errorStage == 1)
         {
@@ -204,8 +204,8 @@ void Cell::yFindStar(Cell *sides[]) // same as the x but with x and y and u and 
             errno = 0;
             for (int side = 0; side < 2; side++)
             {
-                double A = 2 / ((gamma + 1) * sides[side]->rho);
-                double B = sides[side]->p * (gamma - 1) / (gamma + 1);
+                double A = 2 / ((gammma + 1) * sides[side]->rho);
+                double B = sides[side]->p * (gammma - 1) / (gammma + 1);
                 if (p > sides[side]->p) // shock
                 {
                     fs[side] = (p - sides[side]->p) * pow(A / (p + B), 0.5);
@@ -213,8 +213,8 @@ void Cell::yFindStar(Cell *sides[]) // same as the x but with x and y and u and 
                 }
                 else // expansion
                 {
-                    fs[side] = 2 * sides[side]->a / (gamma - 1) * (pow(p / sides[side]->p, (gamma - 1) / (2 * gamma)) - 1);
-                    d_fs[side] = 1 / (sides[side]->p * sides[side]->a) * pow(p / sides[side]->p, -(gamma + 1) / (2 * gamma));
+                    fs[side] = 2 * sides[side]->a / (gammma - 1) * (pow(p / sides[side]->p, (gammma - 1) / (2 * gammma)) - 1);
+                    d_fs[side] = 1 / (sides[side]->p * sides[side]->a) * pow(p / sides[side]->p, -(gammma + 1) / (2 * gammma));
                 }
             }
             if (errno != 0)
@@ -236,12 +236,12 @@ void Cell::yFindStar(Cell *sides[]) // same as the x but with x and y and u and 
     v = 0.5 * (sides[0]->v + sides[1]->v) + 0.5 * (fs[1] - fs[0]); // u*
     if (v >= 0)                                                    // pick rho value depending on the side of the discontinuity
     {
-        rho = sides[0]->rho * (((p / sides[0]->p) + ((gamma - 1) / (gamma + 1))) / (((gamma - 1) / (gamma + 1)) * (p / sides[0]->p) + 1));
+        rho = sides[0]->rho * (((p / sides[0]->p) + ((gammma - 1) / (gammma + 1))) / (((gammma - 1) / (gammma + 1)) * (p / sides[0]->p) + 1));
         u = sides[0]->u;
     }
     else
     {
-        rho = sides[1]->rho * (((p / sides[1]->p) + ((gamma - 1) / (gamma + 1))) / (((gamma - 1) / (gamma + 1)) * (p / sides[1]->p) + 1));
+        rho = sides[1]->rho * (((p / sides[1]->p) + ((gammma - 1) / (gammma + 1))) / (((gammma - 1) / (gammma + 1)) * (p / sides[1]->p) + 1));
         u = sides[1]->u;
     }
     aCalc();
