@@ -9,10 +9,10 @@ Cell::Cell(double p, double rho, double u, double v)
 }
 double Cell::aCalc() // find speed of sound
 {
-    if (rho == 0)
-        a = 0;
-    else
-        a = sqrt((gammma * p) / rho);
+    //   if (rho == 0)
+    //     a = 0;
+    // else
+    a = sqrt((gammma * p) / rho);
     return a;
 }
 // the following are to get the conservatives and fluxes from the primatives
@@ -30,10 +30,10 @@ double Cell::u3()
 }
 double Cell::u4()
 {
-    if (rho == 0)
-        return 0;
-    else
-        return rho * (0.5 * (u * u + v * v) + p / ((gammma - 1) * rho));
+    //   if (rho == 0)
+    //     return 0;
+    //  else
+    return rho * (0.5 * (u * u + v * v) + p / ((gammma - 1) * rho));
 }
 double Cell::f1()
 {
@@ -49,10 +49,10 @@ double Cell::f3()
 }
 double Cell::f4()
 {
-    if (rho == 0)
-        return 0;
-    else
-        return u * (rho * (0.5 * (u * u + v * v) + p / ((gammma - 1) * rho)) + p);
+    //   if (rho == 0)
+    //     return 0;
+    //  else
+    return u * (rho * (0.5 * (u * u + v * v) + p / ((gammma - 1) * rho)) + p);
 }
 double Cell::g1()
 {
@@ -68,33 +68,33 @@ double Cell::g3()
 }
 double Cell::g4()
 {
-    if (rho == 0)
-        return 0;
-    else
-        return v * (rho * (0.5 * (u * u + v * v) + p / ((gammma - 1) * rho)) + p);
+    //   if (rho == 0)
+    //     return 0;
+    // else
+    return v * (rho * (0.5 * (u * u + v * v) + p / ((gammma - 1) * rho)) + p);
 }
 
 void Cell::updateConservatives(double u1, double u2, double u3, double u4) // update the primatives from new conservative values
 {
-    if (u1 == 0)
-    {
-        updatePrimatives(0, 0, 0, 0);
-    }
-    else
-    {
-        double rho_ = u1;
-        double u_ = u2 / u1;
-        double v_ = u3 / u1;
-        double p_ = (gammma - 1) * (u4 - 0.5 * ((u2 * u2 + u3 * u3) / u1)); // these all need checking i guessed it ngl
-        updatePrimatives(p_, rho_, u_, v_);
-    }
+    // if (u1 == 0)
+    // {
+    //     updatePrimatives(0, 0, 0, 0);
+    // }
+    // else
+    // {
+    double rho_ = u1;
+    double u_ = u2 / u1;
+    double v_ = u3 / u1;
+    double p_ = (gammma - 1) * (u4 - 0.5 * ((u2 * u2 + u3 * u3) / u1)); // these all need checking i guessed it ngl
+    updatePrimatives(p_, rho_, u_, v_);
+    //  }
 }
 void Cell::updatePrimatives(double p, double rho, double u, double v)
 {
-    if (p <= 0.0 || rho <= 0.0)
+    if (p <= 0.001 || rho <= 0.001)
     {
-        this->p = 0.0;
-        this->rho = 0.0;
+        this->p = 0.01;
+        this->rho = 0.01;
     }
     else
     {
@@ -116,10 +116,11 @@ void Cell::xFindStar(Cell *sides[]) // find the values at the faces between 2 ce
     double fs[2];
     double d_fs[2];
 
-    if ((sides[0]->rho == 0.0 && sides[1]->rho != 0.0) || ((sides[1]->rho == 0.0 && sides[0]->rho == 0.0) && 0 >= (sides[1]->u - 2 * sides[1]->a / (gammma - 1)))) // vacuum left not right
+    if ((sides[0]->rho == 0.01 && sides[1]->rho != 0.01) || ((sides[1]->rho == 0.01 && sides[0]->rho == 0.01) && 0 >= (sides[1]->u - 2 * sides[1]->a / (gammma - 1)))) // vacuum left not right
     {
         if (0 >= (sides[1]->u + sides[1]->a))
         {
+            std::cout << "A" << std::endl;
             rho = sides[1]->rho;
             u = sides[1]->u;
             v = sides[1]->v; // made up
@@ -127,6 +128,7 @@ void Cell::xFindStar(Cell *sides[]) // find the values at the faces between 2 ce
         }
         else if (0 <= (sides[1]->u - 2 * sides[1]->a / (gammma - 1)))
         {
+            std::cout << "B" << std::endl;
             rho = 0;
             p = 0;
             u = 0.5 * (sides[0]->u + sides[1]->u); // SOURCE: I MADE IT UP NEED TO ASK
@@ -134,6 +136,7 @@ void Cell::xFindStar(Cell *sides[]) // find the values at the faces between 2 ce
         }
         else
         {
+            std::cout << "C" << std::endl;
             rho = sides[1]->rho * pow(2 / (gammma + 1) - (gammma - 1) / (gammma + 1) * (sides[1]->u) / sides[1]->a, 2 / (gammma - 1));
             u = 2 / (gammma + 1) * (-sides[1]->a + ((gammma - 1) / 2) * sides[1]->u);
             v = 2 / (gammma + 1) * (-sides[1]->a + ((gammma - 1) / 2) * sides[1]->v); // made up
@@ -141,10 +144,11 @@ void Cell::xFindStar(Cell *sides[]) // find the values at the faces between 2 ce
         }
         return;
     }
-    else if ((sides[1]->rho == 0.0 && sides[0]->rho != 0.0) || ((sides[1]->rho == 0.0 && sides[0]->rho == 0.0) && 0 <= (sides[0]->u + 2 * sides[0]->a / (gammma - 1)))) // vacuum right not left
+    else if ((sides[1]->rho == 0.01 && sides[0]->rho != 0.01) || ((sides[1]->rho == 0.01 && sides[0]->rho == 0.01) && 0 <= (sides[0]->u + 2 * sides[0]->a / (gammma - 1)))) // vacuum right not left
     {
         if (0 <= (sides[0]->u - sides[0]->a))
         {
+            std::cout << "D" << std::endl;
             rho = sides[1]->rho;
             u = sides[1]->u;
             v = sides[1]->v; // made up
@@ -152,6 +156,7 @@ void Cell::xFindStar(Cell *sides[]) // find the values at the faces between 2 ce
         }
         else if (0 >= (sides[0]->u + 2 * sides[0]->a / (gammma - 1)))
         {
+            std::cout << "E" << std::endl;
             rho = 0;
             p = 0;
             u = 0.5 * (sides[0]->u + sides[1]->u); // SOURCE: I MADE IT UP NEED TO ASK
@@ -159,15 +164,17 @@ void Cell::xFindStar(Cell *sides[]) // find the values at the faces between 2 ce
         }
         else
         {
+            std::cout << "F" << std::endl;
             rho = sides[0]->rho * pow(2 / (gammma + 1) - (gammma - 1) / (gammma + 1) * (sides[0]->u) / sides[0]->a, 2 / (gammma - 1));
-            u = 2 / (gammma + 1) * (-sides[0]->a + ((gammma - 1) / 2) * sides[0]->u);
-            v = 2 / (gammma + 1) * (-sides[0]->a + ((gammma - 1) / 2) * sides[0]->v); // made up
+            u = 2 / (gammma + 1) * (sides[0]->a + ((gammma - 1) / 2) * sides[0]->u);
+            v = 2 / (gammma + 1) * (sides[0]->a + ((gammma - 1) / 2) * sides[0]->v); // made up
             p = sides[0]->p * pow(2 / (gammma + 1) - (gammma - 1) / (gammma + 1) * (sides[0]->u) / sides[0]->a, (2 * gammma) / (gammma - 1));
         }
         return;
     }
-    else if (sides[1]->rho == 0.0 && sides[0]->rho == 0.0) // vacuum left and right
+    else if (sides[1]->rho == 0.01 && sides[0]->rho == 0.01) // vacuum left and right
     {
+        std::cout << "G" << std::endl;
         rho = 0;
         p = 0;
         u = 0.5 * (sides[0]->u + sides[1]->u); // SOURCE: I MADE IT UP NEED TO ASK
@@ -257,6 +264,13 @@ void Cell::xFindStar(Cell *sides[]) // find the values at the faces between 2 ce
             else
                 p = TOL;
         }
+        else if (errorStage == 5)
+        {
+        }
+        else if (errorStage == 6)
+        {
+            p = 1 * pow(10, -6);
+        }
         else
         {
             std::cout << "Error converging on p in x" << std::endl;
@@ -339,17 +353,19 @@ void Cell::yFindStar(Cell *sides[]) // same as the x but with x and y and u and 
     double fs[2];
     double d_fs[2];
 
-    if ((sides[0]->rho == 0.0 && sides[1]->rho != 0.0) || ((sides[1]->rho == 0.0 && sides[0]->rho == 0.0) && 0 >= (sides[1]->v - 2 * sides[1]->a / (gammma - 1)))) // vacuum left not right
+    if ((sides[0]->rho == 0.01 && sides[1]->rho != 0.01) || ((sides[1]->rho == 0.01 && sides[0]->rho == 0.01) && 0 >= (sides[1]->v - 2 * sides[1]->a / (gammma - 1)))) // vacuum left not right
     {
         if (0 >= (sides[1]->v + sides[1]->a))
         {
+            std::cout << "Ay" << std::endl;
             rho = sides[1]->rho;
             v = sides[1]->v;
             u = sides[1]->u; // made up
             p = sides[1]->p;
         }
-        else if (0 <= (sides[1]->u - 2 * sides[1]->a / (gammma - 1)))
+        else if (0 <= (sides[1]->v - 2 * sides[1]->a / (gammma - 1)))
         {
+            std::cout << "By" << std::endl;
             rho = 0;
             p = 0;
             v = 0.5 * (sides[0]->v + sides[1]->v); // SOURCE: I MADE IT UP NEED TO ASK
@@ -357,6 +373,7 @@ void Cell::yFindStar(Cell *sides[]) // same as the x but with x and y and u and 
         }
         else
         {
+            std::cout << "Cy" << std::endl;
             rho = sides[1]->rho * pow(2 / (gammma + 1) - (gammma - 1) / (gammma + 1) * (sides[1]->v) / sides[1]->a, 2 / (gammma - 1));
             v = 2 / (gammma + 1) * (-sides[1]->a + ((gammma - 1) / 2) * sides[1]->v); // made up
             u = 2 / (gammma + 1) * (-sides[1]->a + ((gammma - 1) / 2) * sides[1]->u);
@@ -364,10 +381,11 @@ void Cell::yFindStar(Cell *sides[]) // same as the x but with x and y and u and 
         }
         return;
     }
-    else if ((sides[1]->rho == 0.0 && sides[0]->rho != 0.0) || ((sides[1]->rho == 0.0 && sides[0]->rho == 0.0) && 0 <= (sides[0]->v + 2 * sides[0]->a / (gammma - 1)))) // vacuum right not left
+    else if ((sides[1]->rho == 0.01 && sides[0]->rho != 0.01) || ((sides[1]->rho == 0.01 && sides[0]->rho == 0.01) && 0 <= (sides[0]->v + 2 * sides[0]->a / (gammma - 1)))) // vacuum right not left
     {
         if (0 <= (sides[0]->v - sides[0]->a))
         {
+            std::cout << "Dy" << std::endl;
             rho = sides[1]->rho;
             v = sides[1]->v; // made up
             u = sides[1]->u;
@@ -375,6 +393,7 @@ void Cell::yFindStar(Cell *sides[]) // same as the x but with x and y and u and 
         }
         else if (0 >= (sides[0]->v + 2 * sides[0]->a / (gammma - 1)))
         {
+            std::cout << "Ey" << std::endl;
             rho = 0;
             p = 0;
             v = 0.5 * (sides[0]->v + sides[1]->v); // SOURCE: I MADE IT UP NEED TO ASK
@@ -382,6 +401,7 @@ void Cell::yFindStar(Cell *sides[]) // same as the x but with x and y and u and 
         }
         else
         {
+            std::cout << "Fy" << std::endl;
             rho = sides[0]->rho * pow(2 / (gammma + 1) - (gammma - 1) / (gammma + 1) * (sides[0]->v) / sides[0]->a, 2 / (gammma - 1));
             v = 2 / (gammma + 1) * (-sides[0]->a + ((gammma - 1) / 2) * sides[0]->v); // made up
             u = 2 / (gammma + 1) * (-sides[0]->a + ((gammma - 1) / 2) * sides[0]->u);
@@ -389,8 +409,9 @@ void Cell::yFindStar(Cell *sides[]) // same as the x but with x and y and u and 
         }
         return;
     }
-    else if (sides[1]->rho == 0.0 && sides[0]->rho == 0.0) // vacuum left and right
+    else if (sides[1]->rho == 0.01 && sides[0]->rho == 0.01) // vacuum left and right
     {
+        std::cout << "Gy" << std::endl;
         rho = 0;
         p = 0;
         v = 0.5 * (sides[0]->v + sides[1]->v); // SOURCE: I MADE IT UP NEED TO ASK
@@ -444,7 +465,7 @@ void Cell::yFindStar(Cell *sides[]) // same as the x but with x and y and u and 
                 p = (ge_L * sides[0]->p + ge_R * sides[1]->p - (sides[1]->v - sides[0]->v)) / (ge_L + ge_R);
             }
         }
-        else if (errorStage == 1)
+        else if (errorStage == 1) // this error stage stuff is not optimal, should pick the p guess from inital conditions
         {
             p = pow((sides[0]->a + sides[1]->a - 0.5 * (gammma - 1) * (sides[1]->v - sides[0]->v)) / (sides[0]->a / pow(sides[0]->p, (gammma - 1) / (2 * gammma)) + sides[1]->a / pow(sides[1]->p, (gammma - 1) / (2 * gammma))), (2 * gammma) / (gammma - 1));
         }
@@ -478,6 +499,13 @@ void Cell::yFindStar(Cell *sides[]) // same as the x but with x and y and u and 
                 p = p_TS;
             else
                 p = TOL;
+        }
+        else if (errorStage == 5)
+        {
+        }
+        else if (errorStage == 6)
+        {
+            p = 1 * pow(10, -6);
         }
         else
         {

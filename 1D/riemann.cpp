@@ -94,7 +94,7 @@ void sodTests(int caseTest) // run a sod test case and get the results to csv
     else
     {
         _left->updatePrimatives(0.76657, 1.24179, 0.829351);
-        _right->updatePrimatives(0.000043548100000000, 0.000486327, -0.0234923);
+        _right->updatePrimatives(0.0000435481, 0.000486327, -0.0234923);
     }
 
     Point *sides[2];

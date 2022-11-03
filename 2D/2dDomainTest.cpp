@@ -32,9 +32,9 @@ void saveDomain(Domain2D *domain, int num)
 
 int main()
 {
-    int xCellCount = 32;
-    int yCellCount = 32;
-    int iterations = 100;
+    int xCellCount = 100;
+    int yCellCount = 100;
+    int iterations = 200;
     double elapsedTime = 0;
     int domainCount = 4;
 
