@@ -16,6 +16,7 @@ class Domain{
     Domain(double xPhysical, int pointsSize);
     void updatePoints();
     void findHalfs();
+    double timeStep();
 };
 
 

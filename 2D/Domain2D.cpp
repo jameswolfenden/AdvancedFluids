@@ -2,6 +2,7 @@
 #include <iostream>
 #include "Domain2D.h"
 #include "../fluidConsts.h"
+#include "SolveRiemann.h"
 
 Domain2D::Domain2D(double xPhysical, double yPhysical, int xCellCount, int yCellCount, std::vector<bool> ghostFaces, double p, double rho, double u, double v)
 {
@@ -19,7 +20,6 @@ Domain2D::Domain2D(double xPhysical, double yPhysical, int xCellCount, int yCell
     xFaces.resize(xFaceCount, std::vector<Cell>(yCellCount)); // the faces vectors are 'oversized', there are some faces with ghost cells on both sides but makes indexing easier
     yFaces.resize(xCellCount, std::vector<Cell>(yFaceCount));
 
-
     // this may not work if there is initial velocity as the ghost cells will not be inverted
     for (int x = 0; x < (xCellCount); x++) // include ghost cells
     {
@@ -28,7 +28,7 @@ Domain2D::Domain2D(double xPhysical, double yPhysical, int xCellCount, int yCell
             cells[x][y].updatePrimatives(p, rho, u, v); // set inital conditions for entire domain
         }
     }
-    //setGhostCells();
+    // setGhostCells();
 }
 
 void Domain2D::xfindFaces()
@@ -38,11 +38,13 @@ void Domain2D::xfindFaces()
         for (int x = 0; x < xFaceCount; x++)
         {
             // each side is a pointer to the cell on each side of the face
-            Cell *xSides[2];
-            xSides[0] = &cells[x][y];
-            xSides[1] = &cells[x + 1][y];
-            //std::cout << "x: " << x << " and " << x+1 << " , y: " << y << std::endl;
-            xFaces[x][y].xFindStar(xSides); // find the star values for the half point
+            //            Cell *xSides[2];
+            //            xSides[0] = &cells[x][y];
+            //            xSides[1] = &cells[x + 1][y];
+            // std::cout << "x: " << x << " and " << x+1 << " , y: " << y << std::endl;
+            //            xFaces[x][y].xFindStar(xSides); // find the star values for the half point
+
+            xFaces[x][y].updatePrimatives(SolveRiemann::getStars(cells[x][y].p, cells[x][y].rho, cells[x][y].u, cells[x][y].v, cells[x][y].a, cells[x + 1][y].p, cells[x + 1][y].rho, cells[x + 1][y].u, cells[x + 1][y].v, cells[x + 1][y].a));
         }
     }
 }
@@ -54,23 +56,25 @@ void Domain2D::yFindFaces()
         for (int y = 0; y < yFaceCount; y++)
         {
             // each side is a pointer to the cell on each side of the face
-            Cell *ySides[2];
-            ySides[0] = &cells[x][y];
-            ySides[1] = &cells[x][y + 1];
-            //std::cout << "x: " << x << " , y: " << y << " and " << y + 1 << std::endl;
-            yFaces[x][y].yFindStar(ySides); // find the star values for the half point
+            //            Cell *ySides[2];
+            //            ySides[0] = &cells[x][y];
+            //            ySides[1] = &cells[x][y + 1];
+            // std::cout << "x: " << x << " , y: " << y << " and " << y + 1 << std::endl;
+            //            yFaces[x][y].yFindStar(ySides); // find the star values for the half point
+
+            yFaces[x][y].updatePrimatives(SolveRiemann::getStars(cells[x][y].p, cells[x][y].rho, cells[x][y].v, cells[x][y].u, cells[x][y].a, cells[x][y + 1].p, cells[x][y + 1].rho, cells[x][y + 1].v, cells[x][y + 1].u, cells[x][y + 1].a));
         }
     }
 }
 
-void Domain2D::updateCells(std::vector<Domain2D*> sideDomains, double minT) // currently using XY, should change to XYYX or better for more accuracy
+void Domain2D::updateCells(std::vector<Domain2D *> sideDomains, double minT) // currently using XY, should change to XYYX or better for more accuracy
 {
     xUpdateCells(minT, sideDomains);
     yUpdateCells(minT, sideDomains);
     yUpdateCells(minT, sideDomains);
     xUpdateCells(minT, sideDomains);
 }
-void Domain2D::xUpdateCells(double minT, std::vector<Domain2D*> sideDomains)
+void Domain2D::xUpdateCells(double minT, std::vector<Domain2D *> sideDomains)
 {
     xfindFaces();
     for (int y = 1; y < (yCellCount - 1); y++) // loop through all non edge cells
@@ -87,9 +91,9 @@ void Domain2D::xUpdateCells(double minT, std::vector<Domain2D*> sideDomains)
     }
     setGhostCells(sideDomains);
 }
-void Domain2D::yUpdateCells(double minT, std::vector<Domain2D*> sideDomains)
+void Domain2D::yUpdateCells(double minT, std::vector<Domain2D *> sideDomains)
 
-    {
+{
     yFindFaces();
     for (int x = 1; x < (xCellCount - 1); x++) // loop through all non edge cells
     {
@@ -106,52 +110,35 @@ void Domain2D::yUpdateCells(double minT, std::vector<Domain2D*> sideDomains)
     setGhostCells(sideDomains);
 }
 
-
-void Domain2D::setGhostCells(std::vector<Domain2D*> sideDomains) // set the ghost cells on all 4 sides, invert the velocities that collide with the wall
+void Domain2D::setGhostCells(std::vector<Domain2D *> sideDomains) // set the ghost cells on all 4 sides, invert the velocities that collide with the wall
 {
     for (int x = 1; x < (xCellCount - 1); x++) // ghost cells
     {
         if (ghostFaces[0])
-        {
             cells[x][0].updatePrimatives(cells[x][1].p, cells[x][1].rho, cells[x][1].u, -cells[x][1].v);
-        }
         else
-        {
-            cells[x][0].updatePrimatives(sideDomains[0]->cells[x][sideDomains[0]->yCellCount-2].p, sideDomains[0]->cells[x][sideDomains[0]->yCellCount-2].rho, sideDomains[0]->cells[x][sideDomains[0]->yCellCount-2].u, sideDomains[0]->cells[x][sideDomains[0]->yCellCount-2].v);
-        }
+            cells[x][0].updatePrimatives(sideDomains[0]->cells[x][sideDomains[0]->yCellCount - 2].p, sideDomains[0]->cells[x][sideDomains[0]->yCellCount - 2].rho, sideDomains[0]->cells[x][sideDomains[0]->yCellCount - 2].u, sideDomains[0]->cells[x][sideDomains[0]->yCellCount - 2].v);
         if (ghostFaces[1])
-        {
             cells[x][yCellCount - 1].updatePrimatives(cells[x][yCellCount - 2].p, cells[x][yCellCount - 2].rho, cells[x][yCellCount - 2].u, -cells[x][yCellCount - 2].v);
-        }
         else
-        {
             cells[x][yCellCount - 1].updatePrimatives(sideDomains[1]->cells[x][1].p, sideDomains[1]->cells[x][1].rho, sideDomains[1]->cells[x][1].u, sideDomains[1]->cells[x][1].v);
-        }
     }
     for (int y = 1; y < (yCellCount - 1); y++) // ghost cells
     {
         if (ghostFaces[2])
-        {
             cells[0][y].updatePrimatives(cells[1][y].p, cells[1][y].rho, -cells[1][y].u, cells[1][y].v);
-        }
         else
-        {
-            cells[0][y].updatePrimatives(sideDomains[2]->cells[sideDomains[2]->xCellCount-2][y].p, sideDomains[2]->cells[sideDomains[2]->xCellCount-2][y].rho, sideDomains[2]->cells[sideDomains[2]->xCellCount-2][y].u, sideDomains[2]->cells[sideDomains[2]->xCellCount-2][y].v);
-        }
+            cells[0][y].updatePrimatives(sideDomains[2]->cells[sideDomains[2]->xCellCount - 2][y].p, sideDomains[2]->cells[sideDomains[2]->xCellCount - 2][y].rho, sideDomains[2]->cells[sideDomains[2]->xCellCount - 2][y].u, sideDomains[2]->cells[sideDomains[2]->xCellCount - 2][y].v);
         if (ghostFaces[3])
-        {
             cells[xCellCount - 1][y].updatePrimatives(cells[xCellCount - 2][y].p, cells[xCellCount - 2][y].rho, -cells[xCellCount - 2][y].u, cells[xCellCount - 2][y].v);
-        }
         else
-        {
             cells[xCellCount - 1][y].updatePrimatives(sideDomains[3]->cells[1][y].p, sideDomains[3]->cells[1][y].rho, sideDomains[3]->cells[1][y].u, sideDomains[3]->cells[1][y].v);
-        }
     }
 }
 
 double Domain2D::timeStep()
 {
-    double step = 1000000; // high value so its larger then all starting, should change to some inital calc
+    double step = 1000000;                   // high value so its larger then all starting, should change to some inital calc
     for (int x = 1; x < xCellCount - 1; x++) // loop through all non-ghost cells
     {
         for (int y = 1; y < yCellCount - 1; y++)

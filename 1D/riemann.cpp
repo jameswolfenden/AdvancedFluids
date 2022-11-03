@@ -75,11 +75,26 @@ void sodTests(int caseTest) // run a sod test case and get the results to csv
         _left->updatePrimatives(0.4, 1.0, -2.0);
         _right->updatePrimatives(0.4, 1.0, 2.0);
     }
-    else
+    else if (caseTest == 3)
     {
-        _left->updatePrimatives(0.1, 0.1, -0.16625);
-        _right->updatePrimatives(0.1, 0.1, 0.195244);  
+        _left->updatePrimatives(1000.0, 1.0, 0.0);
+        _right->updatePrimatives(0.01, 1.0, 0.0);
     }
+    else if (caseTest == 4)
+    {
+        _left->updatePrimatives(0.01, 1.0, 0.0);
+        _right->updatePrimatives(100.0, 1.0, 0.0);
+    }
+    else if (caseTest == 5)
+    {
+        _left->updatePrimatives(460.894, 5.99924, 19.5975);
+        _right->updatePrimatives(46.0950, 5.99242, -6.19633);
+    }
+    else {
+        _left->updatePrimatives(0.0572443, 0.072785, 0.127178);
+        _right->updatePrimatives(-0.361079, 0.0078484, 0.349665);
+    }
+
     Point *sides[2];
     sides[0] = _left;
     sides[1] = _right;
@@ -94,7 +109,7 @@ void domainTest() // run a test on a domain (1d)
 {
     std::cout << "domaintest" << std::endl;
     int pointsSize = 1000;
-    Domain domain(1,pointsSize); // create new domain of physical size 1
+    Domain domain(1, pointsSize); // create new domain of physical size 1
     int iterations = 7500;
     // create 2d vectors of rho,u,p as arrays don't can't be this large
     // Should change to vector of points or get rid of entirely
@@ -131,16 +146,14 @@ void domainTest() // run a test on a domain (1d)
                 uCSV << ",";
                 pCSV << ",";
             }
-
         }
         // ts[i] = domain.elapsedTime; // put the elapsed time into the vector for the current iteration
         rhoCSV << "\n"; // use n not endl as much faster
         uCSV << "\n";
         pCSV << "\n";
         tCSV << domain.elapsedTime << "\n";
-
     }
-        rhoCSV.close();
+    rhoCSV.close();
     uCSV.close();
     pCSV.close();
     tCSV.close();
@@ -183,8 +196,8 @@ void domainTest() // run a test on a domain (1d)
 
 int main()
 {
-        std::cout << "running" << std::endl;
-  //  sodTests(1);
+    std::cout << "running" << std::endl;
+    //sodTests(333);
 
     domainTest();
 }

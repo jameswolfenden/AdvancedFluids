@@ -32,8 +32,8 @@ void saveDomain(Domain2D *domain, int num)
 
 int main()
 {
-    int xCellCount = 128;
-    int yCellCount = 64;
+    int xCellCount = 32;
+    int yCellCount = 32;
     int iterations = 39;
     double elapsedTime = 0;
     int domainCount = 4;
@@ -46,10 +46,10 @@ int main()
     std::vector<std::vector<Domain2D *>> domainsTransmissive;
     domainsTransmissive.resize(domainCount, std::vector<Domain2D *>(4));
     std::vector<Domain2D> domains = {
-        Domain2D(1, 0.5, xCellCount, yCellCount, domainsGhosts[0], 0.1, 0.125, 0.0, 0.0),
-        Domain2D(1, 0.5, xCellCount, yCellCount, domainsGhosts[1], 1, 1, 0.0, 0.0),
-        Domain2D(1, 0.5, xCellCount, yCellCount, domainsGhosts[2], 0.1, 0.125, 0.0, 0.0),
-        Domain2D(1, 0.5, xCellCount, yCellCount, domainsGhosts[3], 0.1, 0.125, 0.0, 0.0)};
+        Domain2D(1, 1, xCellCount, yCellCount, domainsGhosts[0], 0.1, 0.125, 0.0, 0.0),
+        Domain2D(1, 1, xCellCount, yCellCount, domainsGhosts[1], 1, 1, 0.0, 0.0),
+        Domain2D(1, 1, xCellCount, yCellCount, domainsGhosts[2], 0.1, 0.125, 0.0, 0.0),
+        Domain2D(1, 1, xCellCount, yCellCount, domainsGhosts[3], 0.1, 0.125, 0.0, 0.0)};
     domainsTransmissive[0][0] = &domains[1];
     domainsTransmissive[0][2] = &domains[2];
     domainsTransmissive[0][3] = &domains[3];
