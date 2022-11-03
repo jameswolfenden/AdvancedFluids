@@ -17,6 +17,7 @@ void saveToCSV(WavesDataPoint star, Point *sides[2]) // for saving the results o
     csvFile.open("save2.csv");
     csvFile << "p*," << star.p << "\n";
     csvFile << "u*," << star.u << "\n";
+    csvFile << "rho*," << star.rho << "\n";
     csvFile << "rho*L," << star.rhos[0] << "\n";
     csvFile << "rho*R," << star.rhos[1] << "\n";
     csvFile << "uShock," << star.uShock << "\n";
@@ -90,9 +91,10 @@ void sodTests(int caseTest) // run a sod test case and get the results to csv
         _left->updatePrimatives(460.894, 5.99924, 19.5975);
         _right->updatePrimatives(46.0950, 5.99242, -6.19633);
     }
-    else {
-        _left->updatePrimatives(0.0572443, 0.072785, 0.127178);
-        _right->updatePrimatives(-0.361079, 0.0078484, 0.349665);
+    else
+    {
+        _left->updatePrimatives(0.76657, 1.24179, 0.829351);
+        _right->updatePrimatives(0.000043548100000000, 0.000486327, -0.0234923);
     }
 
     Point *sides[2];
@@ -197,7 +199,7 @@ void domainTest() // run a test on a domain (1d)
 int main()
 {
     std::cout << "running" << std::endl;
-    //sodTests(333);
+    sodTests(333);
 
-    domainTest();
+    // domainTest();
 }

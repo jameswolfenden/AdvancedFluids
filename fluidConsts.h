@@ -3,7 +3,7 @@
 
 const double gammma = 1.4;
 const double TOL = 0.000001;
-const bool waveOutput = false;
+const bool waveOutput = true;
 const bool domainOutput = false;
 
 
