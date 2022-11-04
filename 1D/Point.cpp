@@ -60,7 +60,7 @@ void Point::findStar(Point *sides[])
     double fs[2];
     double d_fs[2];
 
-    if ((sides[0]->rho == 0.0 && sides[1]->rho != 0.0) || ((sides[1]->rho == 0.0 && sides[0]->rho == 0.0)&&0>=(sides[1]->u - 2 * sides[1]->a / (gammma - 1)))) // vacuum left not right
+    if ((sides[0]->rho == 0.0 && sides[1]->rho != 0.0) || ((sides[1]->rho == 0.0 && sides[0]->rho == 0.0) && 0 >= (sides[1]->u - 2 * sides[1]->a / (gammma - 1)))) // vacuum left not right
     {
         if (0 >= (sides[1]->u + sides[1]->a))
         {
@@ -82,7 +82,7 @@ void Point::findStar(Point *sides[])
         }
         return;
     }
-    else if ((sides[1]->rho == 0.0 && sides[0]->rho != 0.0)||((sides[1]->rho == 0.0 && sides[0]->rho == 0.0)&&0<=(sides[0]->u + 2 * sides[0]->a / (gammma - 1)))) // vacuum right not left
+    else if ((sides[1]->rho == 0.0 && sides[0]->rho != 0.0) || ((sides[1]->rho == 0.0 && sides[0]->rho == 0.0) && 0 <= (sides[0]->u + 2 * sides[0]->a / (gammma - 1)))) // vacuum right not left
     {
         if (0 <= (sides[0]->u - sides[0]->a))
         {
@@ -163,6 +163,7 @@ void Point::findStar(Point *sides[])
         else if (errorStage == 1) // this error stage stuff is not optimal, should pick the p guess from inital conditions
         {
             p = pow((sides[0]->a + sides[1]->a - 0.5 * (gammma - 1) * (sides[1]->u - sides[0]->u)) / (sides[0]->a / pow(sides[0]->p, (gammma - 1) / (2 * gammma)) + sides[1]->a / pow(sides[1]->p, (gammma - 1) / (2 * gammma))), (2 * gammma) / (gammma - 1));
+//doesnt work because uR is too big
         }
         else if (errorStage == 2)
         {

@@ -34,7 +34,7 @@ int main()
 {
     int xCellCount = 100;
     int yCellCount = 100;
-    int iterations = 200;
+    int iterations = 100;
     double elapsedTime = 0;
     int domainCount = 4;
 

@@ -91,11 +91,11 @@ void Cell::updateConservatives(double u1, double u2, double u3, double u4) // up
 }
 void Cell::updatePrimatives(double p, double rho, double u, double v)
 {
-    if (p <= 0.001 || rho <= 0.001)
-    {
-        this->p = 0.01;
-        this->rho = 0.01;
-    }
+    if (p <= 0.001 || rho <= 0.001) // this is different to the number used in the vacuum shit to diagnose that the problem is not within the vacuum shit
+   {
+      this->p = 0.001; // value not zero so other calcs still work
+      this->rho = 0.001;
+   }
     else
     {
         this->p = p;
