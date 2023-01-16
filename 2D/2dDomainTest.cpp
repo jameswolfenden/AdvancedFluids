@@ -3,7 +3,7 @@
 #include <fstream>
 #include <algorithm>
 
-void saveDomain(Domain2D *domain, int num)
+void saveDomain(Domain2D *domain, int num) // each domain is saved seperatly 
 {
     std::ofstream pCells, rhoCells, uCells, vCells;
     pCells.open("pCells" + std::to_string(num) + ".csv");
@@ -38,32 +38,32 @@ int main()
     double elapsedTime = 0;
     int domainCount = 4;
 
-    std::vector<std::vector<bool>> domainsGhosts = {
-        {false, true, false, false},
-        {true, false, true, true},
-        {true, true, true, false},
-        {true, true, false, true}};
+    std::vector<std::vector<bool>> domainsGhosts = { // order of sides is top of domain, bottom, left, right
+        {false, true, false, false}, // centre bottom
+        {true, false, true, true}, // top
+        {true, true, true, false}, // left
+        {true, true, false, true}}; // right
     std::vector<std::vector<Domain2D *>> domainsTransmissive;
     domainsTransmissive.resize(domainCount, std::vector<Domain2D *>(4));
     std::vector<Domain2D> domains = {
-        Domain2D(1, 1, xCellCount, yCellCount, domainsGhosts[0], 0.1, 0.125, 0.0, 0.0),
-        Domain2D(1, 1, xCellCount, yCellCount, domainsGhosts[1], 1, 1, 0.0, 0.0),
-        Domain2D(1, 1, xCellCount, yCellCount, domainsGhosts[2], 0.1, 0.125, 0.0, 0.0),
-        Domain2D(1, 1, xCellCount, yCellCount, domainsGhosts[3], 0.1, 0.125, 0.0, 0.0)};
-    domainsTransmissive[0][0] = &domains[1];
-    domainsTransmissive[0][2] = &domains[2];
-    domainsTransmissive[0][3] = &domains[3];
-    domainsTransmissive[1][1] = &domains[0];
-    domainsTransmissive[2][3] = &domains[0];
-    domainsTransmissive[3][2] = &domains[0];
+        Domain2D(1, 1, xCellCount, yCellCount, domainsGhosts[0], 0.1, 0.125, 0.0, 0.0), // centre bottom
+        Domain2D(1, 1, xCellCount, yCellCount, domainsGhosts[1], 1, 1, 0.0, 0.0), // top
+        Domain2D(1, 1, xCellCount, yCellCount, domainsGhosts[2], 0.1, 0.125, 0.0, 0.0), // left
+        Domain2D(1, 1, xCellCount, yCellCount, domainsGhosts[3], 0.1, 0.125, 0.0, 0.0)}; //right
+    domainsTransmissive[0][0] = &domains[1]; // top of centre bottom domain is transmissive to top domain
+    domainsTransmissive[0][2] = &domains[2]; // left of centre bottom domain is transmissive to left domain
+    domainsTransmissive[0][3] = &domains[3]; // right of centre bottom domain is transmissive to right domain
+    domainsTransmissive[1][1] = &domains[0]; // bottom of top domain is transmissive to bottom domain
+    domainsTransmissive[2][3] = &domains[0]; // right of left domain is transmissive to centre bottom domain
+    domainsTransmissive[3][2] = &domains[0]; // left of right domain is transmissive to centre bottom domain
 
     for (int i = 0; i < iterations; i++) // iterate updating the domain's cells
     {
         std::cout << "Starting iteration " << i << std::endl;
-        double timeStep = std::min({domains[0].timeStep(), domains[1].timeStep(), domains[2].timeStep(), domains[3].timeStep()});
+        double timeStep = std::min({domains[0].timeStep(), domains[1].timeStep(), domains[2].timeStep(), domains[3].timeStep()}); // find smallest allowable timestep from all domains
         for (int domain = 0; domain < domainCount; domain++)
         {
-            domains[domain].updateCells(domainsTransmissive[domain], timeStep);
+            domains[domain].updateCells(domainsTransmissive[domain], timeStep); // update each domain by the allowable timestep, pointer to the transmissive domains passed
         }
         elapsedTime += (timeStep * 2); // not entirely sure its x2 but i think so as it iterates 2 with xyyx
     }

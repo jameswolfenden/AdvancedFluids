@@ -1,0 +1,257 @@
+#include "SolveRiemann.h"
+#include <cmath>
+#include "../fluidConsts.h"
+#include <iostream>
+
+
+void SolveRiemann::findStar(double &rhoL, double &uL, double &vL, double &aL, double &pL, double &rhoR, double &uR, double &vR, double &aR, double &pR) // find the values at the faces between 2 cells adjacent in x
+{
+
+    double change;
+    int count = 0;
+    int errorStage = 0;
+    bool iterate = true;
+    double fsL, fsR;
+    double d_fsL, d_fsR;
+    double p,rho,u,v;
+
+    if ((rhoL == 0.01 && rhoR != 0.01) || ((rhoR == 0.01 && rhoL == 0.01) && 0 >= (uR - 2 * aR / (gammma - 1)))) // vacuum left not right
+    {
+        if (0 >= (uR + aR))
+        {
+            std::cout << "A" << std::endl;
+            rho = rhoR;
+            u = uR;
+            v = vR; // made up
+            p = pR;
+        }
+        else if (0 <= (uR - 2 * aR / (gammma - 1)))
+        {
+            std::cout << "B" << std::endl;
+            rho = 0;
+            p = 0;
+            u = 0.5 * (uL + uR); // SOURCE: I MADE IT UP NEED TO ASK
+            v = 0.5 * (vL + vR); // SOURCE: I MADE IT UP NEED TO ASK
+        }
+        else
+        {
+            std::cout << "C" << std::endl;
+            rho = rhoR * pow(2 / (gammma + 1) - (gammma - 1) / (gammma + 1) * (uR) / aR, 2 / (gammma - 1));
+            u = 2 / (gammma + 1) * (-aR + ((gammma - 1) / 2) * uR);
+            v = 2 / (gammma + 1) * (-aR + ((gammma - 1) / 2) * vR); // made up
+            p = pR * pow(2 / (gammma + 1) - (gammma - 1) / (gammma + 1) * (uR) / aR, (2 * gammma) / (gammma - 1));
+        }
+        return;
+    }
+    else if ((rhoR == 0.01 && rhoL != 0.01) || ((rhoR == 0.01 && rhoL == 0.01) && 0 <= (uL + 2 * aL / (gammma - 1)))) // vacuum right not left
+    {
+        if (0 <= (uL - aL))
+        {
+            std::cout << "D" << std::endl;
+            rho = rhoR;
+            u = uR;
+            v = vR; // made up
+            p = pR;
+        }
+        else if (0 >= (uL + 2 * aL / (gammma - 1)))
+        {
+            std::cout << "E" << std::endl;
+            rho = 0;
+            p = 0;
+            u = 0.5 * (uL + uR); // SOURCE: I MADE IT UP NEED TO ASK
+            v = 0.5 * (vL + vR); // SOURCE: I MADE IT UP NEED TO ASK
+        }
+        else
+        {
+            std::cout << "F" << std::endl;
+            rho = rhoL * pow(2 / (gammma + 1) - (gammma - 1) / (gammma + 1) * (uL) / aL, 2 / (gammma - 1));
+            u = 2 / (gammma + 1) * (aL + ((gammma - 1) / 2) * uL);
+            v = 2 / (gammma + 1) * (aL + ((gammma - 1) / 2) * vL); // made up
+            p = pL * pow(2 / (gammma + 1) - (gammma - 1) / (gammma + 1) * (uL) / aL, (2 * gammma) / (gammma - 1));
+        }
+        return;
+    }
+    else if (rhoR == 0.01 && rhoL == 0.01) // vacuum left and right
+    {
+        std::cout << "G" << std::endl;
+        rho = 0;
+        p = 0;
+        u = 0.5 * (uL + uR); // SOURCE: I MADE IT UP NEED TO ASK
+        v = 0.5 * (vL + vR); // SOURCE: I MADE IT UP NEED TO ASK
+        return;
+    }
+
+    while (iterate) // loop to try all the initial p values
+    {
+        // different guesses for p
+        if (errorStage == 0)
+        {
+
+            double G1 = (gammma - 1) / (2 * gammma);
+            double G2 = (gammma + 1) / (2 * gammma);
+            double G3 = 2 * gammma / (gammma - 1);
+            double G4 = 2 / (gammma - 1);
+            double G5 = 2 / (gammma + 1);
+            double G6 = (gammma - 1) / (gammma + 1);
+            double G7 = (gammma - 1) / 2;
+            double G8 = gammma - 1;
+
+            double q_user = 2.0;
+
+            double c_up = 0.25 * (rhoL + rhoR) * (aL + aR);
+            double p_PV = 0.5 * (pL + pR) + 0.5 * (uL - uR) * c_up;
+            p_PV = std::max(0.0, p_PV);
+            double p_min = std::min(pL, pR);
+            double p_max = std::max(pL, pR);
+            double q_max = p_max / p_min;
+
+            if (q_max < q_user && (p_min < p_PV && p_PV < p_max))
+            {
+                // Select PVRS Riemann solver
+                p = p_PV;
+            }
+            else if (p_PV < p_min)
+            {
+                // Select Two-Rarefaction Riemann solver
+                double p_q = pow(pL / pR, G1);
+                double u_m = (p_q * uL / aL + uR / aR + G4 * (p_q - 1.0)) / (p_q / aL + 1 / aR);
+                double p_TL = 1 + G7 * (uL - u_m) / aL;
+                double p_TR = 1 + G7 * (u_m - uR) / aR;
+                p = 0.5 * (pL * pow(p_TL, G3) + pR * pow(p_TR, G3));
+            }
+            else
+            {
+                // Select Two-Shock Riemann solver with
+                // PVRS as estimate
+                double ge_L = sqrt((G5 / rhoL) / (G6 * pL + p_PV));
+                double ge_R = sqrt((G5 / rhoR) / (G6 * pR + p_PV));
+                p = (ge_L * pL + ge_R * pR - (uR - uL)) / (ge_L + ge_R);
+            }
+        }
+        else if (errorStage == 1)
+        {
+            p = pow((aL + aR - 0.5 * (gammma - 1) * (uR - uL)) / (aL / pow(pL, (gammma - 1) / (2 * gammma)) + aR / pow(pR, (gammma - 1) / (2 * gammma))), (2 * gammma) / (gammma - 1));
+        }
+        else if (errorStage == 2)
+        {
+            p = 0.5 * (pL + pR);
+        }
+        else if (errorStage == 3)
+        {
+            double p_PV = 0.5 * (pL + pR) + 0.5 * (uL - uR) * 0.5 * (rhoL + rhoR) * 0.5 * (aL + aR);
+            if (p_PV > TOL)
+                p = p_PV;
+            else
+                p = TOL;
+        }
+        else if (errorStage == 4)
+        {
+            double p_PV = 0.5 * (pL + pR) + 0.5 * (uL - uR) * 0.5 * (rhoL + rhoR) * 0.5 * (aL + aR);
+            if (p_PV > TOL)
+                p = p_PV;
+            else
+                p = TOL;
+            double AL = 2 / ((gammma + 1) * rhoL);
+            double BL = pL * (gammma - 1) / (gammma + 1);
+            double AR = 2 / ((gammma + 1) * rhoR);
+            double BR = pR * (gammma - 1) / (gammma + 1);
+            double gL = pow(AL / (p + BL), 0.5);
+            double gR = pow(AR / (p + BR), 0.5);
+            double p_TS = (gL * pL + gR * pR - (uR - uL)) / (gL + gR);
+            if (p_TS > TOL)
+                p = p_TS;
+            else
+                p = TOL;
+        }
+        else if (errorStage == 5)
+        {
+        }
+        else if (errorStage == 6)
+        {
+            p = 1 * pow(10, -6);
+        }
+        else
+        {
+            std::cout << "Error converging on p in x" << std::endl;
+            std::cout << "pL: " << pL << ", rhoL: " << rhoL << ", uL: " << uL << ", pR: " << pR << ", rhoR: " << rhoR << ", uR: " << uR << std::endl;
+            return; // this doesnt actually stop the program but if you see that in the console the timestep is probably too small
+        }
+        count = 0;
+        while (iterate) // loop to iterate the p value
+        {
+            errno = 0;
+                double A = 2 / ((gammma + 1) * rhoL);
+                double B = pL * (gammma - 1) / (gammma + 1);
+                if (p > pL) // shock
+                {
+                    fsL = (p - pL) * pow(A / (p + B), 0.5);
+                    d_fsL = pow(A / (p + B), 0.5) * (1 - (p - pL) / (2 * (B + p)));
+                }
+                else // expansion
+                {
+                    fsL = 2 * aL / (gammma - 1) * (pow(p / pL, (gammma - 1) / (2 * gammma)) - 1);
+                    d_fsL = 1 / (rhoL * aL) * pow(p / pL, -(gammma + 1) / (2 * gammma));
+                }
+                A = 2 / ((gammma + 1) * rhoR);
+                B = pR * (gammma - 1) / (gammma + 1);
+                if (p > pR) // shock
+                {
+                    fsR = (p - pR) * pow(A / (p + B), 0.5);
+                    d_fsR = pow(A / (p + B), 0.5) * (1 - (p - pR) / (2 * (B + p)));
+                }
+                else // expansion
+                {
+                    fsR = 2 * aR / (gammma - 1) * (pow(p / pR, (gammma - 1) / (2 * gammma)) - 1);
+                    d_fsR = 1 / (rhoR * aR) * pow(p / pR, -(gammma + 1) / (2 * gammma));
+                }
+            if (errno != 0) // p is probably negative giving an issue with pow, we need the next guess of p
+            {
+                errorStage++;
+                break; // exit the iterate loop to try next p
+            }
+
+            double f = fsL + fsR - uL + uR;
+            double d_f = d_fsL + d_fsR;
+            change = f / d_f;
+            p = p - change; // Update new estimate of p*
+            count++;
+
+            if (TOL >= 2 * fabs(change / (change + 2 * p))) // iteration limit (slightly different to notes as abs of entire rhs)
+            {
+                iterate = false; // we have converged
+            }
+        }
+    }
+    u = 0.5 * (uL + uR) + 0.5 * (fsR - fsL); // u*
+    if (u >= 0)                                                    // pick rho value depending on the side of the discontinuity
+    {
+        if (p > pL)
+        {
+            rho = rhoL * (((p / pL) + ((gammma - 1) / (gammma + 1))) / (((gammma - 1) / (gammma + 1)) * (p / pL) + 1));
+        }
+        else
+        {
+            rho = rhoL * pow((p / pL), 1 / gammma);
+        }
+        v = vL;
+    }
+    else
+    {
+        if (p > pR)
+        {
+            rho = rhoR * (((p / pR) + ((gammma - 1) / (gammma + 1))) / (((gammma - 1) / (gammma + 1)) * (p / pR) + 1));
+        }
+        else
+        {
+            rho = rhoR * pow((p / pR), 1 / gammma);
+        }
+        v = vR;
+    }
+    aCalc();
+    return;
+}
+
+void SolveRiemann::testVacuum(double &rhoL, double &uL, double &vL, double &aL, double &pL, double &rhoR, double &uR, double &vR, double &aR, double &pR, double &rho, double &u, double &v, double &a, double &p)
+{
+
+}

@@ -66,7 +66,7 @@ void Domain2D::yFindFaces()
     }
 }
 
-void Domain2D::updateCells(std::vector<Domain2D *> sideDomains, double minT) // currently using XY, should change to XYYX or better for more accuracy
+void Domain2D::updateCells(std::vector<Domain2D *> sideDomains, double minT) // XYYX, could change to other method?
 {
     xUpdateCells(minT, sideDomains);
     yUpdateCells(minT, sideDomains);
