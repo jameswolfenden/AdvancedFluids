@@ -10,8 +10,6 @@ public:
     Cell(double p, double rho, double u, double v);
     void updatePrimatives(double p, double rho, double u, double v);
     void updateConservatives(double u1, double u2, double u3, double u4);
-    void xFindStar(Cell *sides[]);
-    void yFindStar(Cell *sides[]);
 };
 
 #endif

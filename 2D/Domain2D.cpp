@@ -2,6 +2,7 @@
 #include <iostream>
 #include "Domain2D.h"
 #include "../fluidConsts.h"
+#include "SolveRiemann.h"
 
 Domain2D::Domain2D(double xPhysical, double yPhysical, int xCellCount, int yCellCount, std::vector<bool> ghostFaces, double p, double rho, double u, double v)
 {
@@ -36,14 +37,7 @@ void Domain2D::xfindFaces()
     {
         for (int x = 0; x < xFaceCount; x++)
         {
-            // each side is a pointer to the cell on each side of the face
-            Cell *xSides[2];
-            xSides[0] = &cells[x][y];
-            xSides[1] = &cells[x + 1][y];
-            // std::cout << "x: " << x << " and " << x+1 << " , y: " << y << std::endl;
-            xFaces[x][y].xFindStar(xSides); // find the star values for the half point
-
-            //            xFaces[x][y].updatePrimatives(SolveRiemann::getStars(cells[x][y].p, cells[x][y].rho, cells[x][y].u, cells[x][y].v, cells[x][y].a, cells[x + 1][y].p, cells[x + 1][y].rho, cells[x + 1][y].u, cells[x + 1][y].v, cells[x + 1][y].a));
+            rSolver.findStar(cells[x][y].rho, cells[x][y].u, cells[x][y].v, cells[x][y].a, cells[x][y].p, cells[x + 1][y].rho, cells[x + 1][y].u, cells[x + 1][y].v, cells[x + 1][y].a, cells[x + 1][y].p, xFaces[x][y].rho, xFaces[x][y].u, xFaces[x][y].v, xFaces[x][y].a, xFaces[x][y].p);
         }
     }
 }
@@ -54,14 +48,7 @@ void Domain2D::yFindFaces()
     {
         for (int y = 0; y < yFaceCount; y++)
         {
-            // each side is a pointer to the cell on each side of the face
-            Cell *ySides[2];
-            ySides[0] = &cells[x][y];
-            ySides[1] = &cells[x][y + 1];
-            // std::cout << "x: " << x << " , y: " << y << " and " << y + 1 << std::endl;
-            yFaces[x][y].yFindStar(ySides); // find the star values for the half point
-
-            // yFaces[x][y].updatePrimatives(SolveRiemann::getStars(cells[x][y].p, cells[x][y].rho, cells[x][y].v, cells[x][y].u, cells[x][y].a, cells[x][y + 1].p, cells[x][y + 1].rho, cells[x][y + 1].v, cells[x][y + 1].u, cells[x][y + 1].a));
+            rSolver.findStar(cells[x][y].rho, cells[x][y].v, cells[x][y].u, cells[x][y].a, cells[x][y].p, cells[x][y+1].rho, cells[x][y+1].v, cells[x][y+1].u, cells[x][y+1].a, cells[x][y+1].p, yFaces[x][y].rho, yFaces[x][y].v, yFaces[x][y].u, yFaces[x][y].a, yFaces[x][y].p);
         }
     }
 }

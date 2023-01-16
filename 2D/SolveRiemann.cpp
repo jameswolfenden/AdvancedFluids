@@ -4,18 +4,36 @@
 #include <iostream>
 
 
-void SolveRiemann::findStar(double &rhoL, double &uL, double &vL, double &aL, double &pL, double &rhoR, double &uR, double &vR, double &aR, double &pR) // find the values at the faces between 2 cells adjacent in x
+void SolveRiemann::findStar(const double &rhoL, const double &uL, const double &vL, const double &aL, const double &pL, const double &rhoR, const double &uR, const double &vR, const double &aR, const double &pR, double &rho, double &u, double &v, double &a, double &p) // find the values at the faces between 2 cells adjacent in x
 {
+    if (testVacuum(rhoL, uL, vL, aL, pL, rhoR, uR, vR, aR, pR, rho, u, v, a, p))
+        return; // a vacuum is generated, values found without iteration required NEED TO CHECK SPEED OF SOUND!!!!!
 
-    double change;
-    int count = 0;
-    int errorStage = 0;
-    bool iterate = true;
-    double fsL, fsR;
-    double d_fsL, d_fsR;
-    double p,rho,u,v;
+    iterateP(rhoL, uL, vL, aL, pL, rhoR, uR, vR, aR, pR, rho, u, v, a, p);
 
-    if ((rhoL == 0.01 && rhoR != 0.01) || ((rhoR == 0.01 && rhoL == 0.01) && 0 >= (uR - 2 * aR / (gammma - 1)))) // vacuum left not right
+    if (u >= 0)                                                    // pick rho value depending on the side of the discontinuity
+    {
+        if (p > pL)
+            rho = rhoL * (((p / pL) + ((gammma - 1) / (gammma + 1))) / (((gammma - 1) / (gammma + 1)) * (p / pL) + 1));
+        else
+            rho = rhoL * pow((p / pL), 1 / gammma);
+        v = vL;
+    }
+    else
+    {
+        if (p > pR)
+            rho = rhoR * (((p / pR) + ((gammma - 1) / (gammma + 1))) / (((gammma - 1) / (gammma + 1)) * (p / pR) + 1));
+        else
+            rho = rhoR * pow((p / pR), 1 / gammma);
+        v = vR;
+    }
+    a = sqrt((gammma * p) / rho);
+    return;
+}
+
+bool SolveRiemann::testVacuum(const double &rhoL, const double &uL, const double &vL, const double &aL, const double &pL, const double &rhoR, const double &uR, const double &vR, const double &aR, const double &pR, double &rho, double &u, double &v, double &a, double &p)
+{
+    if ((rhoL == 0.0 && rhoR != 0.0) || ((rhoR == 0.0 && rhoL == 0.0) && 0 >= (uR - 2 * aR / (gammma - 1)))) // vacuum left not right
     {
         if (0 >= (uR + aR))
         {
@@ -24,14 +42,16 @@ void SolveRiemann::findStar(double &rhoL, double &uL, double &vL, double &aL, do
             u = uR;
             v = vR; // made up
             p = pR;
+            a = sqrt((gammma * p) / rho);
         }
         else if (0 <= (uR - 2 * aR / (gammma - 1)))
         {
             std::cout << "B" << std::endl;
-            rho = 0;
-            p = 0;
+            rho = 0.0;
+            p = 0.0;
             u = 0.5 * (uL + uR); // SOURCE: I MADE IT UP NEED TO ASK
             v = 0.5 * (vL + vR); // SOURCE: I MADE IT UP NEED TO ASK
+            a = 0.0;
         }
         else
         {
@@ -40,10 +60,11 @@ void SolveRiemann::findStar(double &rhoL, double &uL, double &vL, double &aL, do
             u = 2 / (gammma + 1) * (-aR + ((gammma - 1) / 2) * uR);
             v = 2 / (gammma + 1) * (-aR + ((gammma - 1) / 2) * vR); // made up
             p = pR * pow(2 / (gammma + 1) - (gammma - 1) / (gammma + 1) * (uR) / aR, (2 * gammma) / (gammma - 1));
+            a = sqrt((gammma * p) / rho);
         }
-        return;
+        return true;
     }
-    else if ((rhoR == 0.01 && rhoL != 0.01) || ((rhoR == 0.01 && rhoL == 0.01) && 0 <= (uL + 2 * aL / (gammma - 1)))) // vacuum right not left
+    else if ((rhoR == 0.0 && rhoL != 0.0) || ((rhoR == 0.0 && rhoL == 0.0) && 0 <= (uL + 2 * aL / (gammma - 1)))) // vacuum right not left
     {
         if (0 <= (uL - aL))
         {
@@ -52,14 +73,16 @@ void SolveRiemann::findStar(double &rhoL, double &uL, double &vL, double &aL, do
             u = uR;
             v = vR; // made up
             p = pR;
+            a = sqrt((gammma * p) / rho);
         }
         else if (0 >= (uL + 2 * aL / (gammma - 1)))
         {
             std::cout << "E" << std::endl;
-            rho = 0;
-            p = 0;
+            rho = 0.0;
+            p = 0.0;
             u = 0.5 * (uL + uR); // SOURCE: I MADE IT UP NEED TO ASK
             v = 0.5 * (vL + vR); // SOURCE: I MADE IT UP NEED TO ASK
+            a = 0.0;
         }
         else
         {
@@ -68,21 +91,25 @@ void SolveRiemann::findStar(double &rhoL, double &uL, double &vL, double &aL, do
             u = 2 / (gammma + 1) * (aL + ((gammma - 1) / 2) * uL);
             v = 2 / (gammma + 1) * (aL + ((gammma - 1) / 2) * vL); // made up
             p = pL * pow(2 / (gammma + 1) - (gammma - 1) / (gammma + 1) * (uL) / aL, (2 * gammma) / (gammma - 1));
+            a = sqrt((gammma * p) / rho);
         }
-        return;
+        return true;
     }
-    else if (rhoR == 0.01 && rhoL == 0.01) // vacuum left and right
+    else if (rhoR == 0.0 && rhoL == 0.0) // vacuum left and right
     {
         std::cout << "G" << std::endl;
-        rho = 0;
-        p = 0;
+        rho = 0.0;
+        p = 0.0;
         u = 0.5 * (uL + uR); // SOURCE: I MADE IT UP NEED TO ASK
         v = 0.5 * (vL + vR); // SOURCE: I MADE IT UP NEED TO ASK
-        return;
+        a = 0.0;
+        return true;
     }
+    return false;
+}
 
-    while (iterate) // loop to try all the initial p values
-    {
+void SolveRiemann::pickStartVal(const int errorStage, const double &rhoL, const double &uL, const double &vL, const double &aL, const double &pL, const double &rhoR, const double &uR, const double &vR, const double &aR, const double &pR, double &rho, double &u, double &v, double &a, double &p)
+{
         // different guesses for p
         if (errorStage == 0)
         {
@@ -130,6 +157,7 @@ void SolveRiemann::findStar(double &rhoL, double &uL, double &vL, double &aL, do
         }
         else if (errorStage == 1)
         {
+            std::cout << "went to error stage 1" << std::endl;
             p = pow((aL + aR - 0.5 * (gammma - 1) * (uR - uL)) / (aL / pow(pL, (gammma - 1) / (2 * gammma)) + aR / pow(pR, (gammma - 1) / (2 * gammma))), (2 * gammma) / (gammma - 1));
         }
         else if (errorStage == 2)
@@ -176,6 +204,17 @@ void SolveRiemann::findStar(double &rhoL, double &uL, double &vL, double &aL, do
             std::cout << "pL: " << pL << ", rhoL: " << rhoL << ", uL: " << uL << ", pR: " << pR << ", rhoR: " << rhoR << ", uR: " << uR << std::endl;
             return; // this doesnt actually stop the program but if you see that in the console the timestep is probably too small
         }
+}
+void SolveRiemann::iterateP(const double &rhoL, const double &uL, const double &vL, const double &aL, const double &pL, const double &rhoR, const double &uR, const double &vR, const double &aR, const double &pR, double &rho, double &u, double &v, double &a, double &p)
+{
+    bool iterate = true;
+    double fsL, fsR, d_fsL, d_fsR, change;
+    int errorStage = 0;
+    int count = 0;
+
+    while (iterate) // loop to try all the initial p values
+    {
+        pickStartVal(errorStage, rhoL, uL, vL, aL, pL, rhoR, uR, vR, aR, pR, rho, u, v, a, p);
         count = 0;
         while (iterate) // loop to iterate the p value
         {
@@ -223,35 +262,4 @@ void SolveRiemann::findStar(double &rhoL, double &uL, double &vL, double &aL, do
         }
     }
     u = 0.5 * (uL + uR) + 0.5 * (fsR - fsL); // u*
-    if (u >= 0)                                                    // pick rho value depending on the side of the discontinuity
-    {
-        if (p > pL)
-        {
-            rho = rhoL * (((p / pL) + ((gammma - 1) / (gammma + 1))) / (((gammma - 1) / (gammma + 1)) * (p / pL) + 1));
-        }
-        else
-        {
-            rho = rhoL * pow((p / pL), 1 / gammma);
-        }
-        v = vL;
-    }
-    else
-    {
-        if (p > pR)
-        {
-            rho = rhoR * (((p / pR) + ((gammma - 1) / (gammma + 1))) / (((gammma - 1) / (gammma + 1)) * (p / pR) + 1));
-        }
-        else
-        {
-            rho = rhoR * pow((p / pR), 1 / gammma);
-        }
-        v = vR;
-    }
-    aCalc();
-    return;
-}
-
-void SolveRiemann::testVacuum(double &rhoL, double &uL, double &vL, double &aL, double &pL, double &rhoR, double &uR, double &vR, double &aR, double &pR, double &rho, double &u, double &v, double &a, double &p)
-{
-
 }

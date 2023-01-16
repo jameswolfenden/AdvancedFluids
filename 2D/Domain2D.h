@@ -3,6 +3,7 @@
 
 #include "Cell.h"
 #include <vector>
+#include "SolveRiemann.h"
 
 class Domain2D{
     public:
@@ -15,6 +16,7 @@ class Domain2D{
     std::vector<std::vector<Cell>> xFaces;
     std::vector<std::vector<Cell>> yFaces;
     std::vector<bool> ghostFaces;
+    SolveRiemann rSolver;
     Domain2D(double xPhysical, double yPhysical, int xCellCount, int yCellCount, std::vector<bool> ghostFaces, double p, double rho, double u, double v);
     void updateCells(std::vector<Domain2D*> domain, double timeStep);
     void xfindFaces();
