@@ -72,6 +72,8 @@ void Domain2D::xUpdateCells(double minT, std::vector<Domain2D *> sideDomains)
             double u2 = cells[x][y].u2() + minT / xBox * (xFaces[x - 1][y].f2() - xFaces[x][y].f2());
             double u3 = cells[x][y].u3() + minT / xBox * (xFaces[x - 1][y].f3() - xFaces[x][y].f3());
             double u4 = cells[x][y].u4() + minT / xBox * (xFaces[x - 1][y].f4() - xFaces[x][y].f4());
+            if (u4!=u4)
+                std::cout << cells[x][y].u4() << ", " << xFaces[x - 1][y].f4() << ", " << xFaces[x][y].f4() << ", " << u4 << std::endl;
             cells[x][y].updateConservatives(u1, u2, u3, u4); // update the primatives in the points array from the conservatives found
         }
     }
@@ -90,6 +92,8 @@ void Domain2D::yUpdateCells(double minT, std::vector<Domain2D *> sideDomains)
             double u2 = cells[x][y].u2() + minT / yBox * (yFaces[x][y - 1].g2() - yFaces[x][y].g2());
             double u3 = cells[x][y].u3() + minT / yBox * (yFaces[x][y - 1].g3() - yFaces[x][y].g3());
             double u4 = cells[x][y].u4() + minT / yBox * (yFaces[x][y - 1].g4() - yFaces[x][y].g4());
+                        if (u4!=u4)
+                std::cout << cells[x][y].u4() << ", " << yFaces[x][y-1].g4() << ", " << yFaces[x][y].g4() << ", " << u4 << std::endl;
             cells[x][y].updateConservatives(u1, u2, u3, u4); // update the primatives in the points array from the conservatives found
         }
     }

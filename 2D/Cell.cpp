@@ -30,9 +30,9 @@ double Cell::u3()
 }
 double Cell::u4()
 {
-    //   if (rho == 0)
-    //     return 0;
-    //  else
+       if (rho == 0.0)
+         return 0.0;
+      else
     return rho * (0.5 * (u * u + v * v) + p / ((gammma - 1) * rho));
 }
 double Cell::f1()
@@ -49,9 +49,9 @@ double Cell::f3()
 }
 double Cell::f4()
 {
-    //   if (rho == 0)
-    //     return 0;
-    //  else
+       if (rho == 0.0)
+         return 0.0;
+      else
     return u * (rho * (0.5 * (u * u + v * v) + p / ((gammma - 1) * rho)) + p);
 }
 double Cell::g1()
@@ -68,20 +68,20 @@ double Cell::g3()
 }
 double Cell::g4()
 {
-    //   if (rho == 0)
-    //     return 0;
-    // else
+       if (rho == 0.0)
+         return 0.0;
+     else
     return v * (rho * (0.5 * (u * u + v * v) + p / ((gammma - 1) * rho)) + p);
 }
 
 void Cell::updateConservatives(double u1, double u2, double u3, double u4) // update the primatives from new conservative values
 {
-    // if (u1 == 0)
-    // {
-    //     updatePrimatives(0, 0, 0, 0);
-    // }
-    // else
-    // {
+    if (u1 == 0)
+    {
+        updatePrimatives(0, 0, 0, 0);
+    }
+    else
+    {
     double rho_ = u1;
     double u_ = u2 / u1;
     double v_ = u3 / u1;
@@ -89,16 +89,16 @@ void Cell::updateConservatives(double u1, double u2, double u3, double u4) // up
     if (p_ != p_)
         std::cout << "nan, " << p_ << ", " << u_ << ", " << rho_ << ", " << u1 << ", " << u2 << ", " << u3 << ", " << u4 << std::endl;
     updatePrimatives(p_, rho_, u_, v_);
-    //  }
+    }
 }
 void Cell::updatePrimatives(double p, double rho, double u, double v)
 {
-    if (p <= 0.0 || rho <= 0.0) // this is different to the number used in the vacuum shit to diagnose that the problem is not within the vacuum shit I CHANGED THIS
+    if (p <= 1e-8 || rho <= 1e-8) // this is different to the number used in the vacuum shit to diagnose that the problem is not within the vacuum shit I CHANGED THIS
    {
       this->p = 0.0; // value not zero so other calcs still work I CHANGED THIS
       this->rho = 0.0;
       a = 0.0;
-      std::cout << "p is " << this->p << std::endl;
+      //std::cout << "p is " << this->p << std::endl;
    }
     else
     {

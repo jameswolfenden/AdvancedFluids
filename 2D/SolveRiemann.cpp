@@ -33,11 +33,13 @@ void SolveRiemann::findStar(const double &rhoL, const double &uL, const double &
 
 bool SolveRiemann::testVacuum(const double &rhoL, const double &uL, const double &vL, const double &aL, const double &pL, const double &rhoR, const double &uR, const double &vR, const double &aR, const double &pR, double &rho, double &u, double &v, double &a, double &p)
 {
-    if ((rhoL == 0.0 && rhoR != 0.0) || ((rhoR == 0.0 && rhoL == 0.0) && 0 >= (uR - 2 * aR / (gammma - 1)))) // vacuum left not right
+    if (rhoL ==0.0|| rhoR == 0.0 || (2 * aL / (gammma - 1) + 2 * aR / (gammma - 1))<=(uR-uL)){
+        std::cout<<"im gonna vacooooom"<<std::endl;
+    if ((rhoL == 0.0 && rhoR != 0.0) || ((rhoR != 0.0 && rhoL != 0.0) && 0 >= (uR - 2 * aR / (gammma - 1)))) // vacuum left not right
     {
         if (0 >= (uR + aR))
         {
-            std::cout << "A" << std::endl;
+            //std::cout << "W_R" << std::endl;
             rho = rhoR;
             u = uR;
             v = vR; // made up
@@ -46,7 +48,7 @@ bool SolveRiemann::testVacuum(const double &rhoL, const double &uL, const double
         }
         else if (0 <= (uR - 2 * aR / (gammma - 1)))
         {
-            std::cout << "B" << std::endl;
+            //std::cout << "W_0" << std::endl;
             rho = 0.0;
             p = 0.0;
             u = 0.5 * (uL + uR); // SOURCE: I MADE IT UP NEED TO ASK
@@ -55,20 +57,20 @@ bool SolveRiemann::testVacuum(const double &rhoL, const double &uL, const double
         }
         else
         {
-            std::cout << "C" << std::endl;
+            //std::cout << "W_RFan" << std::endl;
             rho = rhoR * pow(2 / (gammma + 1) - (gammma - 1) / (gammma + 1) * (uR) / aR, 2 / (gammma - 1));
             u = 2 / (gammma + 1) * (-aR + ((gammma - 1) / 2) * uR);
-            v = 2 / (gammma + 1) * (-aR + ((gammma - 1) / 2) * vR); // made up
+            v = 0.5 * (vL + vR); // SOURCE: I MADE IT UP NEED TO ASK
             p = pR * pow(2 / (gammma + 1) - (gammma - 1) / (gammma + 1) * (uR) / aR, (2 * gammma) / (gammma - 1));
             a = sqrt((gammma * p) / rho);
         }
         return true;
     }
-    else if ((rhoR == 0.0 && rhoL != 0.0) || ((rhoR == 0.0 && rhoL == 0.0) && 0 <= (uL + 2 * aL / (gammma - 1)))) // vacuum right not left
+    else if ((rhoR == 0.0 && rhoL != 0.0) || ((rhoR != 0.0 && rhoL != 0.0) && 0 <= (uL + 2 * aL / (gammma - 1)))) // vacuum right not left
     {
         if (0 <= (uL - aL))
         {
-            std::cout << "D" << std::endl;
+            //std::cout << "W_L" << std::endl;
             rho = rhoR;
             u = uR;
             v = vR; // made up
@@ -77,33 +79,33 @@ bool SolveRiemann::testVacuum(const double &rhoL, const double &uL, const double
         }
         else if (0 >= (uL + 2 * aL / (gammma - 1)))
         {
-            std::cout << "E" << std::endl;
+            //std::cout << "W_0" << std::endl;
             rho = 0.0;
             p = 0.0;
             u = 0.5 * (uL + uR); // SOURCE: I MADE IT UP NEED TO ASK
-            v = 0.5 * (vL + vR); // SOURCE: I MADE IT UP NEED TO ASK
             a = 0.0;
         }
         else
         {
-            std::cout << "F" << std::endl;
+            //std::cout << "W_LFan" << std::endl;
             rho = rhoL * pow(2 / (gammma + 1) - (gammma - 1) / (gammma + 1) * (uL) / aL, 2 / (gammma - 1));
             u = 2 / (gammma + 1) * (aL + ((gammma - 1) / 2) * uL);
-            v = 2 / (gammma + 1) * (aL + ((gammma - 1) / 2) * vL); // made up
+            v = 0.5 * (vL + vR); // SOURCE: I MADE IT UP NEED TO ASK
             p = pL * pow(2 / (gammma + 1) - (gammma - 1) / (gammma + 1) * (uL) / aL, (2 * gammma) / (gammma - 1));
             a = sqrt((gammma * p) / rho);
         }
         return true;
     }
-    else if (rhoR == 0.0 && rhoL == 0.0) // vacuum left and right
+    else if ((rhoR == 0.0 && rhoL == 0.0)||((uL + 2 * aL / (gammma - 1))<0&&(uR - 2 * aR / (gammma - 1))>0)) // vacuum left and right
     {
-        std::cout << "G" << std::endl;
+        //std::cout << "W_0" << std::endl;
         rho = 0.0;
         p = 0.0;
         u = 0.5 * (uL + uR); // SOURCE: I MADE IT UP NEED TO ASK
         v = 0.5 * (vL + vR); // SOURCE: I MADE IT UP NEED TO ASK
         a = 0.0;
         return true;
+    }
     }
     return false;
 }
@@ -201,7 +203,7 @@ void SolveRiemann::pickStartVal(const int errorStage, const double &rhoL, const 
         else
         {
             std::cout << "Error converging on p in x" << std::endl;
-            std::cout << "pL: " << pL << ", rhoL: " << rhoL << ", uL: " << uL << ", pR: " << pR << ", rhoR: " << rhoR << ", uR: " << uR << std::endl;
+            std::cout << "pL: " << pL << ", rhoL: " << rhoL << ", uL: " << uL << ", aL: " << aL << ", pR: " << pR << ", rhoR: " << rhoR << ", uR: " << uR << ", aR: " << aR << std::endl;
             return; // this doesnt actually stop the program but if you see that in the console the timestep is probably too small
         }
 }
