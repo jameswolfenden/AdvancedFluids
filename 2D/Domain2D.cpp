@@ -62,6 +62,8 @@ void Domain2D::updateCells(std::vector<Domain2D *> sideDomains, double minT) // 
 }
 void Domain2D::xUpdateCells(double minT, std::vector<Domain2D *> sideDomains)
 {
+        setGhostCells(sideDomains);
+
     xfindFaces();
     for (int y = 1; y < (yCellCount - 1); y++) // loop through all non edge cells
     {
@@ -82,6 +84,8 @@ void Domain2D::xUpdateCells(double minT, std::vector<Domain2D *> sideDomains)
 void Domain2D::yUpdateCells(double minT, std::vector<Domain2D *> sideDomains)
 
 {
+        setGhostCells(sideDomains);
+
     yFindFaces();
     for (int x = 1; x < (xCellCount - 1); x++) // loop through all non edge cells
     {

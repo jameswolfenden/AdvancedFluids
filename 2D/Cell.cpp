@@ -93,11 +93,12 @@ void Cell::updateConservatives(double u1, double u2, double u3, double u4) // up
 }
 void Cell::updatePrimatives(double p, double rho, double u, double v)
 {
-    if (p <= 1e-8 || rho <= 1e-8) // this is different to the number used in the vacuum shit to diagnose that the problem is not within the vacuum shit I CHANGED THIS
+    if (p <= 0.0 || rho <= 0.0) // this is different to the number used in the vacuum shit to diagnose that the problem is not within the vacuum shit I CHANGED THIS
    {
       this->p = 0.0; // value not zero so other calcs still work I CHANGED THIS
       this->rho = 0.0;
       a = 0.0;
+      //aCalc(); // remove
       //std::cout << "p is " << this->p << std::endl;
    }
     else

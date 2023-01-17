@@ -3,13 +3,13 @@
 #include <fstream>
 #include <algorithm>
 
-void saveDomain(Domain2D *domain, int num) // each domain is saved seperatly 
+void saveDomain(Domain2D *domain, int num, int iteration) // each domain is saved seperatly 
 {
     std::ofstream pCells, rhoCells, uCells, vCells;
-    pCells.open("pCells" + std::to_string(num) + ".csv");
-    rhoCells.open("rhoCells" + std::to_string(num) + ".csv");
-    uCells.open("uCells" + std::to_string(num) + ".csv");
-    vCells.open("vCells" + std::to_string(num) + ".csv");
+    pCells.open("./results/"+std::to_string(num)+"pCells" + std::to_string(iteration) + ".csv");
+    rhoCells.open("./results/"+std::to_string(num)+"rhoCells" + std::to_string(iteration) + ".csv");
+    uCells.open("./results/"+std::to_string(num)+"uCells" + std::to_string(iteration) + ".csv");
+    vCells.open("./results/"+std::to_string(num)+"vCells" + std::to_string(iteration) + ".csv");
     for (int y = 0; y < (domain->yCellCount); y++) // write final cell pressures
     {
         for (int x = 0; x < domain->xCellCount; x++)
@@ -34,7 +34,7 @@ int main()
 {
     int xCellCount = 100;
     int yCellCount = 100;
-    int iterations = 39;
+    int iterations = 100;
     double elapsedTime = 0;
     int domainCount = 4;
 
@@ -66,11 +66,12 @@ int main()
             domains[domain].updateCells(domainsTransmissive[domain], timeStep); // update each domain by the allowable timestep, pointer to the transmissive domains passed
         }
         elapsedTime += (timeStep * 2); // not entirely sure its x2 but i think so as it iterates 2 with xyyx
-    }
+    
 
     for (int domain = 0; domain < domainCount; domain++)
     {
-        saveDomain(&domains[domain], domain);
+        saveDomain(&domains[domain], domain, i);
+    }
     }
 
     std::cout << elapsedTime << std::endl; // output elapsed time (of simulation time) to console

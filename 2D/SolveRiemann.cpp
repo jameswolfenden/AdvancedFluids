@@ -53,6 +53,7 @@ bool SolveRiemann::testVacuum(const double &rhoL, const double &uL, const double
             p = 0.0;
             u = 0.5 * (uL + uR); // SOURCE: I MADE IT UP NEED TO ASK
             v = 0.5 * (vL + vR); // SOURCE: I MADE IT UP NEED TO ASK
+            u = uL; //idk
             a = 0.0;
         }
         else
@@ -60,7 +61,7 @@ bool SolveRiemann::testVacuum(const double &rhoL, const double &uL, const double
             //std::cout << "W_RFan" << std::endl;
             rho = rhoR * pow(2 / (gammma + 1) - (gammma - 1) / (gammma + 1) * (uR) / aR, 2 / (gammma - 1));
             u = 2 / (gammma + 1) * (-aR + ((gammma - 1) / 2) * uR);
-            v = 0.5 * (vL + vR); // SOURCE: I MADE IT UP NEED TO ASK
+            v = 2 / (gammma + 1) * (-aR + ((gammma - 1) / 2) * vR);
             p = pR * pow(2 / (gammma + 1) - (gammma - 1) / (gammma + 1) * (uR) / aR, (2 * gammma) / (gammma - 1));
             a = sqrt((gammma * p) / rho);
         }
@@ -71,10 +72,10 @@ bool SolveRiemann::testVacuum(const double &rhoL, const double &uL, const double
         if (0 <= (uL - aL))
         {
             //std::cout << "W_L" << std::endl;
-            rho = rhoR;
-            u = uR;
-            v = vR; // made up
-            p = pR;
+            rho = rhoL;
+            u = uL;
+            v = vL; // made up
+            p = pL;
             a = sqrt((gammma * p) / rho);
         }
         else if (0 >= (uL + 2 * aL / (gammma - 1)))
@@ -83,6 +84,8 @@ bool SolveRiemann::testVacuum(const double &rhoL, const double &uL, const double
             rho = 0.0;
             p = 0.0;
             u = 0.5 * (uL + uR); // SOURCE: I MADE IT UP NEED TO ASK
+            v = 0.5 * (vL + vR); // SOURCE: I MADE IT UP NEED TO ASK
+            u = uR; //idk
             a = 0.0;
         }
         else
@@ -90,7 +93,7 @@ bool SolveRiemann::testVacuum(const double &rhoL, const double &uL, const double
             //std::cout << "W_LFan" << std::endl;
             rho = rhoL * pow(2 / (gammma + 1) - (gammma - 1) / (gammma + 1) * (uL) / aL, 2 / (gammma - 1));
             u = 2 / (gammma + 1) * (aL + ((gammma - 1) / 2) * uL);
-            v = 0.5 * (vL + vR); // SOURCE: I MADE IT UP NEED TO ASK
+            v = 2 / (gammma + 1) * (aL + ((gammma - 1) / 2) * vL);
             p = pL * pow(2 / (gammma + 1) - (gammma - 1) / (gammma + 1) * (uL) / aL, (2 * gammma) / (gammma - 1));
             a = sqrt((gammma * p) / rho);
         }
