@@ -37,7 +37,8 @@ void Domain2D::xfindFaces()
     {
         for (int x = 0; x < xFaceCount; x++)
         {
-            rSolver.findStar(cells[x][y].rho, cells[x][y].u, cells[x][y].v, cells[x][y].a, cells[x][y].p, cells[x + 1][y].rho, cells[x + 1][y].u, cells[x + 1][y].v, cells[x + 1][y].a, cells[x + 1][y].p, xFaces[x][y].rho, xFaces[x][y].u, xFaces[x][y].v, xFaces[x][y].a, xFaces[x][y].p);
+            if(rSolver.findStar(cells[x][y].rho, cells[x][y].u, cells[x][y].v, cells[x][y].a, cells[x][y].p, cells[x + 1][y].rho, cells[x + 1][y].u, cells[x + 1][y].v, cells[x + 1][y].a, cells[x + 1][y].p, xFaces[x][y].rho, xFaces[x][y].u, xFaces[x][y].v, xFaces[x][y].a, xFaces[x][y].p))
+                std::cout << "in x, x: " << x << ", y: " << y <<std::endl;
         }
     }
 }
@@ -48,22 +49,27 @@ void Domain2D::yFindFaces()
     {
         for (int y = 0; y < yFaceCount; y++)
         {
-            rSolver.findStar(cells[x][y].rho, cells[x][y].v, cells[x][y].u, cells[x][y].a, cells[x][y].p, cells[x][y+1].rho, cells[x][y+1].v, cells[x][y+1].u, cells[x][y+1].a, cells[x][y+1].p, yFaces[x][y].rho, yFaces[x][y].v, yFaces[x][y].u, yFaces[x][y].a, yFaces[x][y].p);
+            if(rSolver.findStar(cells[x][y].rho, cells[x][y].v, cells[x][y].u, cells[x][y].a, cells[x][y].p, cells[x][y+1].rho, cells[x][y+1].v, cells[x][y+1].u, cells[x][y+1].a, cells[x][y+1].p, yFaces[x][y].rho, yFaces[x][y].v, yFaces[x][y].u, yFaces[x][y].a, yFaces[x][y].p))
+                std::cout << "in y, x: " << x << ", y: " << y << std::endl;
         }
     }
 }
 
 void Domain2D::updateCells(std::vector<Domain2D *> sideDomains, double minT) // XYYX, could change to other method?
 {
+    setGhostCells(sideDomains);
     xUpdateCells(minT, sideDomains);
+    setGhostCells(sideDomains);
     yUpdateCells(minT, sideDomains);
+    setGhostCells(sideDomains);
     yUpdateCells(minT, sideDomains);
+    setGhostCells(sideDomains);
     xUpdateCells(minT, sideDomains);
+    setGhostCells(sideDomains); // dont think this ones needed since the ghosts arent used but just to make the results correct if checking
+
 }
 void Domain2D::xUpdateCells(double minT, std::vector<Domain2D *> sideDomains)
 {
-        setGhostCells(sideDomains);
-
     xfindFaces();
     for (int y = 1; y < (yCellCount - 1); y++) // loop through all non edge cells
     {
@@ -79,13 +85,10 @@ void Domain2D::xUpdateCells(double minT, std::vector<Domain2D *> sideDomains)
             cells[x][y].updateConservatives(u1, u2, u3, u4); // update the primatives in the points array from the conservatives found
         }
     }
-    setGhostCells(sideDomains);
 }
 void Domain2D::yUpdateCells(double minT, std::vector<Domain2D *> sideDomains)
 
 {
-        setGhostCells(sideDomains);
-
     yFindFaces();
     for (int x = 1; x < (xCellCount - 1); x++) // loop through all non edge cells
     {
@@ -101,7 +104,6 @@ void Domain2D::yUpdateCells(double minT, std::vector<Domain2D *> sideDomains)
             cells[x][y].updateConservatives(u1, u2, u3, u4); // update the primatives in the points array from the conservatives found
         }
     }
-    setGhostCells(sideDomains);
 }
 
 void Domain2D::setGhostCells(std::vector<Domain2D *> sideDomains) // set the ghost cells on all 4 sides, invert the velocities that collide with the wall

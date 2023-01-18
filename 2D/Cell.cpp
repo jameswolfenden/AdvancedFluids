@@ -99,7 +99,7 @@ void Cell::updatePrimatives(double p, double rho, double u, double v)
       this->rho = 0.0;
       a = 0.0;
       //aCalc(); // remove
-      //std::cout << "p is " << this->p << std::endl;
+      std::cout << "p is " << this->p << std::endl;
    }
     else
     {

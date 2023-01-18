@@ -39,7 +39,8 @@ for i = 1:n
 end
 
 figure
-v = VideoWriter('p.avi');
+v = VideoWriter('p.mp4', 'MPEG-4');
+v.Quality = 100;
 open(v);
 for i=1:n
     pBig = [zeros(size(p1,1)-2,size(p2,2)-3), p1(2:size(p1,1)-1,2:size(p1,2)-2,i), zeros(size(p1,1)-2,size(p3,2)-3); p2(2:size(p2,1)-1,2:size(p2,2)-2,i), p0(2:size(p0,1)-1,2:size(p0,2)-2,i), p3(2:size(p3,1)-1,2:size(p3,2)-2,i)];
@@ -55,7 +56,8 @@ end
 close(v);
 
 figure
-v = VideoWriter('rho.avi');
+v = VideoWriter('rho.mp4', 'MPEG-4');
+v.Quality = 100;
 open(v);
 for i=1:n
     rhoBig = [zeros(size(rho1,1)-2,size(rho2,2)-3), rho1(2:size(rho1,1)-1,2:size(rho1,2)-2,i), zeros(size(rho1,1)-2,size(rho3,2)-3); rho2(2:size(rho2,1)-1,2:size(rho2,2)-2,i), rho0(2:size(rho0,1)-1,2:size(rho0,2)-2,i), rho3(2:size(rho3,1)-1,2:size(rho3,2)-2,i)];
@@ -71,7 +73,8 @@ end
 close(v);
 
 figure
-v = VideoWriter('u.avi');
+v = VideoWriter('u.mp4', 'MPEG-4');
+v.Quality = 100;
 open(v);
 for i=1:n
     uBig = [zeros(size(u1,1)-2,size(u2,2)-3), u1(2:size(u1,1)-1,2:size(u1,2)-2,i), zeros(size(u1,1)-2,size(u3,2)-3); u2(2:size(u2,1)-1,2:size(u2,2)-2,i), u0(2:size(u0,1)-1,2:size(u0,2)-2,i), u3(2:size(u3,1)-1,2:size(u3,2)-2,i)];
@@ -87,7 +90,8 @@ end
 close(v);
 
 figure
-v = VideoWriter('v.avi');
+v = VideoWriter('v.mp4', 'MPEG-4');
+v.Quality = 100;
 open(v);
 for i=1:n
     vBig = [zeros(size(v1,1)-2,size(v2,2)-3), v1(2:size(v1,1)-1,2:size(v1,2)-2,i), zeros(size(v1,1)-2,size(v3,2)-3); v2(2:size(v2,1)-1,2:size(v2,2)-2,i), v0(2:size(v0,1)-1,2:size(v0,2)-2,i), v3(2:size(v3,1)-1,2:size(v3,2)-2,i)];

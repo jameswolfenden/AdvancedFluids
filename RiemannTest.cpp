@@ -8,12 +8,12 @@ int main()
 {
     double rho, u, v, a, p, rhoL, uL, vL, aL, pL, rhoR, uR, vR, aR, pR;
     SolveRiemann rSolver;
-    rhoL = 0.292967;
-    rhoR = 2.7355e-11;
-    pL = 12.8143;
-    pR = 2.52242e-12;
-    uL = -2.04943;
-    uR = -44.8764;
+    rhoL = 0.00843769;
+    rhoR = 1.0772e-08;
+    pL = 4.63201e-07;
+    pR = 7.15694e-12;
+    uL = 1.01693;
+    uR = -0.0564724;
     vL = 0;
     vR = 0;
     aL = sqrt((gammma * pL) / rhoL);

@@ -4,10 +4,10 @@
 #include <iostream>
 
 
-void SolveRiemann::findStar(const double &rhoL, const double &uL, const double &vL, const double &aL, const double &pL, const double &rhoR, const double &uR, const double &vR, const double &aR, const double &pR, double &rho, double &u, double &v, double &a, double &p) // find the values at the faces between 2 cells adjacent in x
+bool SolveRiemann::findStar(const double &rhoL, const double &uL, const double &vL, const double &aL, const double &pL, const double &rhoR, const double &uR, const double &vR, const double &aR, const double &pR, double &rho, double &u, double &v, double &a, double &p) // find the values at the faces between 2 cells adjacent in x
 {
     if (testVacuum(rhoL, uL, vL, aL, pL, rhoR, uR, vR, aR, pR, rho, u, v, a, p))
-        return; // a vacuum is generated, values found without iteration required NEED TO CHECK SPEED OF SOUND!!!!!
+        return true; // a vacuum is generated, values found without iteration required NEED TO CHECK SPEED OF SOUND!!!!!
 
     iterateP(rhoL, uL, vL, aL, pL, rhoR, uR, vR, aR, pR, rho, u, v, a, p);
 
@@ -28,7 +28,7 @@ void SolveRiemann::findStar(const double &rhoL, const double &uL, const double &
         v = vR;
     }
     a = sqrt((gammma * p) / rho);
-    return;
+    return false;
 }
 
 bool SolveRiemann::testVacuum(const double &rhoL, const double &uL, const double &vL, const double &aL, const double &pL, const double &rhoR, const double &uR, const double &vR, const double &aR, const double &pR, double &rho, double &u, double &v, double &a, double &p)
@@ -39,7 +39,7 @@ bool SolveRiemann::testVacuum(const double &rhoL, const double &uL, const double
     {
         if (0 >= (uR + aR))
         {
-            //std::cout << "W_R" << std::endl;
+            std::cout << "W_R" << std::endl;
             rho = rhoR;
             u = uR;
             v = vR; // made up
@@ -48,7 +48,7 @@ bool SolveRiemann::testVacuum(const double &rhoL, const double &uL, const double
         }
         else if (0 <= (uR - 2 * aR / (gammma - 1)))
         {
-            //std::cout << "W_0" << std::endl;
+            std::cout << "W_0" << std::endl;
             rho = 0.0;
             p = 0.0;
             u = 0.5 * (uL + uR); // SOURCE: I MADE IT UP NEED TO ASK
@@ -58,10 +58,11 @@ bool SolveRiemann::testVacuum(const double &rhoL, const double &uL, const double
         }
         else
         {
-            //std::cout << "W_RFan" << std::endl;
+            std::cout << "W_RFan" << std::endl;
             rho = rhoR * pow(2 / (gammma + 1) - (gammma - 1) / (gammma + 1) * (uR) / aR, 2 / (gammma - 1));
             u = 2 / (gammma + 1) * (-aR + ((gammma - 1) / 2) * uR);
             v = 2 / (gammma + 1) * (-aR + ((gammma - 1) / 2) * vR);
+            //v = vR;
             p = pR * pow(2 / (gammma + 1) - (gammma - 1) / (gammma + 1) * (uR) / aR, (2 * gammma) / (gammma - 1));
             a = sqrt((gammma * p) / rho);
         }
@@ -71,7 +72,7 @@ bool SolveRiemann::testVacuum(const double &rhoL, const double &uL, const double
     {
         if (0 <= (uL - aL))
         {
-            //std::cout << "W_L" << std::endl;
+            std::cout << "W_L" << std::endl;
             rho = rhoL;
             u = uL;
             v = vL; // made up
@@ -80,7 +81,7 @@ bool SolveRiemann::testVacuum(const double &rhoL, const double &uL, const double
         }
         else if (0 >= (uL + 2 * aL / (gammma - 1)))
         {
-            //std::cout << "W_0" << std::endl;
+            std::cout << "W_0" << std::endl;
             rho = 0.0;
             p = 0.0;
             u = 0.5 * (uL + uR); // SOURCE: I MADE IT UP NEED TO ASK
@@ -90,10 +91,11 @@ bool SolveRiemann::testVacuum(const double &rhoL, const double &uL, const double
         }
         else
         {
-            //std::cout << "W_LFan" << std::endl;
+            std::cout << "W_LFan" << std::endl;
             rho = rhoL * pow(2 / (gammma + 1) - (gammma - 1) / (gammma + 1) * (uL) / aL, 2 / (gammma - 1));
             u = 2 / (gammma + 1) * (aL + ((gammma - 1) / 2) * uL);
             v = 2 / (gammma + 1) * (aL + ((gammma - 1) / 2) * vL);
+            //v = vL;
             p = pL * pow(2 / (gammma + 1) - (gammma - 1) / (gammma + 1) * (uL) / aL, (2 * gammma) / (gammma - 1));
             a = sqrt((gammma * p) / rho);
         }
@@ -101,7 +103,7 @@ bool SolveRiemann::testVacuum(const double &rhoL, const double &uL, const double
     }
     else if ((rhoR == 0.0 && rhoL == 0.0)||((uL + 2 * aL / (gammma - 1))<0&&(uR - 2 * aR / (gammma - 1))>0)) // vacuum left and right
     {
-        //std::cout << "W_0" << std::endl;
+        std::cout << "W_0" << std::endl;
         rho = 0.0;
         p = 0.0;
         u = 0.5 * (uL + uR); // SOURCE: I MADE IT UP NEED TO ASK
@@ -115,9 +117,7 @@ bool SolveRiemann::testVacuum(const double &rhoL, const double &uL, const double
 
 void SolveRiemann::pickStartVal(const int errorStage, const double &rhoL, const double &uL, const double &vL, const double &aL, const double &pL, const double &rhoR, const double &uR, const double &vR, const double &aR, const double &pR, double &rho, double &u, double &v, double &a, double &p)
 {
-        // different guesses for p
-        if (errorStage == 0)
-        {
+
 
             double G1 = (gammma - 1) / (2 * gammma);
             double G2 = (gammma + 1) / (2 * gammma);
@@ -136,6 +136,10 @@ void SolveRiemann::pickStartVal(const int errorStage, const double &rhoL, const 
             double p_min = std::min(pL, pR);
             double p_max = std::max(pL, pR);
             double q_max = p_max / p_min;
+
+        // different guesses for p
+        if (errorStage == 0)
+        {
 
             if (q_max < q_user && (p_min < p_PV && p_PV < p_max))
             {
@@ -172,10 +176,10 @@ void SolveRiemann::pickStartVal(const int errorStage, const double &rhoL, const 
         else if (errorStage == 3)
         {
             double p_PV = 0.5 * (pL + pR) + 0.5 * (uL - uR) * 0.5 * (rhoL + rhoR) * 0.5 * (aL + aR);
-            if (p_PV > TOL)
+           // if (p_PV > TOL)
                 p = p_PV;
-            else
-                p = TOL;
+          //  else
+           //     p = TOL;
         }
         else if (errorStage == 4)
         {
@@ -191,15 +195,37 @@ void SolveRiemann::pickStartVal(const int errorStage, const double &rhoL, const 
             double gL = pow(AL / (p + BL), 0.5);
             double gR = pow(AR / (p + BR), 0.5);
             double p_TS = (gL * pL + gR * pR - (uR - uL)) / (gL + gR);
-            if (p_TS > TOL)
+         //   if (p_TS > TOL)
                 p = p_TS;
-            else
-                p = TOL;
+          //  else
+          //      p = TOL;
         }
         else if (errorStage == 5)
         {
+            p = p_PV;
         }
         else if (errorStage == 6)
+        {   
+                // Select Two-Rarefaction Riemann solver
+                double p_q = pow(pL / pR, G1);
+                double u_m = (p_q * uL / aL + uR / aR + G4 * (p_q - 1.0)) / (p_q / aL + 1 / aR);
+                double p_TL = 1 + G7 * (uL - u_m) / aL;
+                double p_TR = 1 + G7 * (u_m - uR) / aR;
+                p = 0.5 * (pL * pow(p_TL, G3) + pR * pow(p_TR, G3));
+        }          
+        else if (errorStage == 7)
+        {
+                // Select Two-Shock Riemann solver with
+                // PVRS as estimate
+                double ge_L = sqrt((G5 / rhoL) / (G6 * pL + p_PV));
+                double ge_R = sqrt((G5 / rhoR) / (G6 * pR + p_PV));
+                p = (ge_L * pL + ge_R * pR - (uR - uL)) / (ge_L + ge_R);
+        }
+        else if (errorStage == 8)
+        {
+            p = 1/(rhoL*aL+rhoR*aR) * (rhoR*aR*pL+rhoL*aL*pR+rhoL*aL*rhoR*aR*(uL-aR));
+        }
+        else if (errorStage == 9)
         {
             p = 1 * pow(10, -6);
         }
