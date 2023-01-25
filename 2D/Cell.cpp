@@ -9,10 +9,10 @@ Cell::Cell(double p, double rho, double u, double v)
 }
 double Cell::aCalc() // find speed of sound
 {
-       if (rho == 0.0)
-         a = 0.0;
-     else
-    a = sqrt((gammma * p) / rho);
+    if (rho == 0.0)
+        a = 0.0;
+    else
+        a = sqrt((gammma * p) / rho);
     return a;
 }
 // the following are to get the conservatives and fluxes from the primatives
@@ -30,10 +30,10 @@ double Cell::u3()
 }
 double Cell::u4()
 {
-       if (rho == 0.0)
-         return 0.0;
-      else
-    return rho * (0.5 * (u * u + v * v) + p / ((gammma - 1) * rho));
+    if (rho == 0.0)
+        return 0.0;
+    else
+        return rho * (0.5 * (u * u + v * v) + p / ((gammma - 1) * rho));
 }
 double Cell::f1()
 {
@@ -49,10 +49,15 @@ double Cell::f3()
 }
 double Cell::f4()
 {
-       if (rho == 0.0)
-         return 0.0;
-      else
-    return u * (rho * (0.5 * (u * u + v * v) + p / ((gammma - 1) * rho)) + p);
+
+    double result = u * (rho * (0.5 * (u * u + v * v) + p / ((gammma - 1) * rho)) + p);
+    if (rho == 0.0)
+        return 0.0;
+    else
+
+        if (result != result)
+        std::cout << "u: " << u << ", rho: " << rho << ", v: " << v << ", p: " << p << std::endl;
+    return result;
 }
 double Cell::g1()
 {
@@ -68,10 +73,10 @@ double Cell::g3()
 }
 double Cell::g4()
 {
-       if (rho == 0.0)
-         return 0.0;
-     else
-    return v * (rho * (0.5 * (u * u + v * v) + p / ((gammma - 1) * rho)) + p);
+    if (rho == 0.0)
+        return 0.0;
+    else
+        return v * (rho * (0.5 * (u * u + v * v) + p / ((gammma - 1) * rho)) + p);
 }
 
 void Cell::updateConservatives(double u1, double u2, double u3, double u4) // update the primatives from new conservative values
@@ -82,32 +87,44 @@ void Cell::updateConservatives(double u1, double u2, double u3, double u4) // up
     }
     else
     {
-    double rho_ = u1;
-    double u_ = u2 / u1;
-    double v_ = u3 / u1;
-    double p_ = (gammma - 1) * (u4 - 0.5 * ((u2 * u2 + u3 * u3) / u1)); // these all need checking i guessed it ngl
-    if (p_ != p_)
-        std::cout << "nan, " << p_ << ", " << u_ << ", " << rho_ << ", " << u1 << ", " << u2 << ", " << u3 << ", " << u4 << std::endl;
-    updatePrimatives(p_, rho_, u_, v_);
+        double rho_ = u1;
+        double u_ = u2 / u1;
+        double v_ = u3 / u1;
+        double p_ = (gammma - 1) * (u4 - 0.5 * ((u2 * u2 + u3 * u3) / u1)); // these all need checking i guessed it ngl
+        if (p_ < 0)
+            std::cout << "p below zero, " << p_ << ", " << u_ << ", " << rho_ << ", " << u1 << ", " << u2 << ", " << u3 << ", " << u4 << std::endl;
+        if (p_ != p_)
+        {
+            std::cout << "p error, " << p_ << ", " << u_ << ", " << rho_ << ", " << u1 << ", " << u2 << ", " << u3 << ", " << u4 << std::endl;
+            updatePrimatives(p_, rho_, u_, v_);
+        }
+        else
+        {
+            updatePrimatives(p_, rho_, u_, v_);
+        }
     }
 }
 void Cell::updatePrimatives(double p, double rho, double u, double v)
 {
-    if (p <= 0.0 || rho <= 0.0) // this is different to the number used in the vacuum shit to diagnose that the problem is not within the vacuum shit I CHANGED THIS
-   {
-      this->p = 0.0; // value not zero so other calcs still work I CHANGED THIS
-      this->rho = 0.0;
-      a = 0.0;
-      //aCalc(); // remove
-      std::cout << "p is " << this->p << std::endl;
-   }
-    else
-    {
-        this->p = p;
-        this->rho = rho;
-    }
-
     this->u = u;
     this->v = v;
+    this->p = p;
+    this->rho = rho;
+    if (p > 0 && rho > 0)
+    {
+        aCalc();
+        return;
+    }
+    if (p <= 0.0) // this is different to the number used in the vacuum shit to diagnose that the problem is not within the vacuum shit I CHANGED THIS
+    {
+        std::cout << "p is " << p << " rho is " << rho << std::endl;
+        this->p = 0.00001; // value not zero so other calcs still work I CHANGED THIS
+    }
+    if (rho <= 0.0)
+    {
+        std::cout << "p is " << p << " rho is " << rho << std::endl;
+        this->rho = 0.00001;
+    }
     aCalc();
+    return;
 }

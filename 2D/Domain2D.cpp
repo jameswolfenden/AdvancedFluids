@@ -38,7 +38,9 @@ void Domain2D::xfindFaces()
         for (int x = 0; x < xFaceCount; x++)
         {
             if(rSolver.findStar(cells[x][y].rho, cells[x][y].u, cells[x][y].v, cells[x][y].a, cells[x][y].p, cells[x + 1][y].rho, cells[x + 1][y].u, cells[x + 1][y].v, cells[x + 1][y].a, cells[x + 1][y].p, xFaces[x][y].rho, xFaces[x][y].u, xFaces[x][y].v, xFaces[x][y].a, xFaces[x][y].p))
-                std::cout << "in x, x: " << x << ", y: " << y <<std::endl;
+                std::cout << "in x, x: " << x << ", y: " << y << ". Left values - rho: " << cells[x][y].rho << ", u: " << cells[x][y].u << ", v: " << cells[x][y].v << ", a: " << cells[x][y].a << ", p: " << cells[x][y].p << ". Right - rho: " << cells[x+1][y].rho << ", u: " << cells[x+1][y].u << ", v: " << cells[x+1][y].v << ", a: " << cells[x+1][y].a << ", p: " << cells[x+1][y].p << ". Result - rho: " << xFaces[x][y].rho << ", u: " << xFaces[x][y].u << ", v: " << xFaces[x][y].v << ", a: " << xFaces[x][y].a << ", p: " << xFaces[x][y].p << std::endl;
+            if (cells[x][y].rho!=cells[x][y].rho)
+                std::cout<<"that ting nan" <<std::endl;
         }
     }
 }
@@ -50,7 +52,9 @@ void Domain2D::yFindFaces()
         for (int y = 0; y < yFaceCount; y++)
         {
             if(rSolver.findStar(cells[x][y].rho, cells[x][y].v, cells[x][y].u, cells[x][y].a, cells[x][y].p, cells[x][y+1].rho, cells[x][y+1].v, cells[x][y+1].u, cells[x][y+1].a, cells[x][y+1].p, yFaces[x][y].rho, yFaces[x][y].v, yFaces[x][y].u, yFaces[x][y].a, yFaces[x][y].p))
-                std::cout << "in y, x: " << x << ", y: " << y << std::endl;
+                std::cout << "in y, x: " << x << ", y: " << y << ". Top values - rho: " << cells[x][y].rho << ", u: " << cells[x][y].u << ", v: " << cells[x][y].v << ", a: " << cells[x][y].a << ", p: " << cells[x][y].p << ". Bottom - rho: " << cells[x][y+1].rho << ", u: " << cells[x][y+1].u << ", v: " << cells[x][y+1].v << ", a: " << cells[x][y+1].a << ", p: " << cells[x][y+1].p << ". Result - rho: " << yFaces[x][y].rho << ", u: " << yFaces[x][y].u << ", v: " << yFaces[x][y].v << ", a: " << yFaces[x][y].a << ", p: " << yFaces[x][y].p << std::endl;
+            if (cells[x][y].rho!=cells[x][y].rho)
+                std::cout<<"that ting nan" <<std::endl;
         }
     }
 }
@@ -81,7 +85,7 @@ void Domain2D::xUpdateCells(double minT, std::vector<Domain2D *> sideDomains)
             double u3 = cells[x][y].u3() + minT / xBox * (xFaces[x - 1][y].f3() - xFaces[x][y].f3());
             double u4 = cells[x][y].u4() + minT / xBox * (xFaces[x - 1][y].f4() - xFaces[x][y].f4());
             if (u4!=u4)
-                std::cout << cells[x][y].u4() << ", " << xFaces[x - 1][y].f4() << ", " << xFaces[x][y].f4() << ", " << u4 << std::endl;
+                std::cout << "u4error " << cells[x][y].u4() << ", " << xFaces[x - 1][y].f4() << ", " << xFaces[x][y].f4() << ", " << u4 << std::endl;
             cells[x][y].updateConservatives(u1, u2, u3, u4); // update the primatives in the points array from the conservatives found
         }
     }
@@ -99,8 +103,16 @@ void Domain2D::yUpdateCells(double minT, std::vector<Domain2D *> sideDomains)
             double u2 = cells[x][y].u2() + minT / yBox * (yFaces[x][y - 1].g2() - yFaces[x][y].g2());
             double u3 = cells[x][y].u3() + minT / yBox * (yFaces[x][y - 1].g3() - yFaces[x][y].g3());
             double u4 = cells[x][y].u4() + minT / yBox * (yFaces[x][y - 1].g4() - yFaces[x][y].g4());
-                        if (u4!=u4)
-                std::cout << cells[x][y].u4() << ", " << yFaces[x][y-1].g4() << ", " << yFaces[x][y].g4() << ", " << u4 << std::endl;
+            if (u4!=u4)
+            std::cout << "u4error " << cells[x][y].u4() << ", " << yFaces[x][y-1].g4() << ", " << yFaces[x][y].g4() << ", " << u4 << std::endl;
+            if (u1<=0)
+                std::cout << "u1: " << u1 << ", og: " << cells[x][y].u1() << ", g1: " << yFaces[x][y - 1].g1() << ", g1: " << yFaces[x][y].g1() << std::endl;
+            // if (u2<=0)
+            //     std::cout << "u2: " << u2 << ", og: " << cells[x][y].u2() << ", g2: " << yFaces[x][y - 1].g2() << ", g2: " << yFaces[x][y].g2() << std::endl;
+            // if (u3<=0)
+            //     std::cout << "u3: " << u3 << ", og: " << cells[x][y].u3() << ", g3: " << yFaces[x][y - 1].g3() << ", g3: " << yFaces[x][y].g3() << std::endl;
+            if (u4<=0)
+                std::cout << "u4: " << u4 << ", og: " << cells[x][y].u4() << ", g4: " << yFaces[x][y - 1].g4() << ", g4: " << yFaces[x][y].g4() << std::endl;
             cells[x][y].updateConservatives(u1, u2, u3, u4); // update the primatives in the points array from the conservatives found
         }
     }
