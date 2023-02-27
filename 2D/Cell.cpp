@@ -110,7 +110,7 @@ void Cell::updatePrimatives(double p, double rho, double u, double v)
     this->v = v;
     this->p = p;
     this->rho = rho;
-    if (p > 0 && rho > 0)
+    if (p >= 0.0 && rho >= 0.0)
     {
         aCalc();
         return;
@@ -118,13 +118,15 @@ void Cell::updatePrimatives(double p, double rho, double u, double v)
     if (p <= 0.0) // this is different to the number used in the vacuum shit to diagnose that the problem is not within the vacuum shit I CHANGED THIS
     {
         std::cout << "p is " << p << " rho is " << rho << std::endl;
-        this->p = 0.00001; // value not zero so other calcs still work I CHANGED THIS
+        this->p = 0.0; // value not zero so other calcs still work I CHANGED THIS
+        this->rho = 0.0;
     }
     if (rho <= 0.0)
     {
         std::cout << "p is " << p << " rho is " << rho << std::endl;
-        this->rho = 0.00001;
+        this->rho = 0.0;
+        this->p =0.0;
     }
-    aCalc();
+    a=0.0;
     return;
 }

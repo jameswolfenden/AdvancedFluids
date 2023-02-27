@@ -5,11 +5,10 @@
 
 bool SolveRiemann::findStar(const double &rhoL, const double &uL, const double &vL, const double &aL, const double &pL, const double &rhoR, const double &uR, const double &vR, const double &aR, const double &pR, double &rho, double &u, double &v, double &a, double &p) // find the values at the faces between 2 cells adjacent in x
 {
-//    if (testVacuum(rhoL, uL, vL, aL, pL, rhoR, uR, vR, aR, pR, rho, u, v, a, p))
-  //      return true; // a vacuum is generated, values found without iteration required NEED TO CHECK SPEED OF SOUND!!!!!
+    if (testVacuum(rhoL, uL, vL, aL, pL, rhoR, uR, vR, aR, pR, rho, u, v, a, p))
+        return true; // a vacuum is generated, values found without iteration required NEED TO CHECK SPEED OF SOUND!!!!!
 
     iterateP(rhoL, uL, vL, aL, pL, rhoR, uR, vR, aR, pR, rho, u, v, a, p);
-
 
     if (u >= 0.0) // pick rho value depending on the side of the discontinuity
     {
@@ -28,16 +27,16 @@ bool SolveRiemann::findStar(const double &rhoL, const double &uL, const double &
         v = vR;
     }
     a = sqrt((gammma * p) / rho);
-    if (rho!=rho)
-        std::cout<< "u: " << u << ", rhoL: " << rhoL << ", rhoR: " << rhoR << ", vL: " << vL << ", vR: " << vR << ", pL: " << pL<< ", pR: " << pR << std::endl;
+    if (rho != rho)
+        std::cout << "rhoerror u: " << u << ", rhoL: " << rhoL << ", rhoR: " << rhoR << ", vL: " << vL << ", vR: " << vR << ", pL: " << pL << ", pR: " << pR << ", p:" << p << std::endl;
     return false;
 }
 
 bool SolveRiemann::testVacuum(const double &rhoL, const double &uL, const double &vL, const double &aL, const double &pL, const double &rhoR, const double &uR, const double &vR, const double &aR, const double &pR, double &rho, double &u, double &v, double &a, double &p)
 {
-    if (rhoL == 0.0 || rhoR == 0.0 || (2 * aL / (gammma - 1) + 2 * aR / (gammma - 1)) <= (uR - uL))
+    if ((rhoL == 0.0 || pL == 0.0) || (rhoR == 0.0 || pR == 0.0)) //|| (2 * aL / (gammma - 1) + 2 * aR / (gammma - 1)) <= (uR - uL))
     {
-        if ((rhoL == 0.0 && rhoR != 0.0) || ((rhoR != 0.0 && rhoL != 0.0) && 0 >= (uR - 2 * aR / (gammma - 1)))) // vacuum left not right
+        if (((rhoL == 0.0 || pL == 0.0) && (rhoR != 0.0 || pR != 0.0)) || (((rhoR != 0.0 || pR != 0.0) && (rhoL != 0.0 || pL != 0.0)) && 0 >= (uR - 2 * aR / (gammma - 1)))) // vacuum left not right
         {
             if (0 >= (uR + aR))
             {
@@ -50,27 +49,32 @@ bool SolveRiemann::testVacuum(const double &rhoL, const double &uL, const double
             }
             else if (0 <= (uR - 2 * aR / (gammma - 1)))
             {
-                std::cout << "W_0" << std::endl;
-                rho = 0.0;
-                p = 0.0;
-                u = 0.5 * (uL + uR); // SOURCE: I MADE IT UP NEED TO ASK
-                v = 0.5 * (vL + vR); // SOURCE: I MADE IT UP NEED TO ASK
-                u = uL;              // idk
-                a = 0.0;
+                // std::cout << "W_0" << std::endl;
+                // rho = 0.0;
+                // p = 0.0;
+                // u = 0.5 * (uL + uR); // SOURCE: I MADE IT UP NEED TO ASK
+                // v = 0.5 * (vL + vR); // SOURCE: I MADE IT UP NEED TO ASK
+                // u = uL;              // idk
+                // a = 0.0;
+                std::cout << "W_L" << std::endl;
+                rho = rhoL;
+                p = pL;
+                u = uL;
+                v = vL;
+                a = aL;
             }
             else
             {
                 std::cout << "W_RFan" << std::endl;
                 rho = rhoR * pow(2 / (gammma + 1) - (gammma - 1) / (gammma + 1) * (uR) / aR, 2 / (gammma - 1));
                 u = 2 / (gammma + 1) * (-aR + ((gammma - 1) / 2) * uR);
-                v = 2 / (gammma + 1) * (-aR + ((gammma - 1) / 2) * vR);
-                // v = vR;
+                v = vR * pow(2 / (gammma + 1) - (gammma - 1) / (gammma + 1) * (uR) / aR, 2 / (gammma - 1));
                 p = pR * pow(2 / (gammma + 1) - (gammma - 1) / (gammma + 1) * (uR) / aR, (2 * gammma) / (gammma - 1));
                 a = sqrt((gammma * p) / rho);
             }
             return true;
         }
-        else if ((rhoR == 0.0 && rhoL != 0.0) || ((rhoR != 0.0 && rhoL != 0.0) && 0 <= (uL + 2 * aL / (gammma - 1)))) // vacuum right not left
+        else if (((rhoR == 0.0 || pR == 0.0) && (rhoL != 0.0 || pL != 0.0)) || (((rhoR != 0.0 || pR != 0.0) && (rhoL != 0.0 || pL != 0.0)) && 0 <= (uL + 2 * aL / (gammma - 1)))) // vacuum right not left
         {
             if (0 <= (uL - aL))
             {
@@ -83,27 +87,32 @@ bool SolveRiemann::testVacuum(const double &rhoL, const double &uL, const double
             }
             else if (0 >= (uL + 2 * aL / (gammma - 1)))
             {
-                std::cout << "W_0" << std::endl;
-                rho = 0.0;
-                p = 0.0;
-                u = 0.5 * (uL + uR); // SOURCE: I MADE IT UP NEED TO ASK
-                v = 0.5 * (vL + vR); // SOURCE: I MADE IT UP NEED TO ASK
-                u = uR;              // idk
-                a = 0.0;
+                // std::cout << "W_0" << std::endl;
+                // rho = 0.0;
+                // p = 0.0;
+                // u = 0.5 * (uL + uR); // SOURCE: I MADE IT UP NEED TO ASK
+                // v = 0.5 * (vL + vR); // SOURCE: I MADE IT UP NEED TO ASK
+                // u = uR;              // idk
+                // a = 0.0;
+                std::cout << "W_R" << std::endl;
+                rho = rhoR;
+                p = pR;
+                u = uR;
+                v = vR;
+                a = aR;
             }
             else
             {
                 std::cout << "W_LFan" << std::endl;
-                rho = rhoL * pow(2 / (gammma + 1) - (gammma - 1) / (gammma + 1) * (uL) / aL, 2 / (gammma - 1));
+                rho = rhoL * pow(2 / (gammma + 1) + (gammma - 1) / (gammma + 1) * (uL) / aL, 2 / (gammma - 1));
                 u = 2 / (gammma + 1) * (aL + ((gammma - 1) / 2) * uL);
-                v = 2 / (gammma + 1) * (aL + ((gammma - 1) / 2) * vL);
-                // v = vL;
-                p = pL * pow(2 / (gammma + 1) - (gammma - 1) / (gammma + 1) * (uL) / aL, (2 * gammma) / (gammma - 1));
+                v = vL * pow(2 / (gammma + 1) + (gammma - 1) / (gammma + 1) * (uL) / aL, 2 / (gammma - 1));
+                p = pL * pow(2 / (gammma + 1) + (gammma - 1) / (gammma + 1) * (uL) / aL, (2 * gammma) / (gammma - 1));
                 a = sqrt((gammma * p) / rho);
             }
             return true;
         }
-        else if ((rhoR == 0.0 && rhoL == 0.0) || ((uL + 2 * aL / (gammma - 1)) < 0 && (uR - 2 * aR / (gammma - 1)) > 0)) // vacuum left and right
+        else if (((rhoR == 0.0 || pR == 0.0) && (rhoL == 0.0 || pL == 0.0)) || ((uL + 2 * aL / (gammma - 1)) < 0 && (uR - 2 * aR / (gammma - 1)) > 0)) // vacuum left and right
         {
             std::cout << "W_0" << std::endl;
             rho = 0.0;
@@ -249,7 +258,7 @@ void SolveRiemann::iterateP(const double &rhoL, const double &uL, const double &
     {
         pickStartVal(errorStage, rhoL, uL, vL, aL, pL, rhoR, uR, vR, aR, pR, rho, u, v, a, p);
         count = 0;
-        //std::cout << "p guessed: " << p<< std::endl;
+        // std::cout << "p guessed: " << p<< std::endl;
         while (iterate) // loop to iterate the p value
         {
             errno = 0;
@@ -286,13 +295,18 @@ void SolveRiemann::iterateP(const double &rhoL, const double &uL, const double &
             double f = fsL + fsR - uL + uR;
             double d_f = d_fsL + d_fsR;
             change = f / d_f;
-        //    std::cout << f << ", " << d_f << ", " << change << std::endl;
+            //    std::cout << f << ", " << d_f << ", " << change << std::endl;
             p = p - change; // Update new estimate of p*
             count++;
 
             if (TOL >= 2 * fabs(change / (change + 2 * p))) // iteration limit (slightly different to notes as abs of entire rhs)
             {
                 iterate = false; // we have converged
+            }
+            if (count > 10000)
+            {
+                errorStage++;
+                break;
             }
         }
     }
