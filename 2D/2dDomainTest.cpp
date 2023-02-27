@@ -32,30 +32,48 @@ void saveDomain(Domain2D *domain, int num, int iteration) // each domain is save
 
 int main()
 {
-    int xCellCount = 20;
-    int yCellCount = 20;
     int iterations = 100;
     double elapsedTime = 0;
     int domainCount = 4;
+    double fridgeHeight = 2.02;
+    double pipeHeight = 1.02;
+    double pipeWidth = 0.07;
+    double leftFridgeWidth = 0.07;
+    double rightFridgeWidth = 1.02 - leftFridgeWidth - pipeWidth; // idk if this is right
+    int xCellsPerMetre = 100;
+    int yCellsPerMetre = 100;
+    int pipeWidthCells = (int) (pipeWidth*xCellsPerMetre);
+    int pipeHeightCells = (int) (pipeHeight*yCellsPerMetre);
+    int leftFridgeWidthCells = (int) (leftFridgeWidth*xCellsPerMetre);
+    int rightFridgeWidthCells = (int) (rightFridgeWidth*xCellsPerMetre);
+    int fridgeHeightCells = (int) (fridgeHeight*yCellsPerMetre);
+    std::cout << "pipeWidthCells: " << pipeWidthCells << std::endl;
+    std::cout << "pipeHeightCells: " << pipeHeightCells << std::endl;
+    std::cout << "leftFridgeWidthCells: " << leftFridgeWidthCells << std::endl;
+    std::cout << "rightFridgeWidthCells: " << rightFridgeWidthCells << std::endl;
+    std::cout << "fridgeHeightCells: " << fridgeHeightCells << std::endl;
+    // important to take into account the ghost cells - the domain is 1 cell larger in each direction
+
+
 
     std::vector<std::vector<bool>> domainsGhosts = {                             // order of sides is top of domain, bottom, left, right
-                                                    {false, true, false, false}, // centre bottom
-                                                    {true, false, true, true},   // top
-                                                    {true, true, true, false},   // left
-                                                    {true, true, false, true}};  // right
+                                                    {true, false, false, false}, // centre fridge interior
+                                                    {false, true, true, true},   // pipe below fridge
+                                                    {true, true, true, false},   // left fridge interior (small)
+                                                    {true, true, false, true}};  // right fridge interior (large)
     std::vector<std::vector<Domain2D *>> domainsTransmissive;
     domainsTransmissive.resize(domainCount, std::vector<Domain2D *>(4));
     std::vector<Domain2D> domains = {
-        Domain2D(1, 1, xCellCount, yCellCount, domainsGhosts[0], 0.1, 0.125, 0.0, 0.0),  // centre bottom
-        Domain2D(1, 1, xCellCount, yCellCount, domainsGhosts[1], 1, 1, 0.0, 0.0),        // top
-        Domain2D(1, 1, xCellCount, yCellCount, domainsGhosts[2], 0.1, 0.125, 0.0, 0.0),  // left
-        Domain2D(1, 1, xCellCount, yCellCount, domainsGhosts[3], 0.1, 0.125, 0.0, 0.0)}; // right
-    domainsTransmissive[0][0] = &domains[1];                                             // top of centre bottom domain is transmissive to top domain
-    domainsTransmissive[0][2] = &domains[2];                                             // left of centre bottom domain is transmissive to left domain
-    domainsTransmissive[0][3] = &domains[3];                                             // right of centre bottom domain is transmissive to right domain
-    domainsTransmissive[1][1] = &domains[0];                                             // bottom of top domain is transmissive to bottom domain
-    domainsTransmissive[2][3] = &domains[0];                                             // right of left domain is transmissive to centre bottom domain
-    domainsTransmissive[3][2] = &domains[0];                                             // left of right domain is transmissive to centre bottom domain
+        Domain2D(pipeWidth, fridgeHeight, pipeWidthCells, fridgeHeightCells, domainsGhosts[0], 1, 1.3, 0.0, 0.0),  // centre fridge interior
+        Domain2D(pipeWidth, pipeHeight, pipeWidthCells, pipeHeightCells, domainsGhosts[1], 1.1, 1.45, 0.0, 0.0),        // pipe below fridge
+        Domain2D(leftFridgeWidth, fridgeHeight, leftFridgeWidthCells, fridgeHeightCells, domainsGhosts[2], 1, 1.3, 0.0, 0.0),  // left fridge interior (small)
+        Domain2D(rightFridgeWidth, fridgeHeight, rightFridgeWidthCells, fridgeHeightCells, domainsGhosts[3], 1, 1.3, 0.0, 0.0)}; // right fridge interior (large)
+    domainsTransmissive[0][1] = &domains[1];                                             // bottom of centre fridge domain is transmissive to pipe domain
+    domainsTransmissive[0][2] = &domains[2];                                             // left of centre fridge domain is transmissive to left fridge domain
+    domainsTransmissive[0][3] = &domains[3];                                             // right of centre fridge domain is transmissive to right fridge domain
+    domainsTransmissive[1][0] = &domains[0];                                             // top of pipe domain is transmissive to centre fridge domain
+    domainsTransmissive[2][3] = &domains[0];                                             // right of left fridge domain is transmissive to centre fridge domain
+    domainsTransmissive[3][2] = &domains[0];                                             // left of right fridge domain is transmissive to centre fridge domain
 
     for (int domain = 0; domain < domainCount; domain++)
     {

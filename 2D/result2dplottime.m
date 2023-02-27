@@ -46,12 +46,12 @@ v = VideoWriter('p.mp4', 'MPEG-4');
 v.Quality = 100;
 open(v);
 for i=toplay
-    pBig = [zeros(size(p1,1)-2,size(p2,2)-3), p1(2:size(p1,1)-1,2:size(p1,2)-2,i), zeros(size(p1,1)-2,size(p3,2)-3); p2(2:size(p2,1)-1,2:size(p2,2)-2,i), p0(2:size(p0,1)-1,2:size(p0,2)-2,i), p3(2:size(p3,1)-1,2:size(p3,2)-2,i)];
-    clims = [0 1];
+    pBig = [p2(2:size(p2,1)-1,2:size(p2,2)-2,i), p0(2:size(p0,1)-1,2:size(p0,2)-2,i), p3(2:size(p3,1)-1,2:size(p3,2)-2,i); zeros(size(p1,1)-2,size(p2,2)-3), p1(2:size(p1,1)-1,2:size(p1,2)-2,i), zeros(size(p1,1)-2,size(p3,2)-3)];
+    clims = [1 1.1];
     imagesc(pBig, clims);
     hold on
-    fill([0.5 0.5 size(p2,2)-2.5 size(p2,2)-2.5],[0.5 size(p1,1)-1.5 size(p1,1)-1.5 0.5], "w");
-    fill([size(pBig,2)+0.5 size(pBig,2)+0.5 size(pBig,2)-size(p2,2)+3.5 size(pBig,2)-size(p2,2)+3.5],[0.5 size(p1,1)-1.5 size(p1,1)-1.5 0.5], "w");
+    fill([0.5 0.5 size(p2,2)-2.5 size(p2,2)-2.5],[size(p2,1)-1.5 size(pBig,1)+0.5 size(pBig,1)+0.5 size(p2,1)-1.5], "w");
+    fill([size(pBig,2)+0.5 size(pBig,2)+0.5 size(pBig,2)-size(p3,2)+3.5 size(pBig,2)-size(p3,2)+3.5],[size(p2,1)-1.5 size(pBig,1)+0.5 size(pBig,1)+0.5 size(p2,1)-1.5], "w");
     title("p");
     frame = getframe(gcf);
     writeVideo(v,frame);
@@ -63,12 +63,12 @@ v = VideoWriter('rho.mp4', 'MPEG-4');
 v.Quality = 100;
 open(v);
 for i=toplay
-    rhoBig = [zeros(size(rho1,1)-2,size(rho2,2)-3), rho1(2:size(rho1,1)-1,2:size(rho1,2)-2,i), zeros(size(rho1,1)-2,size(rho3,2)-3); rho2(2:size(rho2,1)-1,2:size(rho2,2)-2,i), rho0(2:size(rho0,1)-1,2:size(rho0,2)-2,i), rho3(2:size(rho3,1)-1,2:size(rho3,2)-2,i)];
-    clims = [0 1];
+    rhoBig = [rho2(2:size(rho2,1)-1,2:size(rho2,2)-2,i), rho0(2:size(rho0,1)-1,2:size(rho0,2)-2,i), rho3(2:size(rho3,1)-1,2:size(rho3,2)-2,i); zeros(size(rho1,1)-2,size(rho2,2)-3), rho1(2:size(rho1,1)-1,2:size(rho1,2)-2,i), zeros(size(rho1,1)-2,size(rho3,2)-3)];
+    clims = [1.3 1.45];
     imagesc(rhoBig, clims);
     hold on
-    fill([0.5 0.5 size(rho2,2)-2.5 size(rho2,2)-2.5],[0.5 size(rho1,1)-1.5 size(rho1,1)-1.5 0.5], "w");
-    fill([size(rhoBig,2)+0.5 size(rhoBig,2)+0.5 size(rhoBig,2)-size(rho2,2)+3.5 size(rhoBig,2)-size(rho2,2)+3.5],[0.5 size(rho1,1)-1.5 size(rho1,1)-1.5 0.5], "w");
+    fill([0.5 0.5 size(rho2,2)-2.5 size(rho2,2)-2.5],[size(rho2,1)-1.5 size(rhoBig,1)+0.5 size(rhoBig,1)+0.5 size(rho2,1)-1.5], "w");
+    fill([size(rhoBig,2)+0.5 size(rhoBig,2)+0.5 size(rhoBig,2)-size(rho3,2)+3.5 size(rhoBig,2)-size(rho3,2)+3.5],[size(rho2,1)-1.5 size(rhoBig,1)+0.5 size(rhoBig,1)+0.5 size(rho2,1)-1.5], "w");
     title("rho");
     frame = getframe(gcf);
     writeVideo(v,frame);
@@ -80,12 +80,12 @@ v = VideoWriter('u.mp4', 'MPEG-4');
 v.Quality = 100;
 open(v);
 for i=toplay
-    uBig = [zeros(size(u1,1)-2,size(u2,2)-3), u1(2:size(u1,1)-1,2:size(u1,2)-2,i), zeros(size(u1,1)-2,size(u3,2)-3); u2(2:size(u2,1)-1,2:size(u2,2)-2,i), u0(2:size(u0,1)-1,2:size(u0,2)-2,i), u3(2:size(u3,1)-1,2:size(u3,2)-2,i)];
-    clims = [-1.5 1.5];
+    uBig = [u2(2:size(u2,1)-1,2:size(u2,2)-2,i), u0(2:size(u0,1)-1,2:size(u0,2)-2,i), u3(2:size(u3,1)-1,2:size(u3,2)-2,i); zeros(size(u1,1)-2,size(u2,2)-3), u1(2:size(u1,1)-1,2:size(u1,2)-2,i), zeros(size(u1,1)-2,size(u3,2)-3)];
+    clims = [-0.05 0.05];
     imagesc(uBig, clims);
     hold on
-    fill([0.5 0.5 size(u2,2)-2.5 size(u2,2)-2.5],[0.5 size(u1,1)-1.5 size(u1,1)-1.5 0.5], "w");
-    fill([size(uBig,2)+0.5 size(uBig,2)+0.5 size(uBig,2)-size(u2,2)+3.5 size(uBig,2)-size(u2,2)+3.5],[0.5 size(u1,1)-1.5 size(u1,1)-1.5 0.5], "w");
+    fill([0.5 0.5 size(u2,2)-2.5 size(u2,2)-2.5],[size(u2,1)-1.5 size(uBig,1)+0.5 size(uBig,1)+0.5 size(u2,1)-1.5], "w");
+    fill([size(uBig,2)+0.5 size(uBig,2)+0.5 size(uBig,2)-size(u3,2)+3.5 size(uBig,2)-size(u3,2)+3.5],[size(u2,1)-1.5 size(uBig,1)+0.5 size(uBig,1)+0.5 size(u2,1)-1.5], "w");
     title("u");
     frame = getframe(gcf);
     writeVideo(v,frame);
@@ -97,12 +97,12 @@ v = VideoWriter('v.mp4', 'MPEG-4');
 v.Quality = 100;
 open(v);
 for i=toplay
-    vBig = [zeros(size(v1,1)-2,size(v2,2)-3), v1(2:size(v1,1)-1,2:size(v1,2)-2,i), zeros(size(v1,1)-2,size(v3,2)-3); v2(2:size(v2,1)-1,2:size(v2,2)-2,i), v0(2:size(v0,1)-1,2:size(v0,2)-2,i), v3(2:size(v3,1)-1,2:size(v3,2)-2,i)];
-    clims = [-1.5 1.5];
+    vBig = [v2(2:size(v2,1)-1,2:size(v2,2)-2,i), v0(2:size(v0,1)-1,2:size(v0,2)-2,i), v3(2:size(v3,1)-1,2:size(v3,2)-2,i); zeros(size(v1,1)-2,size(v2,2)-3), v1(2:size(v1,1)-1,2:size(v1,2)-2,i), zeros(size(v1,1)-2,size(v3,2)-3)];
+    clims = [-0.05 0.05];
     imagesc(vBig, clims);
     hold on
-    fill([0.5 0.5 size(v2,2)-2.5 size(v2,2)-2.5],[0.5 size(v1,1)-1.5 size(v1,1)-1.5 0.5], "w");
-    fill([size(vBig,2)+0.5 size(vBig,2)+0.5 size(vBig,2)-size(v2,2)+3.5 size(vBig,2)-size(v2,2)+3.5],[0.5 size(v1,1)-1.5 size(v1,1)-1.5 0.5], "w");
+    fill([0.5 0.5 size(v2,2)-2.5 size(v2,2)-2.5],[size(v2,1)-1.5 size(vBig,1)+0.5 size(vBig,1)+0.5 size(v2,1)-1.5], "w");
+    fill([size(vBig,2)+0.5 size(vBig,2)+0.5 size(vBig,2)-size(v3,2)+3.5 size(vBig,2)-size(v3,2)+3.5],[size(v2,1)-1.5 size(vBig,1)+0.5 size(vBig,1)+0.5 size(v2,1)-1.5], "w");
     title("v");
     frame = getframe(gcf);
     writeVideo(v,frame);
