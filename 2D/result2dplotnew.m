@@ -1,4 +1,4 @@
-i=100
+i=30
 
 p0 = readmatrix("results\0pCells"+i+".csv");
 rho0 = readmatrix("results\0rhoCells"+i+".csv");

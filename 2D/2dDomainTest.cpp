@@ -32,16 +32,18 @@ void saveDomain(Domain2D *domain, int num, int iteration) // each domain is save
 
 int main()
 {
-    int iterations = 100;
+    int iterations = 50;
     double elapsedTime = 0;
     int domainCount = 4;
-    double fridgeHeight = 2.02;
-    double pipeHeight = 1.02;
-    double pipeWidth = 0.07;
+   // double fridgeHeight = 2.02; // full size
+    double fridgeHeight = 0.72; // reduced size
+    double pipeHeight = 0.77;
+    double pipeWidth = 0.05;
     double leftFridgeWidth = 0.07;
-    double rightFridgeWidth = 1.02 - leftFridgeWidth - pipeWidth; // idk if this is right
-    int xCellsPerMetre = 100;
-    int yCellsPerMetre = 100;
+    //double rightFridgeWidth = 1.06 - leftFridgeWidth - pipeWidth; // maybe right? full size
+    double rightFridgeWidth = 0.36 - leftFridgeWidth - pipeWidth; // reduced size
+    int xCellsPerMetre = 200;
+    int yCellsPerMetre = 200;
     int pipeWidthCells = (int) (pipeWidth*xCellsPerMetre);
     int pipeHeightCells = (int) (pipeHeight*yCellsPerMetre);
     int leftFridgeWidthCells = (int) (leftFridgeWidth*xCellsPerMetre);
