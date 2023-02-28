@@ -3,9 +3,9 @@
 #include "../fluidConsts.h"
 #include <iostream>
 
-bool SolveRiemann::findStar(const double &rhoL, const double &uL, const double &vL, const double &aL, const double &pL, const double &rhoR, const double &uR, const double &vR, const double &aR, const double &pR, double &rho, double &u, double &v, double &a, double &p) // find the values at the faces between 2 cells adjacent in x
+bool SolveRiemann::findStar(const double &rhoL, const double &uL, const double &vL, const double &aL, const double &pL, const double &dyeL, const double &rhoR, const double &uR, const double &vR, const double &aR, const double &pR, const double &dyeR, double &rho, double &u, double &v, double &a, double &p , double &dye) // find the values at the faces between 2 cells adjacent in x
 {
-    if (testVacuum(rhoL, uL, vL, aL, pL, rhoR, uR, vR, aR, pR, rho, u, v, a, p))
+    if (testVacuum(rhoL, uL, vL, aL, pL, dyeL, rhoR, uR, vR, aR, pR, dyeR, rho, u, v, a, p, dye))
         return true; // a vacuum is generated, values found without iteration required NEED TO CHECK SPEED OF SOUND!!!!!
 
     iterateP(rhoL, uL, vL, aL, pL, rhoR, uR, vR, aR, pR, rho, u, v, a, p);
@@ -17,6 +17,7 @@ bool SolveRiemann::findStar(const double &rhoL, const double &uL, const double &
         else
             rho = rhoL * pow((p / pL), 1 / gammma);
         v = vL;
+        dye = dyeL;
     }
     else
     {
@@ -25,6 +26,7 @@ bool SolveRiemann::findStar(const double &rhoL, const double &uL, const double &
         else
             rho = rhoR * pow((p / pR), 1 / gammma);
         v = vR;
+        dye = dyeR;
     }
     a = sqrt((gammma * p) / rho);
     if (rho != rho)
@@ -32,7 +34,7 @@ bool SolveRiemann::findStar(const double &rhoL, const double &uL, const double &
     return false;
 }
 
-bool SolveRiemann::testVacuum(const double &rhoL, const double &uL, const double &vL, const double &aL, const double &pL, const double &rhoR, const double &uR, const double &vR, const double &aR, const double &pR, double &rho, double &u, double &v, double &a, double &p)
+bool SolveRiemann::testVacuum(const double &rhoL, const double &uL, const double &vL, const double &aL, const double &pL, const double &dyeL, const double &rhoR, const double &uR, const double &vR, const double &aR, const double &pR, const double &dyeR, double &rho, double &u, double &v, double &a, double &p, double &dye)
 {
     if ((rhoL == 0.0 || pL == 0.0) || (rhoR == 0.0 || pR == 0.0)) //|| (2 * aL / (gammma - 1) + 2 * aR / (gammma - 1)) <= (uR - uL))
     {
@@ -44,6 +46,7 @@ bool SolveRiemann::testVacuum(const double &rhoL, const double &uL, const double
                 rho = rhoR;
                 u = uR;
                 v = vR; // made up
+                dye = dyeR; // made up
                 p = pR;
                 a = sqrt((gammma * p) / rho);
             }
@@ -61,6 +64,7 @@ bool SolveRiemann::testVacuum(const double &rhoL, const double &uL, const double
                 p = pL;
                 u = uL;
                 v = vL;
+                dye = dyeL;
                 a = aL;
             }
             else
@@ -69,6 +73,7 @@ bool SolveRiemann::testVacuum(const double &rhoL, const double &uL, const double
                 rho = rhoR * pow(2 / (gammma + 1) - (gammma - 1) / (gammma + 1) * (uR) / aR, 2 / (gammma - 1));
                 u = 2 / (gammma + 1) * (-aR + ((gammma - 1) / 2) * uR);
                 v = vR * pow(2 / (gammma + 1) - (gammma - 1) / (gammma + 1) * (uR) / aR, 2 / (gammma - 1));
+                dye = dyeR * pow(2 / (gammma + 1) - (gammma - 1) / (gammma + 1) * (uR) / aR, 2 / (gammma - 1));
                 p = pR * pow(2 / (gammma + 1) - (gammma - 1) / (gammma + 1) * (uR) / aR, (2 * gammma) / (gammma - 1));
                 a = sqrt((gammma * p) / rho);
             }
@@ -82,6 +87,7 @@ bool SolveRiemann::testVacuum(const double &rhoL, const double &uL, const double
                 rho = rhoL;
                 u = uL;
                 v = vL; // made up
+                dye = dyeL; // made up
                 p = pL;
                 a = sqrt((gammma * p) / rho);
             }
@@ -99,6 +105,7 @@ bool SolveRiemann::testVacuum(const double &rhoL, const double &uL, const double
                 p = pR;
                 u = uR;
                 v = vR;
+                dye = dyeR;
                 a = aR;
             }
             else
@@ -107,6 +114,7 @@ bool SolveRiemann::testVacuum(const double &rhoL, const double &uL, const double
                 rho = rhoL * pow(2 / (gammma + 1) + (gammma - 1) / (gammma + 1) * (uL) / aL, 2 / (gammma - 1));
                 u = 2 / (gammma + 1) * (aL + ((gammma - 1) / 2) * uL);
                 v = vL * pow(2 / (gammma + 1) + (gammma - 1) / (gammma + 1) * (uL) / aL, 2 / (gammma - 1));
+                dye = dyeL * pow(2 / (gammma + 1) + (gammma - 1) / (gammma + 1) * (uL) / aL, 2 / (gammma - 1));
                 p = pL * pow(2 / (gammma + 1) + (gammma - 1) / (gammma + 1) * (uL) / aL, (2 * gammma) / (gammma - 1));
                 a = sqrt((gammma * p) / rho);
             }
@@ -119,6 +127,7 @@ bool SolveRiemann::testVacuum(const double &rhoL, const double &uL, const double
             p = 0.0;
             u = 0.5 * (uL + uR); // SOURCE: I MADE IT UP NEED TO ASK
             v = 0.5 * (vL + vR); // SOURCE: I MADE IT UP NEED TO ASK
+            dye = 0.5 * (dyeL + dyeR); // SOURCE: I MADE IT UP NEED TO ASK
             a = 0.0;
             return true;
         }

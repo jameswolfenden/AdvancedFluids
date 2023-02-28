@@ -1,21 +1,25 @@
-n = numel(dir("results\*.csv"))/16;
+n = numel(dir("results\*.csv"))/20;
 
 p0 = zeros([size(readmatrix("results\0pCells0.csv")) n]);
 rho0 = zeros(size(p0));
 u0 = zeros(size(p0));
 v0 = zeros(size(p0));
+dye0 = zeros(size(p0));
 p1 = zeros([size(readmatrix("results\1pCells0.csv")) n]);
 rho1 = zeros(size(p1));
 u1 = zeros(size(p1));
 v1 = zeros(size(p1));
+dye1 = zeros(size(p1));
 p2 = zeros([size(readmatrix("results\2pCells0.csv")) n]);
 rho2 = zeros(size(p2));
 u2 = zeros(size(p2));
 v2 = zeros(size(p2));
+dye2 = zeros(size(p2));
 p3 = zeros([size(readmatrix("results\3pCells0.csv")) n]);
 rho3 = zeros(size(p3));
 u3 = zeros(size(p3));
 v3 = zeros(size(p3));
+dye3 = zeros(size(p3));
 
 toplay=1:n;
 %toplay = 1:10:1001;
@@ -26,18 +30,22 @@ for i = toplay
     rho0(:,:,i) = readmatrix("results\0rhoCells"+(i-1)+".csv");
     u0(:,:,i) = readmatrix("results\0uCells"+(i-1)+".csv");
     v0(:,:,i) = readmatrix("results\0vCells"+(i-1)+".csv");
+    dye0(:,:,i) = readmatrix("results\0dyeCells"+(i-1)+".csv");
     p1(:,:,i) = readmatrix("results\1pCells"+(i-1)+".csv");
     rho1(:,:,i) = readmatrix("results\1rhoCells"+(i-1)+".csv");
     u1(:,:,i) = readmatrix("results\1uCells"+(i-1)+".csv");
     v1(:,:,i) = readmatrix("results\1vCells"+(i-1)+".csv");
+    dye1(:,:,i) = readmatrix("results\1dyeCells"+(i-1)+".csv");
     p2(:,:,i) = readmatrix("results\2pCells"+(i-1)+".csv");
     rho2(:,:,i) = readmatrix("results\2rhoCells"+(i-1)+".csv");
     u2(:,:,i) = readmatrix("results\2uCells"+(i-1)+".csv");
     v2(:,:,i) = readmatrix("results\2vCells"+(i-1)+".csv");
+    dye2(:,:,i) = readmatrix("results\2dyeCells"+(i-1)+".csv");
     p3(:,:,i) = readmatrix("results\3pCells"+(i-1)+".csv");
     rho3(:,:,i) = readmatrix("results\3rhoCells"+(i-1)+".csv");
     u3(:,:,i) = readmatrix("results\3uCells"+(i-1)+".csv");
     v3(:,:,i) = readmatrix("results\3vCells"+(i-1)+".csv");
+    dye3(:,:,i) = readmatrix("results\3dyeCells"+(i-1)+".csv");
     
 end
 
@@ -109,3 +117,18 @@ for i=toplay
 end
 close(v);
 
+figure
+v = VideoWriter('dye.mp4', 'MPEG-4');
+v.Quality = 100;
+open(v);
+for i=toplay
+    dyeBig = [dye2(2:size(dye2,1)-1,2:size(dye2,2)-2,i), dye0(2:size(dye0,1)-1,2:size(dye0,2)-2,i), dye3(2:size(dye3,1)-1,2:size(dye3,2)-2,i); zeros(size(dye1,1)-2,size(dye2,2)-3), dye1(2:size(dye1,1)-1,2:size(dye1,2)-2,i), zeros(size(dye1,1)-2,size(dye3,2)-3)];
+    clims = [0 1];
+    imagesc(dyeBig, clims);
+    hold on
+    fill([0.5 0.5 size(dye2,2)-2.5 size(dye2,2)-2.5],[size(dye2,1)-1.5 size(dyeBig,1)+0.5 size(dyeBig,1)+0.5 size(dye2,1)-1.5], "w");
+    fill([size(dyeBig,2)+0.5 size(dyeBig,2)+0.5 size(dyeBig,2)-size(dye3,2)+3.5 size(dyeBig,2)-size(dye3,2)+3.5],[size(dye2,1)-1.5 size(dyeBig,1)+0.5 size(dyeBig,1)+0.5 size(dye2,1)-1.5], "w");
+    title("dye");
+    frame = getframe(gcf);
+    writeVideo(v,frame);
+end

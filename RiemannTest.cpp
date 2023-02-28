@@ -6,7 +6,7 @@
 
 int main()
 {
-    double rho, u, v, a, p, rhoL, uL, vL, aL, pL, rhoR, uR, vR, aR, pR;
+    double rho, u, v, a, p, dye, rhoL, uL, vL, aL, pL, rhoR, uR, vR, aR, pR;
     SolveRiemann rSolver;
 
 
@@ -88,6 +88,6 @@ int main()
     else
         aR = sqrt((gammma * pL) / rhoL);
 
-    rSolver.findStar(rhoL, uL, vL, aL, pL, rhoR, uR, vR, aR, pR, rho, u, v, a, p);
-    std::cout << "rho: " << rho << ", u: " << u << ", v: " << v << ", a: " << a << ", p: " << p << std::endl;
+    rSolver.findStar(rhoL, uL, vL, aL, pL, 0.0, rhoR, uR, vR, aR, pR, 1.0, rho, u, v, a, p, dye);
+    std::cout << "rho: " << rho << ", u: " << u << ", v: " << v << ", a: " << a << ", p: " << p << ", dye: " << dye << std::endl;
 }

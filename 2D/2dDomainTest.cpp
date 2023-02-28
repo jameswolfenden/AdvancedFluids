@@ -5,11 +5,12 @@
 
 void saveDomain(Domain2D *domain, int num, int iteration) // each domain is saved seperatly
 {
-    std::ofstream pCells, rhoCells, uCells, vCells;
+    std::ofstream pCells, rhoCells, uCells, vCells, dyeCells;
     pCells.open("./results/" + std::to_string(num) + "pCells" + std::to_string(iteration) + ".csv");
     rhoCells.open("./results/" + std::to_string(num) + "rhoCells" + std::to_string(iteration) + ".csv");
     uCells.open("./results/" + std::to_string(num) + "uCells" + std::to_string(iteration) + ".csv");
     vCells.open("./results/" + std::to_string(num) + "vCells" + std::to_string(iteration) + ".csv");
+    dyeCells.open("./results/" + std::to_string(num) + "dyeCells" + std::to_string(iteration) + ".csv");
     for (int y = 0; y < (domain->yCellCount); y++) // write final cell pressures
     {
         for (int x = 0; x < domain->xCellCount; x++)
@@ -18,16 +19,19 @@ void saveDomain(Domain2D *domain, int num, int iteration) // each domain is save
             rhoCells << domain->cells[x][y].rho << ",";
             uCells << domain->cells[x][y].u << ",";
             vCells << domain->cells[x][y].v << ",";
+            dyeCells << domain->cells[x][y].dye << ",";
         }
         pCells << "\n";
         rhoCells << "\n";
         uCells << "\n";
         vCells << "\n";
+        dyeCells << "\n";
     }
     pCells.close();
     rhoCells.close();
     uCells.close();
     vCells.close();
+    dyeCells.close();
 }
 
 int main()
@@ -66,10 +70,10 @@ int main()
     std::vector<std::vector<Domain2D *>> domainsTransmissive;
     domainsTransmissive.resize(domainCount, std::vector<Domain2D *>(4));
     std::vector<Domain2D> domains = {
-        Domain2D(pipeWidth, fridgeHeight, pipeWidthCells, fridgeHeightCells, domainsGhosts[0], 1, 1.3, 0.0, 0.0),  // centre fridge interior
-        Domain2D(pipeWidth, pipeHeight, pipeWidthCells, pipeHeightCells, domainsGhosts[1], 1.1, 1.45, 0.0, 0.0),        // pipe below fridge
-        Domain2D(leftFridgeWidth, fridgeHeight, leftFridgeWidthCells, fridgeHeightCells, domainsGhosts[2], 1, 1.3, 0.0, 0.0),  // left fridge interior (small)
-        Domain2D(rightFridgeWidth, fridgeHeight, rightFridgeWidthCells, fridgeHeightCells, domainsGhosts[3], 1, 1.3, 0.0, 0.0)}; // right fridge interior (large)
+        Domain2D(pipeWidth, fridgeHeight, pipeWidthCells, fridgeHeightCells, domainsGhosts[0], 1, 1.3, 0.0, 0.0, 0.0),  // centre fridge interior
+        Domain2D(pipeWidth, pipeHeight, pipeWidthCells, pipeHeightCells, domainsGhosts[1], 1.1, 1.45, 0.0, 0.0, 1.0),        // pipe below fridge
+        Domain2D(leftFridgeWidth, fridgeHeight, leftFridgeWidthCells, fridgeHeightCells, domainsGhosts[2], 1, 1.3, 0.0, 0.0, 0.0),  // left fridge interior (small)
+        Domain2D(rightFridgeWidth, fridgeHeight, rightFridgeWidthCells, fridgeHeightCells, domainsGhosts[3], 1, 1.3, 0.0, 0.0, 0.0)}; // right fridge interior (large)
     domainsTransmissive[0][1] = &domains[1];                                             // bottom of centre fridge domain is transmissive to pipe domain
     domainsTransmissive[0][2] = &domains[2];                                             // left of centre fridge domain is transmissive to left fridge domain
     domainsTransmissive[0][3] = &domains[3];                                             // right of centre fridge domain is transmissive to right fridge domain
