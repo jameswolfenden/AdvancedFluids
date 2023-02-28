@@ -14,10 +14,20 @@ void saveDomain(Domain2D *domain, int num, int iteration) // each domain is save
     {
         for (int x = 0; x < domain->xCellCount; x++)
         {
-            pCells << domain->cells[x][y].p << ",";
-            rhoCells << domain->cells[x][y].rho << ",";
-            uCells << domain->cells[x][y].u << ",";
-            vCells << domain->cells[x][y].v << ",";
+            if (x == domain->xCellCount - 1)
+            {
+                pCells << domain->cells[x][y].p;
+                rhoCells << domain->cells[x][y].rho;
+                uCells << domain->cells[x][y].u;
+                vCells << domain->cells[x][y].v;
+            }
+            else
+            {
+                pCells << domain->cells[x][y].p << ",";
+                rhoCells << domain->cells[x][y].rho << ",";
+                uCells << domain->cells[x][y].u << ",";
+                vCells << domain->cells[x][y].v << ",";
+            }
         }
         pCells << "\n";
         rhoCells << "\n";
@@ -32,18 +42,18 @@ void saveDomain(Domain2D *domain, int num, int iteration) // each domain is save
 
 int main()
 {
-    int iterations = 50;
+    int iterations = 75;
     double elapsedTime = 0;
     int domainCount = 4;
    // double fridgeHeight = 2.02; // full size
-    double fridgeHeight = 0.72; // reduced size
+    double fridgeHeight = 0.42; // reduced size
     double pipeHeight = 0.77;
     double pipeWidth = 0.05;
     double leftFridgeWidth = 0.07;
     //double rightFridgeWidth = 1.06 - leftFridgeWidth - pipeWidth; // maybe right? full size
-    double rightFridgeWidth = 0.36 - leftFridgeWidth - pipeWidth; // reduced size
-    int xCellsPerMetre = 200;
-    int yCellsPerMetre = 200;
+    double rightFridgeWidth = 0.20; // reduced size
+    int xCellsPerMetre = 300;
+    int yCellsPerMetre = 300;
     int pipeWidthCells = (int) (pipeWidth*xCellsPerMetre);
     int pipeHeightCells = (int) (pipeHeight*yCellsPerMetre);
     int leftFridgeWidthCells = (int) (leftFridgeWidth*xCellsPerMetre);
