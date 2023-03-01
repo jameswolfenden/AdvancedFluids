@@ -1,4 +1,4 @@
-i=50
+i=500
 
 p0 = readmatrix("results\0pCells"+i+".csv");
 rho0 = readmatrix("results\0rhoCells"+i+".csv");
@@ -19,9 +19,9 @@ v3 = readmatrix("results\3vCells"+i+".csv");
 
 pBig = [p2(2:size(p2,1)-1,2:size(p2,2)-1), p0(2:size(p0,1)-1,2:size(p0,2)-1), p3(2:size(p3,1)-1,2:size(p3,2)-1); zeros(size(p1,1)-2,size(p2,2)-2), p1(2:size(p1,1)-1,2:size(p1,2)-1), zeros(size(p1,1)-2,size(p3,2)-2)];
 figure
-clims = [0 1];
-%imagesc(pBig, clims);
-imagesc(pBig);
+clims = [1 1.05];
+imagesc(pBig, clims);
+%imagesc(pBig);
 hold on
 fill([0.5 0.5 size(p2,2)-1.5 size(p2,2)-1.5],[size(p2,1)-1.5 size(pBig,1)+0.5 size(pBig,1)+0.5 size(p2,1)-1.5], "w");
 fill([size(pBig,2)+0.5 size(pBig,2)+0.5 size(pBig,2)-size(p3,2)+2.5 size(pBig,2)-size(p3,2)+2.5],[size(p2,1)-1.5 size(pBig,1)+0.5 size(pBig,1)+0.5 size(p2,1)-1.5], "w");
@@ -29,9 +29,9 @@ title("p");
 
 rhoBig = [rho2(2:size(rho2,1)-1,2:size(rho2,2)-1), rho0(2:size(rho0,1)-1,2:size(rho0,2)-1), rho3(2:size(rho3,1)-1,2:size(rho3,2)-1); zeros(size(rho1,1)-2,size(rho2,2)-2), rho1(2:size(rho1,1)-1,2:size(rho1,2)-1), zeros(size(rho1,1)-2,size(rho3,2)-2)];
 figure
-clims = [0 1];
-%imagesc(rhoBig, clims);
-imagesc(rhoBig);
+clims = [1.3 1.4];
+imagesc(rhoBig, clims);
+%imagesc(rhoBig);
 hold on
 fill([0.5 0.5 size(rho2,2)-1.5 size(rho2,2)-1.5],[size(rho2,1)-1.5 size(rhoBig,1)+0.5 size(rhoBig,1)+0.5 size(rho2,1)-1.5], "w");
 fill([size(rhoBig,2)+0.5 size(rhoBig,2)+0.5 size(rhoBig,2)-size(rho3,2)+2.5 size(rhoBig,2)-size(rho3,2)+2.5],[size(rho2,1)-1.5 size(rhoBig,1)+0.5 size(rhoBig,1)+0.5 size(rho2,1)-1.5], "w");

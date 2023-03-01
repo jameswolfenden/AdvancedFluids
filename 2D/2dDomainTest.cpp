@@ -40,20 +40,49 @@ void saveDomain(Domain2D *domain, int num, int iteration) // each domain is save
     vCells.close();
 }
 
+void writeToDomainStreams(Domain2D *domain, std::vector<std::ofstream> &streams)
+{
+    // write to all file streams in the vector
+    for (int y = 0; y < (domain->yCellCount); y++) // write final cell pressures
+    {
+        for (int x = 0; x < domain->xCellCount; x++)
+        {
+            if (x == domain->xCellCount - 1)
+            {
+                streams[0] << domain->cells[x][y].p;
+                streams[1] << domain->cells[x][y].rho;
+                streams[2] << domain->cells[x][y].u;
+                streams[3] << domain->cells[x][y].v;
+            }
+            else
+            {
+                streams[0] << domain->cells[x][y].p << ",";
+                streams[1] << domain->cells[x][y].rho << ",";
+                streams[2] << domain->cells[x][y].u << ",";
+                streams[3] << domain->cells[x][y].v << ",";
+            }
+        }
+        streams[0] << "\n";
+        streams[1] << "\n";
+        streams[2] << "\n";
+        streams[3] << "\n";
+    }
+}
+
 int main()
 {
-    int iterations = 75;
+    int iterations = 200;
     double elapsedTime = 0;
     int domainCount = 4;
    // double fridgeHeight = 2.02; // full size
-    double fridgeHeight = 0.42; // reduced size
-    double pipeHeight = 0.77;
+    double fridgeHeight = 0.32; // reduced size
+    double pipeHeight = 0.27;
     double pipeWidth = 0.05;
     double leftFridgeWidth = 0.07;
     //double rightFridgeWidth = 1.06 - leftFridgeWidth - pipeWidth; // maybe right? full size
     double rightFridgeWidth = 0.20; // reduced size
-    int xCellsPerMetre = 300;
-    int yCellsPerMetre = 300;
+    int xCellsPerMetre = 1000;
+    int yCellsPerMetre = 1000;
     int pipeWidthCells = (int) (pipeWidth*xCellsPerMetre);
     int pipeHeightCells = (int) (pipeHeight*yCellsPerMetre);
     int leftFridgeWidthCells = (int) (leftFridgeWidth*xCellsPerMetre);
@@ -87,10 +116,37 @@ int main()
     domainsTransmissive[2][3] = &domains[0];                                             // right of left fridge domain is transmissive to centre fridge domain
     domainsTransmissive[3][2] = &domains[0];                                             // left of right fridge domain is transmissive to centre fridge domain
 
+    // 2d vector of file streams for each domain
+    std::vector<std::vector<std::ofstream>> domainStreams;
+    // create a vector of file streams for each domain and add to the 2d vector
     for (int domain = 0; domain < domainCount; domain++)
     {
-        saveDomain(&domains[domain], domain, 0);
+        std::vector<std::ofstream> domainStream;
+        for (int i = 0; i < 4; i++)
+        {
+            std::ofstream stream;
+            domainStream.push_back(std::move(stream));
+        }
+        domainStreams.push_back(std::move(domainStream));
     }
+    for (int domain = 0; domain < domainCount; domain++)
+    {
+        domainStreams[domain][0].open("./resultsdomain/domain" + std::to_string(domain) + "p.csv");
+        domainStreams[domain][1].open("./resultsdomain/domain" + std::to_string(domain) + "rho.csv");
+        domainStreams[domain][2].open("./resultsdomain/domain" + std::to_string(domain) + "u.csv");
+        domainStreams[domain][3].open("./resultsdomain/domain" + std::to_string(domain) + "v.csv");
+    }
+
+    // save initial state
+    for (int domain = 0; domain < domainCount; domain++)
+    {
+        writeToDomainStreams(&domains[domain], domainStreams[domain]);
+    }
+
+    // for (int domain = 0; domain < domainCount; domain++)
+    // {
+    //     saveDomain(&domains[domain], domain, 0);
+    // }
 
     for (int i = 1; i < iterations+1; i++) // iterate updating the domain's cells
     {
@@ -102,11 +158,23 @@ int main()
         }
         elapsedTime += (timeStep * 2); // not entirely sure its x2 but i think so as it iterates 2 with xyyx
 
+        // save state
         for (int domain = 0; domain < domainCount; domain++)
         {
-            saveDomain(&domains[domain], domain, i);
+            writeToDomainStreams(&domains[domain], domainStreams[domain]);
+        }
+        // for (int domain = 0; domain < domainCount; domain++)
+        // {
+        //     saveDomain(&domains[domain], domain, i);
+        // }
+    }
+    // close file streams
+    for (int domain = 0; domain < domainCount; domain++)
+    {
+        for (int stream = 0; stream < 4; stream++)
+        {
+            domainStreams[domain][stream].close();
         }
     }
-
     std::cout << elapsedTime << std::endl; // output elapsed time (of simulation time) to console
 }

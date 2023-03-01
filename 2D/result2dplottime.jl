@@ -23,7 +23,7 @@ toplay = 1:n
 # toplay = 1:10:1001
 
 for i in toplay
-    
+    println("Loading frame $(i)")
     p0[:, :, i] = readdlm("2d/results/0pCells" * string(i - 1) * ".csv",',')
     rho0[:, :, i] = readdlm("2d/results/0rhoCells" * string(i - 1) * ".csv",',')
     u0[:, :, i] = readdlm("2d/results/0uCells" * string(i - 1) * ".csv",',')
@@ -43,44 +43,42 @@ for i in toplay
 
 end
 
-
-
 toplay = 1:n
 
 pAnim = Animation()
 for i in toplay
     pBig = [p2[2:end-1, 2:end-2, i] p0[2:end-1, 2:end-2, i] p3[2:end-1, 2:end-2, i]; zeros(size(p1,1)-2, size(p2,2)-3) p1[2:end-1, 2:end-2, i] zeros(size(p1,1)-2, size(p3,2)-3)]
     clims = (1, 1.06)
-    pPlt = heatmap(pBig, clim=clims, yflip=true)
+    pPlt = heatmap(pBig, clim=clims, yflip=true, colorbar=:none, showaxis=false, size=(1000,1000))
     frame(pAnim, pPlt)
 end
-gif(pAnim, "2d/p.gif", fps = 30)
+mp4(pAnim, "2d/p.mp4", fps = 30)
 
 rhoAnim = Animation()
 for i in toplay
     rhoBig = [rho2[2:end-1, 2:end-2, i] rho0[2:end-1, 2:end-2, i] rho3[2:end-1, 2:end-2, i]; zeros(size(rho1,1)-2, size(rho2,2)-3) rho1[2:end-1, 2:end-2, i] zeros(size(rho1,1)-2, size(rho3,2)-3)]
     clims = (1.3, 1.35)
-    rhoPlt = heatmap(rhoBig, clim=clims, yflip=true)
+    rhoPlt = heatmap(rhoBig, clim=clims, yflip=true, colorbar=:none, showaxis=false, size=(1000,1000))
     frame(rhoAnim, rhoPlt)
 end
-gif(rhoAnim, "2d/rho.gif", fps = 30)
+mp4(rhoAnim, "2d/rho.mp4", fps = 30)
 
 uAnim = Animation()
 for i in toplay
     uBig = [u2[2:end-1, 2:end-2, i] u0[2:end-1, 2:end-2, i] u3[2:end-1, 2:end-2, i]; zeros(size(u1,1)-2, size(u2,2)-3) u1[2:end-1, 2:end-2, i] zeros(size(u1,1)-2, size(u3,2)-3)]
     clims = (-0.02, 0.02)
-    uPlt = heatmap(uBig, clim=clims, yflip=true)
+    uPlt = heatmap(uBig, clim=clims, yflip=true, colorbar=:none, showaxis=false, size=(1000,1000))
     frame(uAnim, uPlt)
 end
-gif(uAnim, "2d/u.gif", fps = 30)
+mp4(uAnim, "2d/u.mp4", fps = 30)
 
 vAnim = Animation()
 for i in toplay
     vBig = [v2[2:end-1, 2:end-2, i] v0[2:end-1, 2:end-2, i] v3[2:end-1, 2:end-2, i]; zeros(size(v1,1)-2, size(v2,2)-3) v1[2:end-1, 2:end-2, i] zeros(size(v1,1)-2, size(v3,2)-3)]
     clims = (-0.02, 0.02)
-    vPlt = heatmap(vBig, clim=clims, yflip=true)
+    vPlt = heatmap(vBig, clim=clims, yflip=true, colorbar=:none, showaxis=false, size=(1000,1000))
     frame(vAnim, vPlt)
 end
-gif(vAnim, "2d/v.gif", fps = 30)
+mp4(vAnim, "2d/v.mp4", fps = 30)
 
 
