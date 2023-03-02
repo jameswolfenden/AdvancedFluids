@@ -1,23 +1,18 @@
 using DelimitedFiles, Plots, LinearAlgebra
 
-n = 101
+# read in the number of iterations
+n = Int(readdlm("2d/resultsdomain/iterations.csv",',')[1] + 1)
+# print the number of iterations(+1)
+println("Number of iterations(+1): $(n)")
 
+# read in the data
 p0 = readdlm("2d/resultsdomain/domain0p.csv",',')
 p1 = readdlm("2d/resultsdomain/domain1p.csv",',')
 p2 = readdlm("2d/resultsdomain/domain2p.csv",',')
 p3 = readdlm("2d/resultsdomain/domain3p.csv",',')
-rho0 = readdlm("2d/resultsdomain/domain0rho.csv",',')
-rho1 = readdlm("2d/resultsdomain/domain1rho.csv",',')
-rho2 = readdlm("2d/resultsdomain/domain2rho.csv",',')
-rho3 = readdlm("2d/resultsdomain/domain3rho.csv",',')
-u0 = readdlm("2d/resultsdomain/domain0u.csv",',')
-u1 = readdlm("2d/resultsdomain/domain1u.csv",',')
-u2 = readdlm("2d/resultsdomain/domain2u.csv",',')
-u3 = readdlm("2d/resultsdomain/domain3u.csv",',')
-v0 = readdlm("2d/resultsdomain/domain0v.csv",',')
-v1 = readdlm("2d/resultsdomain/domain1v.csv",',')
-v2 = readdlm("2d/resultsdomain/domain2v.csv",',')
-v3 = readdlm("2d/resultsdomain/domain3v.csv",',')
+
+println("Read in p")
+
 
 toplay = 0:n-2
 
@@ -39,6 +34,18 @@ for i in toplay
 end
 mp4(pAnim, "2d/resultsdomain/p.mp4", fps=30)
 
+p0 = Nothing
+p1 = Nothing
+p2 = Nothing
+p3 = Nothing
+
+rho0 = readdlm("2d/resultsdomain/domain0rho.csv",',')
+rho1 = readdlm("2d/resultsdomain/domain1rho.csv",',')
+rho2 = readdlm("2d/resultsdomain/domain2rho.csv",',')
+rho3 = readdlm("2d/resultsdomain/domain3rho.csv",',')
+
+println("Read in rho")
+
 rhoAnim = Animation()
 for i in toplay
     rho0i = rho0[i*size0+1:(i+1)*size0,:]
@@ -51,6 +58,18 @@ for i in toplay
     frame(rhoAnim, rhoPlt)
 end
 mp4(rhoAnim, "2d/resultsdomain/rho.mp4", fps=30)
+
+rho0 = Nothing
+rho1 = Nothing
+rho2 = Nothing
+rho3 = Nothing
+
+u0 = readdlm("2d/resultsdomain/domain0u.csv",',')
+u1 = readdlm("2d/resultsdomain/domain1u.csv",',')
+u2 = readdlm("2d/resultsdomain/domain2u.csv",',')
+u3 = readdlm("2d/resultsdomain/domain3u.csv",',')
+
+println("Read in u")
 
 uAnim = Animation()
 for i in toplay
@@ -65,6 +84,18 @@ for i in toplay
 end
 mp4(uAnim, "2d/resultsdomain/u.mp4", fps=30)
 
+u0 = Nothing
+u1 = Nothing
+u2 = Nothing
+u3 = Nothing
+
+v0 = readdlm("2d/resultsdomain/domain0v.csv",',')
+v1 = readdlm("2d/resultsdomain/domain1v.csv",',')
+v2 = readdlm("2d/resultsdomain/domain2v.csv",',')
+v3 = readdlm("2d/resultsdomain/domain3v.csv",',')
+
+println("Read in v")
+
 vAnim = Animation()
 for i in toplay
     v0i = v0[i*size0+1:(i+1)*size0,:]
@@ -78,3 +109,7 @@ for i in toplay
 end
 mp4(vAnim, "2d/resultsdomain/v.mp4", fps=30)
 
+v0 = Nothing
+v1 = Nothing
+v2 = Nothing
+v3 = Nothing
