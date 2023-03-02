@@ -43,9 +43,9 @@ void Domain3D::xFindFaces()
 {
     for (int x = 0; x < xFaceCount; x++)
     {
-        for (int y = 0; y < yCellCount; y++)
+        for (int y = 1; y < yFaceCount; y++)
         {
-            for (int z = 0; z < zCellCount; z++)
+            for (int z = 1; z < zFaceCount; z++)
             {
                 if(rSolver.findStar(boxes[x][y][z].rho, boxes[x][y][z].u, boxes[x][y][z].v, boxes[x][y][z].w, boxes[x][y][z].a, boxes[x][y][z].p, boxes[x+1][y][z].rho, boxes[x+1][y][z].u, boxes[x+1][y][z].v, boxes[x+1][y][z].w, boxes[x+1][y][z].a, boxes[x+1][y][z].p, xFaces[x][y][z].rho, xFaces[x][y][z].u, xFaces[x][y][z].v, xFaces[x][y][z].w, xFaces[x][y][z].a, xFaces[x][y][z].p))
                 {
@@ -58,11 +58,11 @@ void Domain3D::xFindFaces()
 
 void Domain3D::yFindFaces()
 {
-    for (int x = 0; x < xCellCount; x++)
+    for (int x = 1; x < xFaceCount; x++)
     {
         for (int y = 0; y < yFaceCount; y++)
         {
-            for (int z = 0; z < zCellCount; z++)
+            for (int z = 1; z < zFaceCount; z++)
             {
                 if(rSolver.findStar(boxes[x][y][z].rho, boxes[x][y][z].v, boxes[x][y][z].u, boxes[x][y][z].w, boxes[x][y][z].a, boxes[x][y][z].p, boxes[x][y+1][z].rho, boxes[x][y+1][z].v, boxes[x][y+1][z].u, boxes[x][y+1][z].w, boxes[x][y+1][z].a, boxes[x][y+1][z].p, yFaces[x][y][z].rho, yFaces[x][y][z].v, yFaces[x][y][z].u, yFaces[x][y][z].w, yFaces[x][y][z].a, yFaces[x][y][z].p))
                 {
@@ -75,9 +75,9 @@ void Domain3D::yFindFaces()
 
 void Domain3D::zFindFaces()
 {
-    for (int x = 0; x < xCellCount; x++)
+    for (int x = 1; x < xFaceCount; x++)
     {
-        for (int y = 0; y < yCellCount; y++)
+        for (int y = 1; y < yFaceCount; y++)
         {
             for (int z = 0; z < zFaceCount; z++)
             {

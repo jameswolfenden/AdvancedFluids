@@ -79,21 +79,21 @@ void writeToDomainStreams(Domain3D *domain, std::vector<std::ofstream> &streams,
 
 int main()
 {
-    int iterations = 30;
+    int iterations = 200;
     double elapsedTime = 0;
     int domainCount = 10;
    // double fridgeHeight = 2.02; // full size
-    double fridgeHeight = 0.32; // reduced size
-    double pipeHeight = 0.22;
+    double fridgeHeight = 0.20; // reduced size
+    double pipeHeight = 0.20;
     double pipeWidth = 0.05;
     double leftFridgeWidth = 0.07;
     //double rightFridgeWidth = 1.06 - leftFridgeWidth - pipeWidth; // maybe right? full size
-    double rightFridgeWidth = 0.19; // reduced size
+    double rightFridgeWidth = 0.12; // reduced size
     double pipeDepth = 0.05;
     double frontFridgeDepth = 0.20;
     double backFridgeDepth = 0.20;
-    int xCellsPerMetre = 100;
-    int yCellsPerMetre = 100;
+    int xCellsPerMetre = 1000;
+    int yCellsPerMetre = 500;
     int zCellsPerMetre = 60;
     int pipeWidthCells = (int) (pipeWidth*xCellsPerMetre);
     int pipeHeightCells = (int) (pipeHeight*yCellsPerMetre);
@@ -113,7 +113,8 @@ int main()
     std::cout << "backFridgeDepthCells: " << backFridgeDepthCells << std::endl;
     // important to take into account the ghost cells - the domain is 1 cell larger in each direction
 
-    int z = (pipeWidthCells-1)/2; // centre of pipe
+    int z = (pipeDepthCells-1)/2; // centre of pipe
+    std::cout << "z: " << z << std::endl;
 
     std::vector<std::vector<bool>> domainsGhosts = {                             // order of sides is top of domain, bottom, left, right, front, back
                                                     {true, false, false, false, false, false}, // centre fridge interior

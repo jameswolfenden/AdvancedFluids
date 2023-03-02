@@ -13,6 +13,9 @@ p3 = readdlm("3D/resultsdomain/domain3p.csv",',')
 
 println("Read in p")
 
+# find the highest pressure in the second column of p2
+maxpressure = maximum(p2[:,2])
+println("Max pressure: $(maxpressure)")
 
 toplay = 0:n-2
 
@@ -28,7 +31,7 @@ for i in toplay
     p2i = p2[i*size2+1:(i+1)*size2,:]
     p3i = p3[i*size3+1:(i+1)*size3,:]
     pBig = [p2i[2:end-1, 2:end-2] p0i[2:end-1, 2:end-2] p3i[2:end-1, 2:end-2]; zeros(size(p1i,1)-2, size(p2i,2)-3) p1i[2:end-1, 2:end-2] zeros(size(p1i,1)-2, size(p3i,2)-3)]
-    clims = (1, 1.06)
+    clims = (1, 1.01)
     pPlt = heatmap(pBig, clim=clims, yflip=true)
     frame(pAnim, pPlt)
 end
@@ -53,7 +56,7 @@ for i in toplay
     rho2i = rho2[i*size2+1:(i+1)*size2,:]
     rho3i = rho3[i*size3+1:(i+1)*size3,:]
     rhoBig = [rho2i[2:end-1, 2:end-2] rho0i[2:end-1, 2:end-2] rho3i[2:end-1, 2:end-2]; zeros(size(rho1i,1)-2, size(rho2i,2)-3) rho1i[2:end-1, 2:end-2] zeros(size(rho1i,1)-2, size(rho3i,2)-3)]
-    clims = (1.3, 1.35)
+    clims = (1.3, 1.31)
     rhoPlt = heatmap(rhoBig, clim=clims, yflip=true)
     frame(rhoAnim, rhoPlt)
 end

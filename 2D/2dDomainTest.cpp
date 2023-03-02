@@ -71,18 +71,18 @@ void writeToDomainStreams(Domain2D *domain, std::vector<std::ofstream> &streams)
 
 int main()
 {
-    int iterations = 500;
+    int iterations = 30;
     double elapsedTime = 0;
     int domainCount = 4;
    // double fridgeHeight = 2.02; // full size
-    double fridgeHeight = 0.32; // reduced size
-    double pipeHeight = 0.22;
+    double fridgeHeight = 0.20; // reduced size
+    double pipeHeight = 0.20;
     double pipeWidth = 0.05;
     double leftFridgeWidth = 0.07;
     //double rightFridgeWidth = 1.06 - leftFridgeWidth - pipeWidth; // maybe right? full size
-    double rightFridgeWidth = 0.19; // reduced size
-    int xCellsPerMetre = 2000;
-    int yCellsPerMetre = 2000;
+    double rightFridgeWidth = 0.12; // reduced size
+    int xCellsPerMetre = 100;
+    int yCellsPerMetre = 100;
     int pipeWidthCells = (int) (pipeWidth*xCellsPerMetre);
     int pipeHeightCells = (int) (pipeHeight*yCellsPerMetre);
     int leftFridgeWidthCells = (int) (leftFridgeWidth*xCellsPerMetre);
