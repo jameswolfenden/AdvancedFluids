@@ -153,8 +153,8 @@ double Domain2D::timeStep()
         {
             double C_clf = 0.5;
             // this needs optimisation
-            if (C_clf * yBox / (std::abs(cells[x][y].u) + cells[x][y].a) < step) // set the deltaT for the next iteration being 0.9 * the min time step for this iteration
-                step = C_clf * yBox / (std::abs(cells[x][y].u) + cells[x][y].a);
+            if (C_clf * yBox / (std::abs(cells[x][y].v) + cells[x][y].a) < step) // set the deltaT for the next iteration being 0.9 * the min time step for this iteration
+                step = C_clf * yBox / (std::abs(cells[x][y].v) + cells[x][y].a);
             if (C_clf * xBox / (std::abs(cells[x][y].u) + cells[x][y].a) < step) // set the deltaT for the next iteration being 0.9 * the min time step for this iteration
                 step = C_clf * xBox / (std::abs(cells[x][y].u) + cells[x][y].a);
         }
