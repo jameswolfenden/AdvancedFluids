@@ -31,7 +31,7 @@ for i in toplay
     p2i = p2[i*size2+1:(i+1)*size2,:]
     p3i = p3[i*size3+1:(i+1)*size3,:]
     pBig = [p2i[2:end-1, 2:end-2] p0i[2:end-1, 2:end-2] p3i[2:end-1, 2:end-2]; zeros(size(p1i,1)-2, size(p2i,2)-3) p1i[2:end-1, 2:end-2] zeros(size(p1i,1)-2, size(p3i,2)-3)]
-    clims = (1, 1.01)
+    clims = (1.013, 1.02)
     pPlt = heatmap(pBig, clim=clims, yflip=true)
     frame(pAnim, pPlt)
 end
@@ -56,7 +56,7 @@ for i in toplay
     rho2i = rho2[i*size2+1:(i+1)*size2,:]
     rho3i = rho3[i*size3+1:(i+1)*size3,:]
     rhoBig = [rho2i[2:end-1, 2:end-2] rho0i[2:end-1, 2:end-2] rho3i[2:end-1, 2:end-2]; zeros(size(rho1i,1)-2, size(rho2i,2)-3) rho1i[2:end-1, 2:end-2] zeros(size(rho1i,1)-2, size(rho3i,2)-3)]
-    clims = (1.3, 1.31)
+    clims = (1.265, 1.30)
     rhoPlt = heatmap(rhoBig, clim=clims, yflip=true)
     frame(rhoAnim, rhoPlt)
 end
@@ -81,7 +81,7 @@ for i in toplay
     u2i = u2[i*size2+1:(i+1)*size2,:]
     u3i = u3[i*size3+1:(i+1)*size3,:]
     uBig = [u2i[2:end-1, 2:end-2] u0i[2:end-1, 2:end-2] u3i[2:end-1, 2:end-2]; zeros(size(u1i,1)-2, size(u2i,2)-3) u1i[2:end-1, 2:end-2] zeros(size(u1i,1)-2, size(u3i,2)-3)]
-    clims = (-0.05, 0.05)
+    clims = (-0.01, 0.01)
     uPlt = heatmap(uBig, clim=clims, yflip=true)
     frame(uAnim, uPlt)
 end
@@ -106,7 +106,7 @@ for i in toplay
     v2i = v2[i*size2+1:(i+1)*size2,:]
     v3i = v3[i*size3+1:(i+1)*size3,:]
     vBig = [v2i[2:end-1, 2:end-2] v0i[2:end-1, 2:end-2] v3i[2:end-1, 2:end-2]; zeros(size(v1i,1)-2, size(v2i,2)-3) v1i[2:end-1, 2:end-2] zeros(size(v1i,1)-2, size(v3i,2)-3)]
-    clims = (-0.05, 0.05)
+    clims = (-0.01, 0.01)
     vPlt = heatmap(vBig, clim=clims, yflip=true)
     frame(vAnim, vPlt)
 end
@@ -131,7 +131,7 @@ for i in toplay
     w2i = w2[i*size2+1:(i+1)*size2,:]
     w3i = w3[i*size3+1:(i+1)*size3,:]
     wBig = [w2i[2:end-1, 2:end-2] w0i[2:end-1, 2:end-2] w3i[2:end-1, 2:end-2]; zeros(size(w1i,1)-2, size(w2i,2)-3) w1i[2:end-1, 2:end-2] zeros(size(w1i,1)-2, size(w3i,2)-3)]
-    clims = (-0.05, 0.05)
+    clims = (-0.01, 0.01)
     wPlt = heatmap(wBig, clim=clims, yflip=true)
     frame(wAnim, wPlt)
 end

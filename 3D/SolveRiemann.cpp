@@ -8,7 +8,8 @@ bool SolveRiemann::findStar(const double &rhoL, const double &uL, const double &
     if (testVacuum(rhoL, uL, vL, wL, aL, pL, rhoR, uR, vR, wR, aR, pR, rho, u, v, w, a, p))
         return true; // a vacuum is generated, values found without iteration required NEED TO CHECK SPEED OF SOUND!!!!!
 
-    iterateP(rhoL, uL, vL, wL, aL, pL, rhoR, uR, vR, wR, aR, pR, rho, u, v, w, a, p);
+    if (!iterateP(rhoL, uL, vL, wL, aL, pL, rhoR, uR, vR, wR, aR, pR, rho, u, v, w, a, p))
+        return false; // iteration failed, abort
 
     if (u >= 0.0) // pick rho value depending on the side of the discontinuity
     {
@@ -31,7 +32,7 @@ bool SolveRiemann::findStar(const double &rhoL, const double &uL, const double &
     a = sqrt((gammma * p) / rho);
     if (rho != rho)
         std::cout << "rhoerror u: " << u << ", rhoL: " << rhoL << ", rhoR: " << rhoR << ", vL: " << vL << ", vR: " << vR << ", pL: " << pL << ", pR: " << pR << ", p:" << p << std::endl;
-    return false;
+    return true;
 }
 
 bool SolveRiemann::testVacuum(const double &rhoL, const double &uL, const double &vL, const double &wL, const double &aL, const double &pL, const double &rhoR, const double &uR, const double &vR, const double &wR, const double &aR, const double &pR, double &rho, double &u, double &v, double &w, double &a, double &p)
@@ -256,7 +257,7 @@ bool SolveRiemann::pickStartVal(const int errorStage, const double &rhoL, const 
     }
     return true;
 }
-void SolveRiemann::iterateP(const double &rhoL, const double &uL, const double &vL, const double &wL, const double &aL, const double &pL, const double &rhoR, const double &uR, const double &vR, const double &wR, const double &aR, const double &pR, double &rho, double &u, double &v, double &w, double &a, double &p)
+bool SolveRiemann::iterateP(const double &rhoL, const double &uL, const double &vL, const double &wL, const double &aL, const double &pL, const double &rhoR, const double &uR, const double &vR, const double &wR, const double &aR, const double &pR, double &rho, double &u, double &v, double &w, double &a, double &p)
 {
     bool iterate = true;
     double fsL, fsR, d_fsL, d_fsR, change;
@@ -265,7 +266,9 @@ void SolveRiemann::iterateP(const double &rhoL, const double &uL, const double &
 
     while (iterate) // loop to try all the initial p values
     {
-        pickStartVal(errorStage, rhoL, uL, vL, wL, aL, pL, rhoR, uR, vR, wR, aR, pR, rho, u, v, w, a, p);
+        iterate = pickStartVal(errorStage, rhoL, uL, vL, wL, aL, pL, rhoR, uR, vR, wR, aR, pR, rho, u, v, w, a, p);
+        if (!iterate)
+            return false;
         count = 0;
         // std::cout << "p guessed: " << p<< std::endl;
         while (iterate) // loop to iterate the p value
@@ -320,5 +323,5 @@ void SolveRiemann::iterateP(const double &rhoL, const double &uL, const double &
         }
     }
     u = 0.5 * (uL + uR) + 0.5 * (fsR - fsL); // u*
-    return;
+    return true;
 }
