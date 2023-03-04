@@ -221,7 +221,7 @@ int main()
                 }
             }
             elapsedTime += (timeStep * 2); // not entirely sure its x2 but i think so as it iterates 2 with xyyx
-
+            std::cout << "Elapsed time: " << elapsedTime << std::endl;
             // save state
             for (int domain = 0; domain < 4; domain++)
             {
