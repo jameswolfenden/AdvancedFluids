@@ -44,11 +44,11 @@ void saveWallPressures(std::vector<Domain3D *> domains, std::ofstream &stream)
             {
                 if (i == domains.size() - 1 && z == domains[i]->zFaceCount - 1)
                 {
-                    stream << domains[i]->boxes[0][y][z].p;
+                    stream << domains[i]->boxes[1][y][z].p;
                 }
                 else
                 {
-                    stream << domains[i]->boxes[0][y][z].p << ",";
+                    stream << domains[i]->boxes[1][y][z].p << ",";
                 }
             }
         }
@@ -58,11 +58,11 @@ void saveWallPressures(std::vector<Domain3D *> domains, std::ofstream &stream)
 
 int main()
 {
-    int iterations = 50;
+    int iterations = 500;
     double elapsedTime = 0;
     int domainCount = 10;
     double fridgeHeight = 2.0; // full size
-    // double fridgeHeight = 0.20; // reduced size
+    // double fridgeHeight = 0.40; // reduced size
     double pipeHeight = 0.20;
     double pipeWidth = 0.03;
     double leftFridgeWidth = 0.05;
@@ -73,9 +73,9 @@ int main()
     // double backFridgeDepth = 0.40; // reduced size
     double frontFridgeDepth = (1 - pipeDepth) / 2; // full size
     double backFridgeDepth = (1 - pipeDepth) / 2;  // full size
-    int xCellsPerMetre = 100;
-    int yCellsPerMetre = 100;
-    int zCellsPerMetre = 100;
+    int xCellsPerMetre = 200;
+    int yCellsPerMetre = 200;
+    int zCellsPerMetre = 200;
     int pipeWidthCells = (int)(pipeWidth * xCellsPerMetre) + 2;
     int pipeHeightCells = (int)(pipeHeight * yCellsPerMetre) + 2;
     int leftFridgeWidthCells = (int)(leftFridgeWidth * xCellsPerMetre) + 2;
@@ -114,9 +114,9 @@ int main()
     std::cout << "z: " << z << std::endl;
 
     double fridgePressure = 1.01325;
-    double pipePressure = 1.06;
+    double pipePressure = 1.04;
     double fridgeDensity = 1.268;
-    double pipeDensity = 1.37;
+    double pipeDensity = 1.33;
 
     std::vector<std::vector<bool>> domainsGhosts = {
         // order of sides is top of domain, bottom, left, right, front, back
@@ -250,7 +250,10 @@ int main()
     // save number of iterations to file
     std::ofstream iterationsStream;
     iterationsStream.open("./resultsdomain/iterations.csv");
-    iterationsStream << iterations;
+    iterationsStream << iterations << "\n";
+    iterationsStream << xCellsPerMetre << "\n";
+    iterationsStream << yCellsPerMetre << "\n";
+    iterationsStream << zCellsPerMetre;
     iterationsStream.close();
 
     std::cout << elapsedTime << std::endl; // output elapsed time (of simulation time) to console
