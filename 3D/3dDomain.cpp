@@ -58,7 +58,7 @@ void saveWallPressures(std::vector<Domain3D *> domains, std::ofstream &stream)
 
 int main()
 {
-    int iterations = 500;
+    int iterations = 50;
     double elapsedTime = 0;
     int domainCount = 10;
     double fridgeHeight = 2.0; // full size
@@ -73,9 +73,9 @@ int main()
     // double backFridgeDepth = 0.40; // reduced size
     double frontFridgeDepth = (1 - pipeDepth) / 2; // full size
     double backFridgeDepth = (1 - pipeDepth) / 2;  // full size
-    int xCellsPerMetre = 200;
-    int yCellsPerMetre = 200;
-    int zCellsPerMetre = 200;
+    int xCellsPerMetre = 100;
+    int yCellsPerMetre = 100;
+    int zCellsPerMetre = 100;
     int pipeWidthCells = (int)(pipeWidth * xCellsPerMetre) + 2;
     int pipeHeightCells = (int)(pipeHeight * yCellsPerMetre) + 2;
     int leftFridgeWidthCells = (int)(leftFridgeWidth * xCellsPerMetre) + 2;
@@ -114,9 +114,9 @@ int main()
     std::cout << "z: " << z << std::endl;
 
     double fridgePressure = 1.01325;
-    double pipePressure = 1.04;
+    double pipePressure = 1.035;
     double fridgeDensity = 1.268;
-    double pipeDensity = 1.33;
+    double pipeDensity = 1.32;
 
     std::vector<std::vector<bool>> domainsGhosts = {
         // order of sides is top of domain, bottom, left, right, front, back
@@ -199,10 +199,16 @@ int main()
         writeToDomainStreams(&domains[domain], domainStreams[domain], z);
     }
 
+    // save inital wall pressures
     std::ofstream wallPressuresStream;
     wallPressuresStream.open("./resultsdomain/wallPressures.csv");
     std::vector<Domain3D *> wallDomains = {&domains[6], &domains[2], &domains[7]};
     saveWallPressures(wallDomains, wallPressuresStream);
+
+    // save inital elapsed time
+    std::ofstream elapsedTimeStream;
+    elapsedTimeStream.open("./resultsdomain/elapsedtime.csv");
+    elapsedTimeStream << 0.0 << "\n";
 
     bool run = true;
     for (int i = 1; i < iterations + 1; i++) // iterate updating the domain's cells
@@ -228,6 +234,7 @@ int main()
                 writeToDomainStreams(&domains[domain], domainStreams[domain], z);
             }
             saveWallPressures(wallDomains, wallPressuresStream);
+            elapsedTimeStream << elapsedTime << "\n";
         }
         else
         {
@@ -247,6 +254,7 @@ int main()
         }
     }
     wallPressuresStream.close();
+    elapsedTimeStream.close();
     // save number of iterations to file
     std::ofstream iterationsStream;
     iterationsStream.open("./resultsdomain/iterations.csv");

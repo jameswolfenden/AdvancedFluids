@@ -7,6 +7,8 @@ cellspermetery = Int(config[3])
 cellspermeterz = Int(config[4])
 p = reshape(p, (Int(size(p,1)/iterations), iterations, size(p,2)))
 
+time = readdlm("3D/resultsdomain/elapsedtime.csv",',')
+
 
 toplay = 0:iterations-2
 pWallAnim = Animation()
@@ -45,16 +47,32 @@ W = 1.0
 I = t^3 * W / 12
 
 # find the centre of pressure at each time step
-rowforce = sum(forcecell, dims=3)
+rowpressure = sum(p, dims=3)
 
 # array of the physical x positions of each row
 xs = size(p,1)/cellspermetery.-((1:size(p,1)).-0.5)./cellspermetery
 
-sxsf = dropdims(sum(rowforce.*xs, dims=1), dims=(1,3))
+sxsf = dropdims(sum(rowpressure.*xs, dims=1), dims=(1,3))
 
-sf = dropdims(sum(rowforce, dims=1), dims=(1,3))
+sf = dropdims(sum(rowpressure, dims=1), dims=(1,3))
 
 centrepressure = sxsf./ sf
 centrepressure[sf.==0].=0
 
-y = totalforce .* centrepressure .* (H^2 .- centrepressure.^2).^(3 / 2) / (9 * sqrt(3) * H * E * I)
+y = zeros(size(centrepressure))
+# equation only valid for centre pressure < H/2
+y[centrepressure .< H/2] = totalforce[centrepressure .< H/2] .* centrepressure[centrepressure .< H/2] .* (H^2 .- centrepressure[centrepressure .< H/2].^2).^(3 / 2) / (9 * sqrt(3) * H * E * I)
+
+# equation only valid for centre pressure > H/2
+y[centrepressure .> H/2] = totalforce[centrepressure .> H/2] .* (H .- centrepressure[centrepressure .> H/2]) .* (H^2 .- (H .- centrepressure[centrepressure .> H/2]).^2).^(3 / 2) / (9 * sqrt(3) * H * E * I)
+
+# approximate as triangle
+ylocation = sqrt.((H.^2 .- (H.-centrepressure).^2)/3)
+a = sqrt.(ylocation.^2 .+ y.^2)
+b = sqrt.((H .- ylocation).^2 .+ y.^2)
+delta = a .+ b .- H
+elongation = delta ./ H
+# get the sign of y
+signy = ones(size(y))
+signy[y .!=0] = y[y .!=0] ./ abs.(y[y .!=0])
+elongation = elongation .* signy
