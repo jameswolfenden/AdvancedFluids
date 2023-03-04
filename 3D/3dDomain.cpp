@@ -114,9 +114,9 @@ int main()
     std::cout << "z: " << z << std::endl;
 
     double fridgePressure = 1.01325;
-    double pipePressure = 1.025;
+    double pipePressure = 1.0225;
     double fridgeDensity = 1.268;
-    double pipeDensity = 1.30;
+    double pipeDensity = 1.31;
 
     std::vector<std::vector<bool>> domainsGhosts = {
         // order of sides is top of domain, bottom, left, right, front, back
