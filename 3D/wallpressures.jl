@@ -50,7 +50,7 @@ I = t^3 * W / 12
 rowpressure = sum(p, dims=3)
 
 # array of the physical x positions of each row
-xs = size(p,1)/cellspermetery.-((1:size(p,1)).-0.5)./cellspermetery
+xs = H .-((1:size(p,1)).-0.5)./cellspermetery
 
 sxsf = dropdims(sum(rowpressure.*xs, dims=1), dims=(1,3))
 
