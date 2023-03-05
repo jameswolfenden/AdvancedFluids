@@ -1,6 +1,6 @@
 using DelimitedFiles, Plots
 
-path = "3D/resultsdomain bc4 6/"
+path = "3D/resultsdomain/"
 
 p = readdlm(path*"wallPressures.csv",',')
 config = readdlm(path*"iterations.csv",',')
@@ -54,7 +54,7 @@ rowpressure = sum(forcecell, dims=3)
 rowpressure[rowpressure .< 0] .= 0
 
 # array of the physical x positions of each row
-xs = H .-((1:size(p,1)).-0.5)./cellspermetery
+xs = ((1:size(p,1)).-0.5)./cellspermetery
 
 sxsf = dropdims(sum(rowpressure.*xs, dims=1), dims=(1,3))
 
@@ -66,6 +66,7 @@ centrepressure = abs.(centrepressure)
 # ensure centre pressure is between 0 and H
 centrepressure[centrepressure .< 0] .= 0
 centrepressure[centrepressure .> H] .= H
+centrepressure = H .- centrepressure
 
 y = zeros(size(centrepressure))
 # equation only valid for centre pressure < H/2
