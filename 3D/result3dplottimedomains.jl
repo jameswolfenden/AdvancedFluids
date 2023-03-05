@@ -30,8 +30,8 @@ for i in toplay
     p1i = p1[i*size1+1:(i+1)*size1,:]
     p2i = p2[i*size2+1:(i+1)*size2,:]
     p3i = p3[i*size3+1:(i+1)*size3,:]
-    pBig = [p2i[2:end-1, 2:end-2] p0i[2:end-1, 2:end-2] p3i[2:end-1, 2:end-2]; zeros(size(p1i,1)-2, size(p2i,2)-3) p1i[2:end-1, 2:end-2] zeros(size(p1i,1)-2, size(p3i,2)-3)]
-    clims = (1.013, 1.02)
+    pBig = [p2i[2:end-1, 2:end-1] p0i[2:end-1, 2:end-1] p3i[2:end-1, 2:end-1]; zeros(size(p1i,1)-2, size(p2i,2)-2) p1i[2:end-1, 2:end-1] zeros(size(p1i,1)-2, size(p3i,2)-2)]
+    clims = (1.013, 1.014)
     pPlt = heatmap(pBig, clim=clims, yflip=true)
     frame(pAnim, pPlt)
 end
@@ -55,8 +55,8 @@ for i in toplay
     rho1i = rho1[i*size1+1:(i+1)*size1,:]
     rho2i = rho2[i*size2+1:(i+1)*size2,:]
     rho3i = rho3[i*size3+1:(i+1)*size3,:]
-    rhoBig = [rho2i[2:end-1, 2:end-2] rho0i[2:end-1, 2:end-2] rho3i[2:end-1, 2:end-2]; zeros(size(rho1i,1)-2, size(rho2i,2)-3) rho1i[2:end-1, 2:end-2] zeros(size(rho1i,1)-2, size(rho3i,2)-3)]
-    clims = (1.265, 1.30)
+    rhoBig = [rho2i[2:end-1, 2:end-1] rho0i[2:end-1, 2:end-1] rho3i[2:end-1, 2:end-1]; zeros(size(rho1i,1)-2, size(rho2i,2)-2) rho1i[2:end-1, 2:end-1] zeros(size(rho1i,1)-2, size(rho3i,2)-2)]
+    clims = (1.267, 1.269)
     rhoPlt = heatmap(rhoBig, clim=clims, yflip=true)
     frame(rhoAnim, rhoPlt)
 end
@@ -80,8 +80,8 @@ for i in toplay
     u1i = u1[i*size1+1:(i+1)*size1,:]
     u2i = u2[i*size2+1:(i+1)*size2,:]
     u3i = u3[i*size3+1:(i+1)*size3,:]
-    uBig = [u2i[2:end-1, 2:end-2] u0i[2:end-1, 2:end-2] u3i[2:end-1, 2:end-2]; zeros(size(u1i,1)-2, size(u2i,2)-3) u1i[2:end-1, 2:end-2] zeros(size(u1i,1)-2, size(u3i,2)-3)]
-    clims = (-0.01, 0.01)
+    uBig = [u2i[2:end-1, 2:end-1] u0i[2:end-1, 2:end-1] u3i[2:end-1, 2:end-1]; zeros(size(u1i,1)-2, size(u2i,2)-2) u1i[2:end-1, 2:end-1] zeros(size(u1i,1)-2, size(u3i,2)-2)]
+    clims = (-0.001, 0.001)
     uPlt = heatmap(uBig, clim=clims, yflip=true)
     frame(uAnim, uPlt)
 end
@@ -105,8 +105,8 @@ for i in toplay
     v1i = v1[i*size1+1:(i+1)*size1,:]
     v2i = v2[i*size2+1:(i+1)*size2,:]
     v3i = v3[i*size3+1:(i+1)*size3,:]
-    vBig = [v2i[2:end-1, 2:end-2] v0i[2:end-1, 2:end-2] v3i[2:end-1, 2:end-2]; zeros(size(v1i,1)-2, size(v2i,2)-3) v1i[2:end-1, 2:end-2] zeros(size(v1i,1)-2, size(v3i,2)-3)]
-    clims = (-0.01, 0.01)
+    vBig = [v2i[2:end-1, 2:end-1] v0i[2:end-1, 2:end-1] v3i[2:end-1, 2:end-1]; zeros(size(v1i,1)-2, size(v2i,2)-2) v1i[2:end-1, 2:end-1] zeros(size(v1i,1)-2, size(v3i,2)-2)]
+    clims = (-0.001, 0.001)
     vPlt = heatmap(vBig, clim=clims, yflip=true)
     frame(vAnim, vPlt)
 end
@@ -130,8 +130,8 @@ for i in toplay
     w1i = w1[i*size1+1:(i+1)*size1,:]
     w2i = w2[i*size2+1:(i+1)*size2,:]
     w3i = w3[i*size3+1:(i+1)*size3,:]
-    wBig = [w2i[2:end-1, 2:end-2] w0i[2:end-1, 2:end-2] w3i[2:end-1, 2:end-2]; zeros(size(w1i,1)-2, size(w2i,2)-3) w1i[2:end-1, 2:end-2] zeros(size(w1i,1)-2, size(w3i,2)-3)]
-    clims = (-0.01, 0.01)
+    wBig = [w2i[2:end-1, 2:end-1] w0i[2:end-1, 2:end-1] w3i[2:end-1, 2:end-1]; zeros(size(w1i,1)-2, size(w2i,2)-2) w1i[2:end-1, 2:end-1] zeros(size(w1i,1)-2, size(w3i,2)-2)]
+    clims = (-0.001, 0.001)
     wPlt = heatmap(wBig, clim=clims, yflip=true)
     frame(wAnim, wPlt)
 end

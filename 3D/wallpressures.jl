@@ -1,22 +1,24 @@
 using DelimitedFiles, Plots
 
-p = readdlm("3D/resultsdomain/wallPressures.csv",',')
-config = readdlm("3D/resultsdomain/iterations.csv",',')
+path = "3D/resultsdomain bc4 6/"
+
+p = readdlm(path*"wallPressures.csv",',')
+config = readdlm(path*"iterations.csv",',')
 iterations = Int(config[1]) + 1
 cellspermetery = Int(config[3])
 cellspermeterz = Int(config[4])
 p = reshape(p, (Int(size(p,1)/iterations), iterations, size(p,2)))
 
-time = readdlm("3D/resultsdomain/elapsedtime.csv",',')
+time = readdlm(path*"elapsedtime.csv",',')
 
 
 toplay = 0:iterations-2
 pWallAnim = Animation()
 for i in toplay
-    pWallPlt = heatmap(p[:,i+1,:], clim=(1.013,1.015))
+    pWallPlt = heatmap(p[:,i+1,:], clim=(1.013,1.014))
     frame(pWallAnim, pWallPlt)
 end
-mp4(pWallAnim, "3D/resultsdomain/pWall.mp4", fps=30)
+mp4(pWallAnim, path*"pWall.mp4", fps=30)
 
 ATM = 1.01325
 pAbs = p .- ATM
@@ -47,7 +49,9 @@ W = 1.0
 I = t^3 * W / 12
 
 # find the centre of pressure at each time step
-rowpressure = sum(p, dims=3)
+rowpressure = sum(forcecell, dims=3)
+# make rowpressures below zero zero
+rowpressure[rowpressure .< 0] .= 0
 
 # array of the physical x positions of each row
 xs = H .-((1:size(p,1)).-0.5)./cellspermetery
@@ -58,6 +62,10 @@ sf = dropdims(sum(rowpressure, dims=1), dims=(1,3))
 
 centrepressure = sxsf./ sf
 centrepressure[sf.==0].=0
+centrepressure = abs.(centrepressure)
+# ensure centre pressure is between 0 and H
+centrepressure[centrepressure .< 0] .= 0
+centrepressure[centrepressure .> H] .= H
 
 y = zeros(size(centrepressure))
 # equation only valid for centre pressure < H/2
