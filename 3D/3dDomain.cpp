@@ -58,24 +58,24 @@ void saveWallPressures(std::vector<Domain3D *> domains, std::ofstream &stream)
 
 int main()
 {
-    int iterations = 50;
+    int iterations = 300;
     double elapsedTime = 0;
     int domainCount = 10;
-    //double fridgeHeight = 2.0; // full size
-    double fridgeHeight = 0.30; // reduced size
+    double fridgeHeight = 2.0; // full size
+    //double fridgeHeight = 0.50; // reduced size
     double pipeHeight = 0.20;
     double pipeWidth = 0.03;
     double leftFridgeWidth = 0.05;
-    //double rightFridgeWidth = 1.0 - leftFridgeWidth - pipeWidth; // maybe right? full size
-    double rightFridgeWidth = 0.16; // reduced size
+    double rightFridgeWidth = 1.0 - leftFridgeWidth - pipeWidth; // maybe right? full size
+    //double rightFridgeWidth = 0.20; // reduced size
     double pipeDepth = 0.03;
     // double frontFridgeDepth = 0.40; // reduced size
     // double backFridgeDepth = 0.40; // reduced size
     double frontFridgeDepth = (1 - pipeDepth) / 2; // full size
     double backFridgeDepth = (1 - pipeDepth) / 2;  // full size
-    int xCellsPerMetre = 200;
-    int yCellsPerMetre = 200;
-    int zCellsPerMetre = 200;
+    int xCellsPerMetre = 100;
+    int yCellsPerMetre = 100;
+    int zCellsPerMetre = 100;
     int pipeWidthCells = (int)(pipeWidth * xCellsPerMetre) + 2;
     int pipeHeightCells = (int)(pipeHeight * yCellsPerMetre) + 2;
     int leftFridgeWidthCells = (int)(leftFridgeWidth * xCellsPerMetre) + 2;

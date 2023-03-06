@@ -15,7 +15,7 @@ time = readdlm(path*"elapsedtime.csv",',')
 toplay = 0:iterations-2
 pWallAnim = Animation()
 for i in toplay
-    pWallPlt = heatmap(p[:,i+1,:], clim=(1.013,1.014))
+    pWallPlt = heatmap(p[:,i+1,:], clim=(1.013,1.014), c=:grays)
     frame(pWallAnim, pWallPlt)
 end
 mp4(pWallAnim, path*"pWall.mp4", fps=30)
@@ -54,7 +54,7 @@ rowpressure = sum(forcecell, dims=3)
 rowpressure[rowpressure .< 0] .= 0
 
 # array of the physical x positions of each row
-xs = ((1:size(p,1)).-0.5)./cellspermetery
+xs = ((size(p,1):-1:1).-0.5)./cellspermetery
 
 sxsf = dropdims(sum(rowpressure.*xs, dims=1), dims=(1,3))
 
@@ -85,3 +85,16 @@ elongation = delta ./ H
 signy = ones(size(y))
 signy[y .!=0] = y[y .!=0] ./ abs.(y[y .!=0])
 elongation = elongation .* signy
+
+plotnum = 1
+if plotnum == 1
+    plot(time, totalforce, label=:none, xlims=(0,maximum(time)))
+    xlabel!("Time (s)")
+    ylabel!("Force (N)")
+    title!("Total Force on Wall")
+elseif plotnum == 2
+    plot(time, H.-centrepressure, label=:none, ylims=(0,H), xlims=(0,maximum(time)))
+    xlabel!("Time (s)")
+    ylabel!("Height (m)")
+    title!("Position of Centre of Pressure on Wall")
+end
