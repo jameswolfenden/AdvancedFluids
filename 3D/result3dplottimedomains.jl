@@ -14,8 +14,8 @@ p3 = readdlm("3D/resultsdomain/domain3p.csv",',')
 println("Read in p")
 
 # find the highest pressure in the second column of p2
-maxpressure = maximum(p2[:,2])
-println("Max pressure: $(maxpressure)")
+maxpressure_ = maximum(p2[:,2])
+println("Max pressure: $(maxpressure_)")
 
 toplay = 0:n-2
 
@@ -31,8 +31,8 @@ for i in toplay
     p2i = p2[i*size2+1:(i+1)*size2,:]
     p3i = p3[i*size3+1:(i+1)*size3,:]
     pBig = [p2i[2:end-1, 2:end-1] p0i[2:end-1, 2:end-1] p3i[2:end-1, 2:end-1]; zeros(size(p1i,1)-2, size(p2i,2)-2) p1i[2:end-1, 2:end-1] zeros(size(p1i,1)-2, size(p3i,2)-2)]
-    clims = (1.013, 1.014)
-    pPlt = heatmap(pBig, clim=clims, yflip=true, c=:grays)
+    clims = (1.013, 1.01375)
+    pPlt = heatmap(pBig, clim=clims, yflip=true)
     frame(pAnim, pPlt)
 end
 mp4(pAnim, "3D/resultsdomain/p.mp4", fps=30)
@@ -57,7 +57,7 @@ for i in toplay
     rho3i = rho3[i*size3+1:(i+1)*size3,:]
     rhoBig = [rho2i[2:end-1, 2:end-1] rho0i[2:end-1, 2:end-1] rho3i[2:end-1, 2:end-1]; zeros(size(rho1i,1)-2, size(rho2i,2)-2) rho1i[2:end-1, 2:end-1] zeros(size(rho1i,1)-2, size(rho3i,2)-2)]
     clims = (1.267, 1.269)
-    rhoPlt = heatmap(rhoBig, clim=clims, yflip=true, c=:grays)
+    rhoPlt = heatmap(rhoBig, clim=clims, yflip=true)
     frame(rhoAnim, rhoPlt)
 end
 mp4(rhoAnim, "3D/resultsdomain/rho.mp4", fps=30)
@@ -82,7 +82,7 @@ for i in toplay
     u3i = u3[i*size3+1:(i+1)*size3,:]
     uBig = [u2i[2:end-1, 2:end-1] u0i[2:end-1, 2:end-1] u3i[2:end-1, 2:end-1]; zeros(size(u1i,1)-2, size(u2i,2)-2) u1i[2:end-1, 2:end-1] zeros(size(u1i,1)-2, size(u3i,2)-2)]
     clims = (-0.001, 0.001)
-    uPlt = heatmap(uBig, clim=clims, yflip=true, c=:grays)
+    uPlt = heatmap(uBig, clim=clims, yflip=true)
     frame(uAnim, uPlt)
 end
 mp4(uAnim, "3D/resultsdomain/u.mp4", fps=30)
@@ -107,7 +107,7 @@ for i in toplay
     v3i = v3[i*size3+1:(i+1)*size3,:]
     vBig = [v2i[2:end-1, 2:end-1] v0i[2:end-1, 2:end-1] v3i[2:end-1, 2:end-1]; zeros(size(v1i,1)-2, size(v2i,2)-2) v1i[2:end-1, 2:end-1] zeros(size(v1i,1)-2, size(v3i,2)-2)]
     clims = (-0.001, 0.001)
-    vPlt = heatmap(vBig, clim=clims, yflip=true, c=:grays)
+    vPlt = heatmap(vBig, clim=clims, yflip=true)
     frame(vAnim, vPlt)
 end
 mp4(vAnim, "3D/resultsdomain/v.mp4", fps=30)
@@ -132,7 +132,7 @@ for i in toplay
     w3i = w3[i*size3+1:(i+1)*size3,:]
     wBig = [w2i[2:end-1, 2:end-1] w0i[2:end-1, 2:end-1] w3i[2:end-1, 2:end-1]; zeros(size(w1i,1)-2, size(w2i,2)-2) w1i[2:end-1, 2:end-1] zeros(size(w1i,1)-2, size(w3i,2)-2)]
     clims = (-0.001, 0.001)
-    wPlt = heatmap(wBig, clim=clims, yflip=true, c=:grays)
+    wPlt = heatmap(wBig, clim=clims, yflip=true)
     frame(wAnim, wPlt)
 end
 mp4(wAnim, "3D/resultsdomain/w.mp4", fps=30)

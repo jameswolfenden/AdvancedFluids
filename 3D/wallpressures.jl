@@ -15,7 +15,7 @@ time = readdlm(path*"elapsedtime.csv",',')
 toplay = 0:iterations-2
 pWallAnim = Animation()
 for i in toplay
-    pWallPlt = heatmap(p[:,i+1,:], clim=(1.013,1.014), c=:grays)
+    pWallPlt = heatmap(p[:,i+1,:], clim=(1.0130,1.01375))
     frame(pWallAnim, pWallPlt)
 end
 mp4(pWallAnim, path*"pWall.mp4", fps=30)
@@ -36,11 +36,6 @@ maxrowarray = zeros(size(p,2))
 for i in 1:size(p,2)
     maxrowarray[i] = Int(maxrow[i][1])
 end
-
-# replace any 1s with 200 in maxrowarray
-maxrowarray[maxrowarray .== 1] .= 200
-
-x = (size(p,1).-maxrowarray.+0.5)./cellspermetery
 
 H = 2.0
 E = 2.0e11
@@ -68,12 +63,17 @@ centrepressure[centrepressure .< 0] .= 0
 centrepressure[centrepressure .> H] .= H
 centrepressure = H .- centrepressure
 
+maxpressure = maxrowarray./cellspermetery
+maxpressure[maxpressure .== 0] .= H
+
 y = zeros(size(centrepressure))
 # equation only valid for centre pressure < H/2
 y[centrepressure .< H/2] = totalforce[centrepressure .< H/2] .* centrepressure[centrepressure .< H/2] .* (H^2 .- centrepressure[centrepressure .< H/2].^2).^(3 / 2) / (9 * sqrt(3) * H * E * I)
 
 # equation only valid for centre pressure > H/2
 y[centrepressure .> H/2] = totalforce[centrepressure .> H/2] .* (H .- centrepressure[centrepressure .> H/2]) .* (H^2 .- (H .- centrepressure[centrepressure .> H/2]).^2).^(3 / 2) / (9 * sqrt(3) * H * E * I)
+
+#y[maxpressure .> H/2] = totalforce[maxpressure .> H/2] .* (H .- maxpressure[maxpressure .> H/2]) .* (H^2 .- (H .- maxpressure[maxpressure .> H/2]).^2).^(3 / 2) / (9 * sqrt(3) * H * E * I)
 
 # approximate as triangle
 ylocation = sqrt.((H.^2 .- (H.-centrepressure).^2)/3)
@@ -91,10 +91,10 @@ if plotnum == 1
     plot(time, totalforce, label=:none, xlims=(0,maximum(time)))
     xlabel!("Time (s)")
     ylabel!("Force (N)")
-    title!("Total Force on Wall")
+    title!("Total Force on back wall")
 elseif plotnum == 2
     plot(time, H.-centrepressure, label=:none, ylims=(0,H), xlims=(0,maximum(time)))
     xlabel!("Time (s)")
     ylabel!("Height (m)")
-    title!("Position of Centre of Pressure on Wall")
+    title!("Position of Centre of Pressure on back wall")
 end
