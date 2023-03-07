@@ -232,7 +232,7 @@ double Domain3D::timeStep()
         {
             for (int z = 1; z < zCellCount - 1; z++)
             {
-                double C_clf = 0.5;
+                double C_clf = 0.5; // Courant number for CFL condition, could probably be up to 0.9 but 0.5 is safe and i don't want to break it. there was a mistake that meant i thought it needed to be lower
                 // this needs optimisation
                 if (C_clf * yBox / (std::abs(boxes[x][y][z].v) + boxes[x][y][z].a) < step) // set the deltaT for the next iteration being 0.9 * the min time step for this iteration
                     step = C_clf * yBox / (std::abs(boxes[x][y][z].v) + boxes[x][y][z].a);

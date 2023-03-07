@@ -58,7 +58,7 @@ void saveWallPressures(std::vector<Domain3D *> domains, std::ofstream &stream)
 
 int main()
 {
-    int iterations = 100;
+    int iterations = 50;
     double elapsedTime = 0;
     int domainCount = 10;
     double fridgeHeight = 2.0; // full size
@@ -113,8 +113,8 @@ int main()
     int z = (pipeDepthCells - 1) / 2; // centre of pipe
     std::cout << "z: " << z << std::endl;
 
-    double fridgePressure = 1.01325;
-    double pipePressure = 1.04;
+    double fridgePressure = 101325;
+    double pipePressure = 104000;
     double fridgeDensity = 1.268;
     double pipeDensity = 1.32;
 
