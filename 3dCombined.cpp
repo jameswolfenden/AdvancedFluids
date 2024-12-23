@@ -1,6 +1,9 @@
 #include <cmath>
 #include <iostream>
 #include <vector>
+#include "H5Cpp.h"
+
+using namespace H5;
 
 const double G = 1.4;
 
@@ -227,7 +230,7 @@ class RiemannSolver
         }
         return true;
     }
-    bool iterateP(const double &rhoL, const double &uL, const double &aL, const double &pL, const double &rhoR, const double &uR, const double &aR, const double &pR, Flux &fl, double &tempP, double &tempU)
+    bool iterateP(const double &rhoL, const double &uL, const double &aL, const double &pL, const double &rhoR, const double &uR, const double &aR, const double &pR, double &tempP, double &tempU)
     {
         bool iterate = true;
         double fsL, fsR, d_fsL, d_fsR, change;
@@ -320,7 +323,7 @@ public:
         }
         double tempP;
         double tempU;
-        if (!iterateP(rhoL, uL, aL, pL, rhoR, uR, aR, pR, fl, tempP, tempU))
+        if (!iterateP(rhoL, uL, aL, pL, rhoR, uR, aR, pR, tempP, tempU))
         {
             std::cout << "iteration failed" << std::endl;
             return false; // iteration failed, abort
@@ -409,19 +412,44 @@ struct Box : State
     }
 };
 
-struct Domain
+class Domain
 {
-    std::vector<std::vector<std::vector<Box>>> boxes;
-    std::vector<std::vector<std::vector<Flux>>> xFaces, yFaces, zFaces;
+public:
+    std::vector<Box> boxes;
+    int nx, ny, nz;
+    int nxFaces, nyFaces, nzFaces;
+    std::vector<Flux> xFaces, yFaces, zFaces;
     double boxDims;
     Domain *sides[6];
     void setup(const double x, const double y, const double z, const double density, const State &initial)
     {
-        boxes.resize(x * density + 2, std::vector<std::vector<Box>>(y * density + 2, std::vector<Box>(z * density + 2, initial)));
+        nx = x * density + 2;
+        ny = y * density + 2;
+        nz = z * density + 2;
+        nxFaces = nx - 1;
+        nyFaces = ny - 1;
+        nzFaces = nz - 1;
         boxDims = 1 / density;
-        xFaces.resize(x * density + 1, std::vector<std::vector<Flux>>(y * density + 2, std::vector<Flux>(z * density + 2)));
-        yFaces.resize(x * density + 2, std::vector<std::vector<Flux>>(y * density + 1, std::vector<Flux>(z * density + 2)));
-        zFaces.resize(x * density + 2, std::vector<std::vector<Flux>>(y * density + 2, std::vector<Flux>(z * density + 1)));
+        boxes.resize(nx * ny * nz, initial);
+        xFaces.resize(nxFaces * ny * nz);
+        yFaces.resize(nx * nyFaces * nz);
+        zFaces.resize(nx * ny * nzFaces);
+    }
+    Box &bAt(const int &x, const int &y, const int &z)
+    {
+        return boxes[x + nx * (y + ny * z)];
+    }
+    Flux &xfAt(const int &x, const int &y, const int &z)
+    {
+        return xFaces[x + nxFaces * (y + ny * z)];
+    }
+    Flux &yfAt(const int &x, const int &y, const int &z)
+    {
+        return yFaces[x + nx * (y + nyFaces * z)];
+    }
+    Flux &zfAt(const int &x, const int &y, const int &z)
+    {
+        return zFaces[x + nx * (y + ny * z)];
     }
 };
 
@@ -460,18 +488,18 @@ public:
     }
     bool timeStep(Domain &d)
     {
-        for (int x = 1; x < d.boxes.size() - 1; x++)
+        for (int i = 1; i < d.nx - 1; i++)
         {
-            for (int y = 1; y < d.boxes[0].size() - 1; y++)
+            for (int j = 1; j < d.ny - 1; j++)
             {
-                for (int z = 1; z < d.boxes[0][0].size() - 1; z++)
+                for (int k = 1; k < d.nz - 1; k++)
                 {
-                    if (clf * d.boxDims / (d.boxes[x][y][z].u + d.boxes[x][y][z].a) < minT)
-                        minT = clf * d.boxDims / (d.boxes[x][y][z].u + d.boxes[x][y][z].a);
-                    if (clf * d.boxDims / (d.boxes[x][y][z].v + d.boxes[x][y][z].a) < minT)
-                        minT = clf * d.boxDims / (d.boxes[x][y][z].v + d.boxes[x][y][z].a);
-                    if (clf * d.boxDims / (d.boxes[x][y][z].w + d.boxes[x][y][z].a) < minT)
-                        minT = clf * d.boxDims / (d.boxes[x][y][z].w + d.boxes[x][y][z].a);
+                    if (clf * d.boxDims / (d.bAt(i, j, k).u + d.bAt(i, j, k).a) < minT)
+                        minT = clf * d.boxDims / (d.bAt(i, j, k).u + d.bAt(i, j, k).a);
+                    if (clf * d.boxDims / (d.bAt(i, j, k).v + d.bAt(i, j, k).a) < minT)
+                        minT = clf * d.boxDims / (d.bAt(i, j, k).v + d.bAt(i, j, k).a);
+                    if (clf * d.boxDims / (d.bAt(i, j, k).w + d.bAt(i, j, k).a) < minT)
+                        minT = clf * d.boxDims / (d.bAt(i, j, k).w + d.bAt(i, j, k).a);
                 }
             }
         }
@@ -518,13 +546,13 @@ public:
     }
     bool xFaces(Domain &d)
     {
-        for (int x = 0; x < d.xFaces.size(); x++)
+        for (int i = 0; i < d.nxFaces; i++)
         {
-            for (int y = 0; y < d.xFaces[0].size(); y++)
+            for (int j = 0; j < d.ny; j++)
             {
-                for (int z = 0; z < d.xFaces[0][0].size(); z++)
+                for (int k = 0; k < d.nz; k++)
                 {
-                    if (!rs.findStar(d.boxes[x][y][z].rho, d.boxes[x][y][z].u, d.boxes[x][y][z].v, d.boxes[x][y][z].w, d.boxes[x][y][z].a, d.boxes[x][y][z].p, d.boxes[x + 1][y][z].rho, d.boxes[x + 1][y][z].u, d.boxes[x + 1][y][z].v, d.boxes[x + 1][y][z].w, d.boxes[x + 1][y][z].a, d.boxes[x + 1][y][z].p, d.xFaces[x][y][z]))
+                    if (!rs.findStar(d.bAt(i, j, k).rho, d.bAt(i, j, k).u, d.bAt(i, j, k).v, d.bAt(i, j, k).w, d.bAt(i, j, k).a, d.bAt(i, j, k).p, d.bAt(i + 1, j, k).rho, d.bAt(i + 1, j, k).u, d.bAt(i + 1, j, k).v, d.bAt(i + 1, j, k).w, d.bAt(i + 1, j, k).a, d.bAt(i + 1, j, k).p, d.xfAt(i, j, k)))
                         return false;
                 }
             }
@@ -533,13 +561,13 @@ public:
     }
     bool yFaces(Domain &d)
     {
-        for (int x = 0; x < d.yFaces.size(); x++)
+        for (int i = 0; i < d.nx; i++)
         {
-            for (int y = 0; y < d.yFaces[0].size(); y++)
+            for (int j = 0; j < d.nyFaces; j++)
             {
-                for (int z = 0; z < d.yFaces[0][0].size(); z++)
+                for (int k = 0; k < d.nz; k++)
                 {
-                    if (!rs.findStar(d.boxes[x][y][z].rho, d.boxes[x][y][z].v, d.boxes[x][y][z].u, d.boxes[x][y][z].w, d.boxes[x][y][z].a, d.boxes[x][y][z].p, d.boxes[x][y + 1][z].rho, d.boxes[x][y + 1][z].v, d.boxes[x][y + 1][z].u, d.boxes[x][y + 1][z].w, d.boxes[x][y + 1][z].a, d.boxes[x][y + 1][z].p, d.yFaces[x][y][z]))
+                    if (!rs.findStar(d.bAt(i, j, k).rho, d.bAt(i, j, k).v, d.bAt(i, j, k).u, d.bAt(i, j, k).w, d.bAt(i, j, k).a, d.bAt(i, j, k).p, d.bAt(i, j + 1, k).rho, d.bAt(i, j + 1, k).v, d.bAt(i, j + 1, k).u, d.bAt(i, j + 1, k).w, d.bAt(i, j + 1, k).a, d.bAt(i, j + 1, k).p, d.yfAt(i, j, k)))
                         return false;
                 }
             }
@@ -548,13 +576,13 @@ public:
     }
     bool zFaces(Domain &d)
     {
-        for (int x = 0; x < d.zFaces.size(); x++)
+        for (int i = 0; i < d.nx; i++)
         {
-            for (int y = 0; y < d.zFaces[0].size(); y++)
+            for (int j = 0; j < d.ny; j++)
             {
-                for (int z = 0; z < d.zFaces[0][0].size(); z++)
+                for (int k = 0; k < d.nzFaces; k++)
                 {
-                    if (!rs.findStar(d.boxes[x][y][z].rho, d.boxes[x][y][z].w, d.boxes[x][y][z].v, d.boxes[x][y][z].u, d.boxes[x][y][z].a, d.boxes[x][y][z].p, d.boxes[x][y][z + 1].rho, d.boxes[x][y][z + 1].w, d.boxes[x][y][z + 1].v, d.boxes[x][y][z + 1].u, d.boxes[x][y][z + 1].a, d.boxes[x][y][z + 1].p, d.zFaces[x][y][z]))
+                    if (!rs.findStar(d.bAt(i, j, k).rho, d.bAt(i, j, k).w, d.bAt(i, j, k).v, d.bAt(i, j, k).u, d.bAt(i, j, k).a, d.bAt(i, j, k).p, d.bAt(i, j, k + 1).rho, d.bAt(i, j, k + 1).w, d.bAt(i, j, k + 1).v, d.bAt(i, j, k + 1).u, d.bAt(i, j, k + 1).a, d.bAt(i, j, k + 1).p, d.zfAt(i, j, k)))
                         return false;
                 }
             }
@@ -563,18 +591,18 @@ public:
     }
     bool xBoxes(Domain &d)
     {
-        for (int x = 1; x < d.boxes.size() - 1; x++)
+        for (int i = 1; i < d.nx - 1; i++)
         {
-            for (int y = 1; y < d.boxes[0].size() - 1; y++)
+            for (int j = 1; j < d.ny - 1; j++)
             {
-                for (int z = 1; z < d.boxes[0][0].size() - 1; z++)
+                for (int k = 1; k < d.nz - 1; k++)
                 {
-                    double u1 = d.boxes[x][y][z].u1() + minT * (d.xFaces[x - 1][y][z].f1 - d.xFaces[x][y][z].f1) / d.boxDims;
-                    double u2 = d.boxes[x][y][z].u2() + minT * (d.xFaces[x - 1][y][z].f2 - d.xFaces[x][y][z].f2) / d.boxDims;
-                    double u3 = d.boxes[x][y][z].u3() + minT * (d.xFaces[x - 1][y][z].f3 - d.xFaces[x][y][z].f3) / d.boxDims;
-                    double u4 = d.boxes[x][y][z].u4() + minT * (d.xFaces[x - 1][y][z].f4 - d.xFaces[x][y][z].f4) / d.boxDims;
-                    double u5 = d.boxes[x][y][z].u5() + minT * (d.xFaces[x - 1][y][z].f5 - d.xFaces[x][y][z].f5) / d.boxDims;
-                    d.boxes[x][y][z].updateFromConservatives(u1, u2, u3, u4, u5);
+                    double u1 = d.bAt(i, j, k).u1() + minT * (d.xfAt(i - 1, j, k).f1 - d.xfAt(i, j, k).f1) / d.boxDims;
+                    double u2 = d.bAt(i, j, k).u2() + minT * (d.xfAt(i - 1, j, k).f2 - d.xfAt(i, j, k).f2) / d.boxDims;
+                    double u3 = d.bAt(i, j, k).u3() + minT * (d.xfAt(i - 1, j, k).f3 - d.xfAt(i, j, k).f3) / d.boxDims;
+                    double u4 = d.bAt(i, j, k).u4() + minT * (d.xfAt(i - 1, j, k).f4 - d.xfAt(i, j, k).f4) / d.boxDims;
+                    double u5 = d.bAt(i, j, k).u5() + minT * (d.xfAt(i - 1, j, k).f5 - d.xfAt(i, j, k).f5) / d.boxDims;
+                    d.bAt(i, j, k).updateFromConservatives(u1, u2, u3, u4, u5);
                 }
             }
         }
@@ -582,18 +610,18 @@ public:
     }
     bool yBoxes(Domain &d)
     {
-        for (int x = 1; x < d.boxes.size() - 1; x++)
+        for (int i = 1; i < d.nx - 1; i++)
         {
-            for (int y = 1; y < d.boxes[0].size() - 1; y++)
+            for (int j = 1; j < d.ny - 1; j++)
             {
-                for (int z = 1; z < d.boxes[0][0].size() - 1; z++)
+                for (int k = 1; k < d.nz - 1; k++)
                 {
-                    double u1 = d.boxes[x][y][z].u1() + minT * (d.yFaces[x][y - 1][z].f1 - d.yFaces[x][y][z].f1) / d.boxDims;
-                    double u2 = d.boxes[x][y][z].u2() + minT * (d.yFaces[x][y - 1][z].f2 - d.yFaces[x][y][z].f2) / d.boxDims;
-                    double u3 = d.boxes[x][y][z].u3() + minT * (d.yFaces[x][y - 1][z].f3 - d.yFaces[x][y][z].f3) / d.boxDims;
-                    double u4 = d.boxes[x][y][z].u4() + minT * (d.yFaces[x][y - 1][z].f4 - d.yFaces[x][y][z].f4) / d.boxDims;
-                    double u5 = d.boxes[x][y][z].u5() + minT * (d.yFaces[x][y - 1][z].f5 - d.yFaces[x][y][z].f5) / d.boxDims;
-                    d.boxes[x][y][z].updateFromConservatives(u1, u2, u3, u4, u5);
+                    double u1 = d.bAt(i, j, k).u1() + minT * (d.yfAt(i, j - 1, k).f1 - d.yfAt(i, j, k).f1) / d.boxDims;
+                    double u2 = d.bAt(i, j, k).u2() + minT * (d.yfAt(i, j - 1, k).f2 - d.yfAt(i, j, k).f2) / d.boxDims;
+                    double u3 = d.bAt(i, j, k).u3() + minT * (d.yfAt(i, j - 1, k).f3 - d.yfAt(i, j, k).f3) / d.boxDims;
+                    double u4 = d.bAt(i, j, k).u4() + minT * (d.yfAt(i, j - 1, k).f4 - d.yfAt(i, j, k).f4) / d.boxDims;
+                    double u5 = d.bAt(i, j, k).u5() + minT * (d.yfAt(i, j - 1, k).f5 - d.yfAt(i, j, k).f5) / d.boxDims;
+                    d.bAt(i, j, k).updateFromConservatives(u1, u2, u3, u4, u5);
                 }
             }
         }
@@ -601,18 +629,18 @@ public:
     }
     bool zBoxes(Domain &d)
     {
-        for (int x = 1; x < d.boxes.size() - 1; x++)
+        for (int i = 1; i < d.nx - 1; i++)
         {
-            for (int y = 1; y < d.boxes[0].size() - 1; y++)
+            for (int j = 1; j < d.ny - 1; j++)
             {
-                for (int z = 1; z < d.boxes[0][0].size() - 1; z++)
+                for (int k = 1; k < d.nz - 1; k++)
                 {
-                    double u1 = d.boxes[x][y][z].u1() + minT * (d.zFaces[x][y][z - 1].f1 - d.zFaces[x][y][z].f1) / d.boxDims;
-                    double u2 = d.boxes[x][y][z].u2() + minT * (d.zFaces[x][y][z - 1].f2 - d.zFaces[x][y][z].f2) / d.boxDims;
-                    double u3 = d.boxes[x][y][z].u3() + minT * (d.zFaces[x][y][z - 1].f3 - d.zFaces[x][y][z].f3) / d.boxDims;
-                    double u4 = d.boxes[x][y][z].u4() + minT * (d.zFaces[x][y][z - 1].f4 - d.zFaces[x][y][z].f4) / d.boxDims;
-                    double u5 = d.boxes[x][y][z].u5() + minT * (d.zFaces[x][y][z - 1].f5 - d.zFaces[x][y][z].f5) / d.boxDims;
-                    d.boxes[x][y][z].updateFromConservatives(u1, u2, u3, u4, u5);
+                    double u1 = d.bAt(i, j, k).u1() + minT * (d.zfAt(i, j, k - 1).f1 - d.zfAt(i, j, k).f1) / d.boxDims;
+                    double u2 = d.bAt(i, j, k).u2() + minT * (d.zfAt(i, j, k - 1).f2 - d.zfAt(i, j, k).f2) / d.boxDims;
+                    double u3 = d.bAt(i, j, k).u3() + minT * (d.zfAt(i, j, k - 1).f3 - d.zfAt(i, j, k).f3) / d.boxDims;
+                    double u4 = d.bAt(i, j, k).u4() + minT * (d.zfAt(i, j, k - 1).f4 - d.zfAt(i, j, k).f4) / d.boxDims;
+                    double u5 = d.bAt(i, j, k).u5() + minT * (d.zfAt(i, j, k - 1).f5 - d.zfAt(i, j, k).f5) / d.boxDims;
+                    d.bAt(i, j, k).updateFromConservatives(u1, u2, u3, u4, u5);
                 }
             }
         }
@@ -623,44 +651,44 @@ public:
         // side 0 is the +x side
         if (d.sides[0]) // transmissive boundary condition
         {
-            for (int y = 1; y < d.boxes[0].size() - 1; y++)
+            for (int j = 1; j < d.ny - 1; j++)
             {
-                for (int z = 1; z < d.boxes[0][0].size() - 1; z++)
+                for (int k = 1; k < d.nz - 1; k++)
                 {
-                    d.boxes[d.boxes.size() - 1][y][z] = d.sides[0]->boxes[0][y][z];
+                    d.bAt(d.nx - 1, j, k) = d.sides[0]->bAt(0, j, k);
                 }
             }
         }
         else // reflective boundary condition
         {
-            for (int y = 1; y < d.boxes[0].size() - 1; y++)
+            for (int j = 1; j < d.ny - 1; j++)
             {
-                for (int z = 1; z < d.boxes[0][0].size() - 1; z++)
+                for (int k = 1; k < d.nz - 1; k++)
                 {
-                    d.boxes[d.boxes.size() - 1][y][z] = d.boxes[d.boxes.size() - 2][y][z];
-                    d.boxes[d.boxes.size() - 1][y][z].u = -d.boxes[d.boxes.size() - 1][y][z].u;
+                    d.bAt(d.nx - 1, j, k) = d.bAt(d.nx - 2, j, k);
+                    d.bAt(d.nx - 1, j, k).u = -d.bAt(d.nx - 1, j, k).u;
                 }
             }
         }
         // side 1 is the -x side
         if (d.sides[1]) // transmissive boundary condition
         {
-            for (int y = 1; y < d.boxes[0].size() - 1; y++)
+            for (int j = 1; j < d.ny - 1; j++)
             {
-                for (int z = 1; z < d.boxes[0][0].size() - 1; z++)
+                for (int k = 1; k < d.nz - 1; k++)
                 {
-                    d.boxes[0][y][z] = d.sides[1]->boxes[d.sides[1]->boxes.size() - 1][y][z];
+                    d.bAt(0, j, k) = d.sides[1]->bAt(d.sides[1]->nx - 1, j, k);
                 }
             }
         }
         else // reflective boundary condition
         {
-            for (int y = 1; y < d.boxes[0].size() - 1; y++)
+            for (int j = 1; j < d.ny - 1; j++)
             {
-                for (int z = 1; z < d.boxes[0][0].size() - 1; z++)
+                for (int k = 1; k < d.nz - 1; k++)
                 {
-                    d.boxes[0][y][z] = d.boxes[1][y][z];
-                    d.boxes[0][y][z].u = -d.boxes[0][y][z].u;
+                    d.bAt(0, j, k) = d.bAt(1, j, k);
+                    d.bAt(0, j, k).u = -d.bAt(0, j, k).u;
                 }
             }
         }
@@ -671,44 +699,44 @@ public:
         // side 2 is the +y side
         if (d.sides[2]) // transmissive boundary condition
         {
-            for (int x = 1; x < d.boxes.size() - 1; x++)
+            for (int i = 1; i < d.nx - 1; i++)
             {
-                for (int z = 1; z < d.boxes[0][0].size() - 1; z++)
+                for (int k = 1; k < d.nz - 1; k++)
                 {
-                    d.boxes[x][d.boxes[0].size() - 1][z] = d.sides[2]->boxes[x][0][z];
+                    d.bAt(i, d.ny - 1, k) = d.sides[2]->bAt(i, 0, k);
                 }
             }
         }
         else // reflective boundary condition
         {
-            for (int x = 1; x < d.boxes.size() - 1; x++)
+            for (int i = 1; i < d.nx - 1; i++)
             {
-                for (int z = 1; z < d.boxes[0][0].size() - 1; z++)
+                for (int k = 1; k < d.nz - 1; k++)
                 {
-                    d.boxes[x][d.boxes[0].size() - 1][z] = d.boxes[x][d.boxes[0].size() - 2][z];
-                    d.boxes[x][d.boxes[0].size() - 1][z].v = -d.boxes[x][d.boxes[0].size() - 1][z].v;
+                    d.bAt(i, d.ny - 1, k) = d.bAt(i, d.ny - 2, k);
+                    d.bAt(i, d.ny - 1, k).v = -d.bAt(i, d.ny - 1, k).v;
                 }
             }
         }
         // side 3 is the -y side
         if (d.sides[3]) // transmissive boundary condition
         {
-            for (int x = 1; x < d.boxes.size() - 1; x++)
+            for (int i = 1; i < d.nx - 1; i++)
             {
-                for (int z = 1; z < d.boxes[0][0].size() - 1; z++)
+                for (int k = 1; k < d.nz - 1; k++)
                 {
-                    d.boxes[x][0][z] = d.sides[3]->boxes[x][d.sides[3]->boxes[0].size() - 1][z];
+                    d.bAt(i, 0, k) = d.sides[3]->bAt(i, d.sides[3]->ny - 1, k);
                 }
             }
         }
         else // reflective boundary condition
         {
-            for (int x = 1; x < d.boxes.size() - 1; x++)
+            for (int i = 1; i < d.nx - 1; i++)
             {
-                for (int z = 1; z < d.boxes[0][0].size() - 1; z++)
+                for (int k = 1; k < d.nz - 1; k++)
                 {
-                    d.boxes[x][0][z] = d.boxes[x][1][z];
-                    d.boxes[x][0][z].v = -d.boxes[x][0][z].v;
+                    d.bAt(i, 0, k) = d.bAt(i, 1, k);
+                    d.bAt(i, 0, k).v = -d.bAt(i, 0, k).v;
                 }
             }
         }
@@ -719,44 +747,44 @@ public:
         // side 4 is the +z side
         if (d.sides[4]) // transmissive boundary condition
         {
-            for (int x = 1; x < d.boxes.size() - 1; x++)
+            for (int i = 1; i < d.nx - 1; i++)
             {
-                for (int y = 1; y < d.boxes[0].size() - 1; y++)
+                for (int j = 1; j < d.ny - 1; j++)
                 {
-                    d.boxes[x][y][d.boxes[0][0].size() - 1] = d.sides[4]->boxes[x][y][0];
+                    d.bAt(i, j, d.nz - 1) = d.sides[4]->bAt(i, j, 0);
                 }
             }
         }
         else // reflective boundary condition
         {
-            for (int x = 1; x < d.boxes.size() - 1; x++)
+            for (int i = 1; i < d.nx - 1; i++)
             {
-                for (int y = 1; y < d.boxes[0].size() - 1; y++)
+                for (int j = 1; j < d.ny - 1; j++)
                 {
-                    d.boxes[x][y][d.boxes[0][0].size() - 1] = d.boxes[x][y][d.boxes[0][0].size() - 2];
-                    d.boxes[x][y][d.boxes[0][0].size() - 1].w = -d.boxes[x][y][d.boxes[0][0].size() - 1].w;
+                    d.bAt(i, j, d.nz - 1) = d.bAt(i, j, d.nz - 2);
+                    d.bAt(i, j, d.nz - 1).w = -d.bAt(i, j, d.nz - 1).w;
                 }
             }
         }
         // side 5 is the -z side
         if (d.sides[5]) // transmissive boundary condition
         {
-            for (int x = 1; x < d.boxes.size() - 1; x++)
+            for (int i = 1; i < d.nx - 1; i++)
             {
-                for (int y = 1; y < d.boxes[0].size() - 1; y++)
+                for (int j = 1; j < d.ny - 1; j++)
                 {
-                    d.boxes[x][y][0] = d.sides[5]->boxes[x][y][d.sides[5]->boxes[0][0].size() - 1];
+                    d.bAt(i, j, 0) = d.sides[5]->bAt(i, j, d.sides[5]->nz - 1);
                 }
             }
         }
         else // reflective boundary condition
         {
-            for (int x = 1; x < d.boxes.size() - 1; x++)
+            for (int i = 1; i < d.nx - 1; i++)
             {
-                for (int y = 1; y < d.boxes[0].size() - 1; y++)
+                for (int j = 1; j < d.ny - 1; j++)
                 {
-                    d.boxes[x][y][0] = d.boxes[x][y][1];
-                    d.boxes[x][y][0].w = -d.boxes[x][y][0].w;
+                    d.bAt(i, j, 0) = d.bAt(i, j, 1);
+                    d.bAt(i, j, 0).w = -d.bAt(i, j, 0).w;
                 }
             }
         }
@@ -766,6 +794,33 @@ public:
 private:
     RiemannSolver rs;
     double clf;
+};
+
+class FileHandler
+{
+    public:
+    FileHandler(std::string filename) : filename(filename) {}
+    std::string filename;
+    H5::H5File file;
+    void createFile()
+    {
+        file = H5::H5File(filename, H5F_ACC_TRUNC);
+    }
+    void writeTimestep(std::vector<Domain> &domains, const double &time, const int &iteration) {
+        std::string groupname = "/timestep" + std::to_string(iteration);
+        H5::Group timestepGroup = file.createGroup(groupname);
+        for (int i = 0; i < domains.size(); i++) {
+            std::string domainname = "/domain" + std::to_string(i);
+            H5::Group domainGroup = timestepGroup.createGroup(domainname);
+            writeDomain(domainGroup, domains[i]);
+        }
+    }
+    void writeDomain(H5::Group &domainGroup, Domain &d) {
+        hsize_t dims[3] = {d.nx, d.ny, d.nz};
+        H5::DataSpace dataspace(3, dims);
+        H5::DataSet dataset = domainGroup.createDataSet("rho", H5::PredType::NATIVE_DOUBLE, dataspace);
+        dataset.write(d.boxes.data(), H5::PredType::NATIVE_DOUBLE);
+    }
 };
 
 int main()
@@ -783,11 +838,11 @@ int main()
     while (t < tEnd)
     {
         ds.updateDomains(domains);
-        t += 2*ds.minT;
+        t += 2 * ds.minT;
         std::cout << "Time elapsed: " << t << std::endl;
     }
     std::cout << "done" << std::endl;
-    std:: cout << "pressure centre domain 0: " << domains[0].boxes[2][2][2].p << std::endl;
-    std:: cout << "pressure centre domain 1: " << domains[1].boxes[2][2][2].p << std::endl;
+    std::cout << "pressure centre domain 0: " << domains[0].bAt(2, 2, 2).p << std::endl;
+    std::cout << "pressure centre domain 1: " << domains[1].bAt(2, 2, 2).p << std::endl;
     return 0;
 }

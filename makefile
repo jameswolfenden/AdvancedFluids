@@ -1,6 +1,7 @@
 # Compiler and flags
 CXX = g++
-CXXFLAGS = -Wall -Wextra -std=c++20 -I. -I1D -I2D -I3D
+CXXFLAGS = -Wall -Wextra -std=c++20 -I. -I1D -I2D -I3D -I/usr/include/hdf5/serial
+LDFLAGS = -L/usr/lib/x86_64-linux-gnu/hdf5/serial -lhdf5
 
 # Executable names
 EXEC_1D = 1D_program
@@ -49,7 +50,7 @@ $(EXEC_3D): $(OBJS_3D)
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
 $(EXEC_3D_2): $(OBJS_3D_2)
-	$(CXX) $(CXXFLAGS) -o $@ $^
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $^
 
 $(EXEC_test): $(OBJS_test)
 	$(CXX) $(CXXFLAGS) -o $@ $^
