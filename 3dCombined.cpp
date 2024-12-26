@@ -2,8 +2,7 @@
 #include <iostream>
 #include <vector>
 #include "H5Cpp.h"
-
-using namespace H5;
+#include <fstream>
 
 const double G = 1.4;
 
@@ -12,6 +11,24 @@ struct State
     double rho, u, v, w, p, a;
     State() {}
     State(double rho, double u, double v, double w, double p) : rho(rho), u(u), v(v), w(w), p(p) { a = sqrt(G * p / rho); }
+};
+
+struct StateRef
+{
+    double &rho, &u, &v, &w, &p, &a;
+    StateRef &operator=(const StateRef &other)
+    {
+        if (this != &other)
+        {
+            rho = other.rho;
+            u = other.u;
+            v = other.v;
+            w = other.w;
+            p = other.p;
+            a = other.a;
+        }
+        return *this;
+    }
 };
 
 struct Flux
@@ -338,10 +355,11 @@ public:
     }
 };
 
-struct Box : State
+struct BoxConserved
 {
-    Box() {}
-    Box(const State &s) : State(s) {}
+
+    BoxConserved(double &rho, double &u, double &v, double &w, double &p, double &a) : rho(rho), u(u), v(v), w(w), p(p), a(a) {}
+
     double aCalc() // find speed of sound
     {
         if (rho == 0.0)
@@ -410,17 +428,26 @@ struct Box : State
         }
         fixVacuum();
     }
+
+private:
+    double &rho, &u, &v, &w, &p, &a;
 };
 
 class Domain
 {
 public:
-    std::vector<Box> boxes;
     int nx, ny, nz;
     int nxFaces, nyFaces, nzFaces;
+    std::vector<double> rho_;
+    std::vector<double> u_;
+    std::vector<double> v_;
+    std::vector<double> w_;
+    std::vector<double> p_;
+    std::vector<double> a_;
     std::vector<Flux> xFaces, yFaces, zFaces;
     double boxDims;
     Domain *sides[6];
+    std::vector<uint8_t> ghostCellMask;
     void setup(const double x, const double y, const double z, const double density, const State &initial)
     {
         nx = x * density + 2;
@@ -430,14 +457,47 @@ public:
         nyFaces = ny - 1;
         nzFaces = nz - 1;
         boxDims = 1 / density;
-        boxes.resize(nx * ny * nz, initial);
+        rho_.resize(nx * ny * nz, initial.rho);
+        u_.resize(nx * ny * nz, initial.u);
+        v_.resize(nx * ny * nz, initial.v);
+        w_.resize(nx * ny * nz, initial.w);
+        p_.resize(nx * ny * nz, initial.p);
+        a_.resize(nx * ny * nz, initial.a);
         xFaces.resize(nxFaces * ny * nz);
         yFaces.resize(nx * nyFaces * nz);
         zFaces.resize(nx * ny * nzFaces);
+        setGhostCellMasks();
     }
-    Box &bAt(const int &x, const int &y, const int &z)
+    double &rho(const int &x, const int &y, const int &z)
     {
-        return boxes[x + nx * (y + ny * z)];
+        return rho_[x + nx * (y + ny * z)];
+    }
+    double &u(const int &x, const int &y, const int &z)
+    {
+        return u_[x + nx * (y + ny * z)];
+    }
+    double &v(const int &x, const int &y, const int &z)
+    {
+        return v_[x + nx * (y + ny * z)];
+    }
+    double &w(const int &x, const int &y, const int &z)
+    {
+        return w_[x + nx * (y + ny * z)];
+    }
+    double &p(const int &x, const int &y, const int &z)
+    {
+        return p_[x + nx * (y + ny * z)];
+    }
+    double &a(const int &x, const int &y, const int &z)
+    {
+        if (rho(x, y, z) == 0.0)
+        {
+            return a_[x + nx * (y + ny * z)] = 0.0;
+        }
+        else
+        {
+            return a_[x + nx * (y + ny * z)] = sqrt(G * p(x, y, z) / rho(x, y, z));
+        }
     }
     Flux &xfAt(const int &x, const int &y, const int &z)
     {
@@ -450,6 +510,43 @@ public:
     Flux &zfAt(const int &x, const int &y, const int &z)
     {
         return zFaces[x + nx * (y + ny * z)];
+    }
+    StateRef at(const int &x, const int &y, const int &z)
+    {
+        return StateRef{rho(x, y, z), u(x, y, z), v(x, y, z), w(x, y, z), p(x, y, z), a(x, y, z)};
+    }
+
+private:
+    void setGhostCellMasks()
+    {
+        {
+            ghostCellMask.resize(nx * ny * nz, 0);
+
+            for (int i = 0; i < nx; i++)
+            {
+                for (int j = 0; j < ny; j++)
+                {
+                    ghostCellMask[i + nx * (j + ny * 0)] = 1;
+                    ghostCellMask[i + nx * (j + ny * (nz - 1))] = 1;
+                }
+            }
+            for (int i = 0; i < nx; i++)
+            {
+                for (int k = 0; k < nz; k++)
+                {
+                    ghostCellMask[i + nx * (0 + ny * k)] = 1;
+                    ghostCellMask[i + nx * ((ny - 1) + ny * k)] = 1;
+                }
+            }
+            for (int j = 0; j < ny; j++)
+            {
+                for (int k = 0; k < nz; k++)
+                {
+                    ghostCellMask[0 + nx * (j + ny * k)] = 1;
+                    ghostCellMask[(nx - 1) + nx * (j + ny * k)] = 1;
+                }
+            }
+        }
     }
 };
 
@@ -494,12 +591,12 @@ public:
             {
                 for (int k = 1; k < d.nz - 1; k++)
                 {
-                    if (clf * d.boxDims / (d.bAt(i, j, k).u + d.bAt(i, j, k).a) < minT)
-                        minT = clf * d.boxDims / (d.bAt(i, j, k).u + d.bAt(i, j, k).a);
-                    if (clf * d.boxDims / (d.bAt(i, j, k).v + d.bAt(i, j, k).a) < minT)
-                        minT = clf * d.boxDims / (d.bAt(i, j, k).v + d.bAt(i, j, k).a);
-                    if (clf * d.boxDims / (d.bAt(i, j, k).w + d.bAt(i, j, k).a) < minT)
-                        minT = clf * d.boxDims / (d.bAt(i, j, k).w + d.bAt(i, j, k).a);
+                    if (clf * d.boxDims / (d.u(i, j, k) + d.a(i, j, k)) < minT)
+                        minT = clf * d.boxDims / (d.u(i, j, k) + d.a(i, j, k));
+                    if (clf * d.boxDims / (d.v(i, j, k) + d.a(i, j, k)) < minT)
+                        minT = clf * d.boxDims / (d.v(i, j, k) + d.a(i, j, k));
+                    if (clf * d.boxDims / (d.w(i, j, k) + d.a(i, j, k)) < minT)
+                        minT = clf * d.boxDims / (d.w(i, j, k) + d.a(i, j, k));
                 }
             }
         }
@@ -552,7 +649,7 @@ public:
             {
                 for (int k = 0; k < d.nz; k++)
                 {
-                    if (!rs.findStar(d.bAt(i, j, k).rho, d.bAt(i, j, k).u, d.bAt(i, j, k).v, d.bAt(i, j, k).w, d.bAt(i, j, k).a, d.bAt(i, j, k).p, d.bAt(i + 1, j, k).rho, d.bAt(i + 1, j, k).u, d.bAt(i + 1, j, k).v, d.bAt(i + 1, j, k).w, d.bAt(i + 1, j, k).a, d.bAt(i + 1, j, k).p, d.xfAt(i, j, k)))
+                    if (!rs.findStar(d.rho(i, j, k), d.u(i, j, k), d.v(i, j, k), d.w(i, j, k), d.a(i, j, k), d.p(i, j, k), d.rho(i + 1, j, k), d.u(i + 1, j, k), d.v(i + 1, j, k), d.w(i + 1, j, k), d.a(i + 1, j, k), d.p(i + 1, j, k), d.xfAt(i, j, k)))
                         return false;
                 }
             }
@@ -567,7 +664,7 @@ public:
             {
                 for (int k = 0; k < d.nz; k++)
                 {
-                    if (!rs.findStar(d.bAt(i, j, k).rho, d.bAt(i, j, k).v, d.bAt(i, j, k).u, d.bAt(i, j, k).w, d.bAt(i, j, k).a, d.bAt(i, j, k).p, d.bAt(i, j + 1, k).rho, d.bAt(i, j + 1, k).v, d.bAt(i, j + 1, k).u, d.bAt(i, j + 1, k).w, d.bAt(i, j + 1, k).a, d.bAt(i, j + 1, k).p, d.yfAt(i, j, k)))
+                    if (!rs.findStar(d.rho(i, j, k), d.v(i, j, k), d.u(i, j, k), d.w(i, j, k), d.a(i, j, k), d.p(i, j, k), d.rho(i, j + 1, k), d.v(i, j + 1, k), d.u(i, j + 1, k), d.w(i, j + 1, k), d.a(i, j + 1, k), d.p(i, j + 1, k), d.yfAt(i, j, k)))
                         return false;
                 }
             }
@@ -582,7 +679,7 @@ public:
             {
                 for (int k = 0; k < d.nzFaces; k++)
                 {
-                    if (!rs.findStar(d.bAt(i, j, k).rho, d.bAt(i, j, k).w, d.bAt(i, j, k).v, d.bAt(i, j, k).u, d.bAt(i, j, k).a, d.bAt(i, j, k).p, d.bAt(i, j, k + 1).rho, d.bAt(i, j, k + 1).w, d.bAt(i, j, k + 1).v, d.bAt(i, j, k + 1).u, d.bAt(i, j, k + 1).a, d.bAt(i, j, k + 1).p, d.zfAt(i, j, k)))
+                    if (!rs.findStar(d.rho(i, j, k), d.w(i, j, k), d.v(i, j, k), d.u(i, j, k), d.a(i, j, k), d.p(i, j, k), d.rho(i, j, k + 1), d.w(i, j, k + 1), d.v(i, j, k + 1), d.u(i, j, k + 1), d.a(i, j, k + 1), d.p(i, j, k + 1), d.zfAt(i, j, k)))
                         return false;
                 }
             }
@@ -597,12 +694,13 @@ public:
             {
                 for (int k = 1; k < d.nz - 1; k++)
                 {
-                    double u1 = d.bAt(i, j, k).u1() + minT * (d.xfAt(i - 1, j, k).f1 - d.xfAt(i, j, k).f1) / d.boxDims;
-                    double u2 = d.bAt(i, j, k).u2() + minT * (d.xfAt(i - 1, j, k).f2 - d.xfAt(i, j, k).f2) / d.boxDims;
-                    double u3 = d.bAt(i, j, k).u3() + minT * (d.xfAt(i - 1, j, k).f3 - d.xfAt(i, j, k).f3) / d.boxDims;
-                    double u4 = d.bAt(i, j, k).u4() + minT * (d.xfAt(i - 1, j, k).f4 - d.xfAt(i, j, k).f4) / d.boxDims;
-                    double u5 = d.bAt(i, j, k).u5() + minT * (d.xfAt(i - 1, j, k).f5 - d.xfAt(i, j, k).f5) / d.boxDims;
-                    d.bAt(i, j, k).updateFromConservatives(u1, u2, u3, u4, u5);
+                    BoxConserved b(d.rho(i, j, k), d.u(i, j, k), d.v(i, j, k), d.w(i, j, k), d.p(i, j, k), d.a(i, j, k));
+                    double u1 = b.u1() + minT * (d.xfAt(i - 1, j, k).f1 - d.xfAt(i, j, k).f1) / d.boxDims;
+                    double u2 = b.u2() + minT * (d.xfAt(i - 1, j, k).f2 - d.xfAt(i, j, k).f2) / d.boxDims;
+                    double u3 = b.u3() + minT * (d.xfAt(i - 1, j, k).f3 - d.xfAt(i, j, k).f3) / d.boxDims;
+                    double u4 = b.u4() + minT * (d.xfAt(i - 1, j, k).f4 - d.xfAt(i, j, k).f4) / d.boxDims;
+                    double u5 = b.u5() + minT * (d.xfAt(i - 1, j, k).f5 - d.xfAt(i, j, k).f5) / d.boxDims;
+                    b.updateFromConservatives(u1, u2, u3, u4, u5);
                 }
             }
         }
@@ -616,12 +714,13 @@ public:
             {
                 for (int k = 1; k < d.nz - 1; k++)
                 {
-                    double u1 = d.bAt(i, j, k).u1() + minT * (d.yfAt(i, j - 1, k).f1 - d.yfAt(i, j, k).f1) / d.boxDims;
-                    double u2 = d.bAt(i, j, k).u2() + minT * (d.yfAt(i, j - 1, k).f2 - d.yfAt(i, j, k).f2) / d.boxDims;
-                    double u3 = d.bAt(i, j, k).u3() + minT * (d.yfAt(i, j - 1, k).f3 - d.yfAt(i, j, k).f3) / d.boxDims;
-                    double u4 = d.bAt(i, j, k).u4() + minT * (d.yfAt(i, j - 1, k).f4 - d.yfAt(i, j, k).f4) / d.boxDims;
-                    double u5 = d.bAt(i, j, k).u5() + minT * (d.yfAt(i, j - 1, k).f5 - d.yfAt(i, j, k).f5) / d.boxDims;
-                    d.bAt(i, j, k).updateFromConservatives(u1, u2, u3, u4, u5);
+                    BoxConserved b(d.rho(i, j, k), d.u(i, j, k), d.v(i, j, k), d.w(i, j, k), d.p(i, j, k), d.a(i, j, k));
+                    double u1 = b.u1() + minT * (d.yfAt(i, j - 1, k).f1 - d.yfAt(i, j, k).f1) / d.boxDims;
+                    double u2 = b.u2() + minT * (d.yfAt(i, j - 1, k).f2 - d.yfAt(i, j, k).f2) / d.boxDims;
+                    double u3 = b.u3() + minT * (d.yfAt(i, j - 1, k).f3 - d.yfAt(i, j, k).f3) / d.boxDims;
+                    double u4 = b.u4() + minT * (d.yfAt(i, j - 1, k).f4 - d.yfAt(i, j, k).f4) / d.boxDims;
+                    double u5 = b.u5() + minT * (d.yfAt(i, j - 1, k).f5 - d.yfAt(i, j, k).f5) / d.boxDims;
+                    b.updateFromConservatives(u1, u2, u3, u4, u5);
                 }
             }
         }
@@ -635,12 +734,13 @@ public:
             {
                 for (int k = 1; k < d.nz - 1; k++)
                 {
-                    double u1 = d.bAt(i, j, k).u1() + minT * (d.zfAt(i, j, k - 1).f1 - d.zfAt(i, j, k).f1) / d.boxDims;
-                    double u2 = d.bAt(i, j, k).u2() + minT * (d.zfAt(i, j, k - 1).f2 - d.zfAt(i, j, k).f2) / d.boxDims;
-                    double u3 = d.bAt(i, j, k).u3() + minT * (d.zfAt(i, j, k - 1).f3 - d.zfAt(i, j, k).f3) / d.boxDims;
-                    double u4 = d.bAt(i, j, k).u4() + minT * (d.zfAt(i, j, k - 1).f4 - d.zfAt(i, j, k).f4) / d.boxDims;
-                    double u5 = d.bAt(i, j, k).u5() + minT * (d.zfAt(i, j, k - 1).f5 - d.zfAt(i, j, k).f5) / d.boxDims;
-                    d.bAt(i, j, k).updateFromConservatives(u1, u2, u3, u4, u5);
+                    BoxConserved b(d.rho(i, j, k), d.u(i, j, k), d.v(i, j, k), d.w(i, j, k), d.p(i, j, k), d.a(i, j, k));
+                    double u1 = b.u1() + minT * (d.zfAt(i, j, k - 1).f1 - d.zfAt(i, j, k).f1) / d.boxDims;
+                    double u2 = b.u2() + minT * (d.zfAt(i, j, k - 1).f2 - d.zfAt(i, j, k).f2) / d.boxDims;
+                    double u3 = b.u3() + minT * (d.zfAt(i, j, k - 1).f3 - d.zfAt(i, j, k).f3) / d.boxDims;
+                    double u4 = b.u4() + minT * (d.zfAt(i, j, k - 1).f4 - d.zfAt(i, j, k).f4) / d.boxDims;
+                    double u5 = b.u5() + minT * (d.zfAt(i, j, k - 1).f5 - d.zfAt(i, j, k).f5) / d.boxDims;
+                    b.updateFromConservatives(u1, u2, u3, u4, u5);
                 }
             }
         }
@@ -655,7 +755,7 @@ public:
             {
                 for (int k = 1; k < d.nz - 1; k++)
                 {
-                    d.bAt(d.nx - 1, j, k) = d.sides[0]->bAt(0, j, k);
+                    d.at(d.nx - 1, j, k) = d.sides[0]->at(0, j, k);
                 }
             }
         }
@@ -665,8 +765,8 @@ public:
             {
                 for (int k = 1; k < d.nz - 1; k++)
                 {
-                    d.bAt(d.nx - 1, j, k) = d.bAt(d.nx - 2, j, k);
-                    d.bAt(d.nx - 1, j, k).u = -d.bAt(d.nx - 1, j, k).u;
+                    d.at(d.nx - 1, j, k) = d.at(d.nx - 2, j, k);
+                    d.at(d.nx - 1, j, k).u = -d.at(d.nx - 1, j, k).u;
                 }
             }
         }
@@ -677,7 +777,7 @@ public:
             {
                 for (int k = 1; k < d.nz - 1; k++)
                 {
-                    d.bAt(0, j, k) = d.sides[1]->bAt(d.sides[1]->nx - 1, j, k);
+                    d.at(0, j, k) = d.sides[1]->at(d.sides[1]->nx - 1, j, k);
                 }
             }
         }
@@ -687,8 +787,8 @@ public:
             {
                 for (int k = 1; k < d.nz - 1; k++)
                 {
-                    d.bAt(0, j, k) = d.bAt(1, j, k);
-                    d.bAt(0, j, k).u = -d.bAt(0, j, k).u;
+                    d.at(0, j, k) = d.at(1, j, k);
+                    d.at(0, j, k).u = -d.at(0, j, k).u;
                 }
             }
         }
@@ -703,7 +803,7 @@ public:
             {
                 for (int k = 1; k < d.nz - 1; k++)
                 {
-                    d.bAt(i, d.ny - 1, k) = d.sides[2]->bAt(i, 0, k);
+                    d.at(i, d.ny - 1, k) = d.sides[2]->at(i, 0, k);
                 }
             }
         }
@@ -713,8 +813,8 @@ public:
             {
                 for (int k = 1; k < d.nz - 1; k++)
                 {
-                    d.bAt(i, d.ny - 1, k) = d.bAt(i, d.ny - 2, k);
-                    d.bAt(i, d.ny - 1, k).v = -d.bAt(i, d.ny - 1, k).v;
+                    d.at(i, d.ny - 1, k) = d.at(i, d.ny - 2, k);
+                    d.at(i, d.ny - 1, k).v = -d.at(i, d.ny - 1, k).v;
                 }
             }
         }
@@ -725,7 +825,7 @@ public:
             {
                 for (int k = 1; k < d.nz - 1; k++)
                 {
-                    d.bAt(i, 0, k) = d.sides[3]->bAt(i, d.sides[3]->ny - 1, k);
+                    d.at(i, 0, k) = d.sides[3]->at(i, d.sides[3]->ny - 1, k);
                 }
             }
         }
@@ -735,8 +835,8 @@ public:
             {
                 for (int k = 1; k < d.nz - 1; k++)
                 {
-                    d.bAt(i, 0, k) = d.bAt(i, 1, k);
-                    d.bAt(i, 0, k).v = -d.bAt(i, 0, k).v;
+                    d.at(i, 0, k) = d.at(i, 1, k);
+                    d.at(i, 0, k).v = -d.at(i, 0, k).v;
                 }
             }
         }
@@ -751,7 +851,7 @@ public:
             {
                 for (int j = 1; j < d.ny - 1; j++)
                 {
-                    d.bAt(i, j, d.nz - 1) = d.sides[4]->bAt(i, j, 0);
+                    d.at(i, j, d.nz - 1) = d.sides[4]->at(i, j, 0);
                 }
             }
         }
@@ -761,8 +861,8 @@ public:
             {
                 for (int j = 1; j < d.ny - 1; j++)
                 {
-                    d.bAt(i, j, d.nz - 1) = d.bAt(i, j, d.nz - 2);
-                    d.bAt(i, j, d.nz - 1).w = -d.bAt(i, j, d.nz - 1).w;
+                    d.at(i, j, d.nz - 1) = d.at(i, j, d.nz - 2);
+                    d.at(i, j, d.nz - 1).w = -d.at(i, j, d.nz - 1).w;
                 }
             }
         }
@@ -773,7 +873,7 @@ public:
             {
                 for (int j = 1; j < d.ny - 1; j++)
                 {
-                    d.bAt(i, j, 0) = d.sides[5]->bAt(i, j, d.sides[5]->nz - 1);
+                    d.at(i, j, 0) = d.sides[5]->at(i, j, d.sides[5]->nz - 1);
                 }
             }
         }
@@ -783,8 +883,8 @@ public:
             {
                 for (int j = 1; j < d.ny - 1; j++)
                 {
-                    d.bAt(i, j, 0) = d.bAt(i, j, 1);
-                    d.bAt(i, j, 0).w = -d.bAt(i, j, 0).w;
+                    d.at(i, j, 0) = d.at(i, j, 1);
+                    d.at(i, j, 0).w = -d.at(i, j, 0).w;
                 }
             }
         }
@@ -798,28 +898,135 @@ private:
 
 class FileHandler
 {
-    public:
-    FileHandler(std::string filename) : filename(filename) {}
+public:
+    FileHandler(std::string filename) : filename(filename)
+    {
+        file = H5::H5File(filename + ".h5", H5F_ACC_TRUNC);
+    }
     std::string filename;
     H5::H5File file;
-    void createFile()
+    void writeTimestep(std::vector<Domain> &domains, const double &time, const int &iteration)
     {
-        file = H5::H5File(filename, H5F_ACC_TRUNC);
-    }
-    void writeTimestep(std::vector<Domain> &domains, const double &time, const int &iteration) {
-        std::string groupname = "/timestep" + std::to_string(iteration);
-        H5::Group timestepGroup = file.createGroup(groupname);
-        for (int i = 0; i < domains.size(); i++) {
-            std::string domainname = "/domain" + std::to_string(i);
-            H5::Group domainGroup = timestepGroup.createGroup(domainname);
-            writeDomain(domainGroup, domains[i]);
+        std::string groupname = "timestep_" + std::to_string(iteration);
+        H5::Group timestepGroup = file.createGroup(groupname.c_str());
+
+        // write the time
+        hsize_t dims[1] = {1};
+        H5::DataSpace dataspace = H5::DataSpace(1, dims);
+        H5::DataSet timeDataset = timestepGroup.createDataSet("time", H5::PredType::NATIVE_DOUBLE, dataspace);
+        timeDataset.write(&time, H5::PredType::NATIVE_DOUBLE);
+
+        // write the domain data
+        for (int i = 0; i < domains.size(); i++)
+        {
+            std::string domainGroupname = "domain_" + std::to_string(i);
+            H5::Group domainGroup = timestepGroup.createGroup(domainGroupname.c_str());
+            writeDomain(domains[i], domainGroup);
         }
     }
-    void writeDomain(H5::Group &domainGroup, Domain &d) {
+    void writeDomain(Domain &d, H5::Group &domainGroup)
+    {
+        // write the domain dimensions
         hsize_t dims[3] = {d.nx, d.ny, d.nz};
-        H5::DataSpace dataspace(3, dims);
+        H5::DataSpace dataspace = H5::DataSpace(3, dims);
         H5::DataSet dataset = domainGroup.createDataSet("rho", H5::PredType::NATIVE_DOUBLE, dataspace);
-        dataset.write(d.boxes.data(), H5::PredType::NATIVE_DOUBLE);
+        dataset.write(d.rho_.data(), H5::PredType::NATIVE_DOUBLE);
+        dataspace = H5::DataSpace(3, dims);
+        dataset = domainGroup.createDataSet("u", H5::PredType::NATIVE_DOUBLE, dataspace);
+        dataset.write(d.u_.data(), H5::PredType::NATIVE_DOUBLE);
+        dataspace = H5::DataSpace(3, dims);
+        dataset = domainGroup.createDataSet("v", H5::PredType::NATIVE_DOUBLE, dataspace);
+        dataset.write(d.v_.data(), H5::PredType::NATIVE_DOUBLE);
+        dataspace = H5::DataSpace(3, dims);
+        dataset = domainGroup.createDataSet("w", H5::PredType::NATIVE_DOUBLE, dataspace);
+        dataset.write(d.w_.data(), H5::PredType::NATIVE_DOUBLE);
+        dataspace = H5::DataSpace(3, dims);
+        dataset = domainGroup.createDataSet("p", H5::PredType::NATIVE_DOUBLE, dataspace);
+        dataset.write(d.p_.data(), H5::PredType::NATIVE_DOUBLE);
+        dataspace = H5::DataSpace(3, dims);
+        dataset = domainGroup.createDataSet("ghostCellMask", H5::PredType::NATIVE_UINT8, dataspace);
+        dataset.write(d.ghostCellMask.data(), H5::PredType::NATIVE_UINT8);
+    }
+};
+
+class XDMFHandler
+{
+public:
+    XDMFHandler(std::vector<Domain> &domains, std::string filename, std::vector<double> &time) : filename(filename)
+    {
+        file.open(filename + ".xmf");
+        writeHeader();
+        writeGrids(domains, time);
+        writeFooter();
+        file.close();
+    }
+
+private:
+    std::string filename;
+    std::ofstream file;
+    void writeHeader()
+    {
+        file << "<?xml version=\"1.0\" ?>\n";
+        file << "<!DOCTYPE Xdmf SYSTEM \"Xdmf.dtd\" []>\n";
+        file << "<Xdmf Version=\"2.0\">\n";
+        file << "  <Domain>\n";
+    }
+    void writeGrids(std::vector<Domain> &domains, std::vector<double> &time)
+    {
+        file << "    <Grid Name=\"TimeSeries\" GridType=\"Collection\" CollectionType=\"Temporal\">\n";
+        for (int i = 0; i < time.size(); i++)
+        {
+            file << "      <Grid Name=\"Timestep_" << i << "\" GridType=\"Collection\" CollectionType=\"Spatial\">\n";
+            file << "        <Time Value=\"" << time[i] << "\"/>\n";
+            writeTimestep(domains, i);
+            file << "      </Grid>\n";
+        }
+        file << "    </Grid>\n";
+    }
+    void writeFooter()
+    {
+        file << "  </Domain>\n";
+        file << "</Xdmf>\n";
+    }
+    void writeTimestep(std::vector<Domain> &domains, const int &it)
+    {
+        int i = 0;
+        for (auto &d : domains)
+        {
+            file << "        <Grid Name=\"Domain_" << i << "\" GridType=\"Uniform\">\n";
+            file << "          <Topology TopologyType=\"3DCoRectMesh\" NumberOfElements=\"" << d.nx + 1 << " " << d.ny + 1 << " " << d.nz + 1 << "\"/>\n";
+            file << "          <Geometry GeometryType=\"ORIGIN_DXDYDZ\">\n";
+            file << "            <DataItem Dimensions=\"3\" NumberType=\"Float\" Precision=\"4\" Format=\"XML\">\n";
+            if (i == 0)
+                file << "              0 0 0\n";
+            else
+                file << "              " << 2 << " 0 0\n"; // temp
+            file << "            </DataItem>\n";
+            file << "            <DataItem Dimensions=\"3\" NumberType=\"Float\" Precision=\"4\" Format=\"XML\">\n";
+            file << "              " << d.boxDims << " " << d.boxDims << " " << d.boxDims << "\n";
+            file << "            </DataItem>\n";
+            file << "          </Geometry>\n";
+            file << "          <Attribute Name=\"rho\" AttributeType=\"Scalar\" Center=\"Cell\">\n";
+            file << "            <DataItem Format=\"HDF\" Dimensions=\"" << d.nx << " " << d.ny << " " << d.nz << "\" NumberType=\"Float\" Precision=\"8\">" << filename << ".h5:/timestep_" << it << "/domain_" << i << "/rho</DataItem>\n";
+            file << "          </Attribute>\n";
+            file << "          <Attribute Name=\"u\" AttributeType=\"Scalar\" Center=\"Cell\">\n";
+            file << "            <DataItem Format=\"HDF\" Dimensions=\"" << d.nx << " " << d.ny << " " << d.nz << "\" NumberType=\"Float\" Precision=\"8\">" << filename << ".h5:/timestep_" << it << "/domain_" << i << "/u</DataItem>\n";
+            file << "          </Attribute>\n";
+            file << "          <Attribute Name=\"v\" AttributeType=\"Scalar\" Center=\"Cell\">\n";
+            file << "            <DataItem Format=\"HDF\" Dimensions=\"" << d.nx << " " << d.ny << " " << d.nz << "\" NumberType=\"Float\" Precision=\"8\">" << filename << ".h5:/timestep_" << it << "/domain_" << i << "/v</DataItem>\n";
+            file << "          </Attribute>\n";
+            file << "          <Attribute Name=\"w\" AttributeType=\"Scalar\" Center=\"Cell\">\n";
+            file << "            <DataItem Format=\"HDF\" Dimensions=\"" << d.nx << " " << d.ny << " " << d.nz << "\" NumberType=\"Float\" Precision=\"8\">" << filename << ".h5:/timestep_" << it << "/domain_" << i << "/w</DataItem>\n";
+            file << "          </Attribute>\n";
+            file << "          <Attribute Name=\"p\" AttributeType=\"Scalar\" Center=\"Cell\">\n";
+            file << "            <DataItem Format=\"HDF\" Dimensions=\"" << d.nx << " " << d.ny << " " << d.nz << "\" NumberType=\"Float\" Precision=\"8\">" << filename << ".h5:/timestep_" << it << "/domain_" << i << "/p</DataItem>\n";
+            file << "          </Attribute>\n";
+            file << "          <Attribute Name=\"ghostCellMask\" AttributeType=\"Scalar\" Center=\"Cell\">\n";
+            file << "            <DataItem Format=\"HDF\" Dimensions=\"" << d.nx << " " << d.ny << " " << d.nz << "\" NumberType=\"UInt8\" Precision=\"8\">" << filename << ".h5:/timestep_" << it << "/domain_" << i << "/ghostCellMask</DataItem>\n";
+            file << "          </Attribute>\n";
+            file << "        </Grid>\n";
+            i++;
+        }
     }
 };
 
@@ -833,16 +1040,27 @@ int main()
     domains[0].sides[0] = &domains[1];
     domains[1].sides[1] = &domains[0];
     DomainSolver ds(0.5);
-    double t = 0.0;
-    double tEnd = 1.0;
-    while (t < tEnd)
+    std::vector<double> t(1, 0.0);
+    double tEnd = 50;
+    int iteration = 0;
+
+    std::string filename("test");
+
+    FileHandler fh(filename);
+    fh.writeTimestep(domains, t.back(), iteration);
+
+    while (t.back() < tEnd)
     {
-        ds.updateDomains(domains);
-        t += 2 * ds.minT;
-        std::cout << "Time elapsed: " << t << std::endl;
+        if (!(ds.updateDomains(domains)))
+            break;
+        t.push_back(t.back() + 2 * ds.minT);
+        iteration++;
+        std::cout << "Time elapsed: " << t.back() << std::endl;
+        fh.writeTimestep(domains, t.back(), iteration);
     }
+    XDMFHandler xh(domains, filename, t);
     std::cout << "done" << std::endl;
-    std::cout << "pressure centre domain 0: " << domains[0].bAt(2, 2, 2).p << std::endl;
-    std::cout << "pressure centre domain 1: " << domains[1].bAt(2, 2, 2).p << std::endl;
+    std::cout << "pressure centre domain 0: " << domains[0].p(2, 2, 2) << std::endl;
+    std::cout << "pressure centre domain 1: " << domains[1].p(2, 2, 2) << std::endl;
     return 0;
 }
