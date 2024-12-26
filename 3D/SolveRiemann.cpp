@@ -267,6 +267,7 @@ bool SolveRiemann::iterateP(const double &rhoL, const double &uL, const double &
     while (iterate) // loop to try all the initial p values
     {
         iterate = pickStartVal(errorStage, rhoL, uL, vL, wL, aL, pL, rhoR, uR, vR, wR, aR, pR, rho, u, v, w, a, p);
+        std::cout << "p guessed: " << p << std::endl;
         if (!iterate)
             return false;
         count = 0;

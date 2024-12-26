@@ -243,7 +243,7 @@ class RiemannSolver
         {
             std::cout << "Error converging on p in x" << std::endl;
             std::cout << "pL: " << pL << ", rhoL: " << rhoL << ", uL: " << uL << ", aL: " << aL << ", pR: " << pR << ", rhoR: " << rhoR << ", uR: " << uR << ", aR: " << aR << std::endl;
-            return false; // this doesnt actually stop the program but if you see that in the console the timestep is probably too small
+            return false; // the timestep is probably too small
         }
         return true;
     }
@@ -424,7 +424,9 @@ struct BoxConserved
             if (p < 0)
                 std::cout << "p below zero, " << p << ", " << u << ", " << rho << ", " << u1 << ", " << u2 << ", " << u3 << ", " << u4 << std::endl;
             if (std::isnan(p))
+            {
                 std::cout << "p error, " << p << ", " << u << ", " << rho << ", " << u1 << ", " << u2 << ", " << u3 << ", " << u4 << std::endl;
+            }
         }
         fixVacuum();
     }
@@ -1030,13 +1032,146 @@ private:
     }
 };
 
+bool testRiemannSolver()
+{
+    RiemannSolver rs;
+    Flux f;
+    double rhoL = 1.0;
+    double uL = 0.0;
+    double vL = 0.0;
+    double wL = 0.0;
+    double pL = 1.0;
+    double aL = sqrt(G * pL / rhoL);
+    double rhoR = 0.125;
+    double uR = 0.0;
+    double vR = 0.0;
+    double wR = 0.0;
+    double pR = 0.1;
+    double aR = sqrt(G * pR / rhoR);
+    if (!rs.findStar(rhoL, uL, vL, wL, aL, pL, rhoR, uR, vR, wR, aR, pR, f))
+        return false;
+    std::cout << "f1: " << f.f1 << ", f2: " << f.f2 << ", f3: " << f.f3 << ", f4: " << f.f4 << ", f5: " << f.f5 << std::endl;
+
+    if (!rs.findStar(rhoR, uR, vR, wR, aR, pR, rhoL, uL, vL, wL, aL, pL, f))
+        return false;
+    std::cout << "f1: " << f.f1 << ", f2: " << f.f2 << ", f3: " << f.f3 << ", f4: " << f.f4 << ", f5: " << f.f5 << std::endl;
+    std::cout << "----------------" << std::endl;
+
+    rhoL = 1.0;
+    uL = -2.0;
+    vL = 0.0;
+    wL = 0.0;
+    pL = 0.4;
+    aL = sqrt(G * pL / rhoL);
+    rhoR = 1.0;
+    uR = 2.0;
+    vR = 0.0;
+    wR = 0.0;
+    pR = 0.4;
+    aR = sqrt(G * pR / rhoR);
+    if (!rs.findStar(rhoL, uL, vL, wL, aL, pL, rhoR, uR, vR, wR, aR, pR, f))
+        return false;
+    std::cout << "f1: " << f.f1 << ", f2: " << f.f2 << ", f3: " << f.f3 << ", f4: " << f.f4 << ", f5: " << f.f5 << std::endl;
+
+    if (!rs.findStar(rhoR, -uR, vR, wR, aR, pR, rhoL, -uL, vL, wL, aL, pL, f))
+        return false;
+    std::cout << "f1: " << f.f1 << ", f2: " << f.f2 << ", f3: " << f.f3 << ", f4: " << f.f4 << ", f5: " << f.f5 << std::endl;
+    std::cout << "----------------" << std::endl;
+
+    rhoL = 1.0;
+    uL = 0.0;
+    vL = 0.0;
+    wL = 0.0;
+    pL = 1000.0;
+    aL = sqrt(G * pL / rhoL);
+    rhoR = 1.0;
+    uR = 0.0;
+    vR = 0.0;
+    wR = 0.0;
+    pR = 0.01;
+    aR = sqrt(G * pR / rhoR);
+    if (!rs.findStar(rhoL, uL, vL, wL, aL, pL, rhoR, uR, vR, wR, aR, pR, f))
+        return false;
+    std::cout << "f1: " << f.f1 << ", f2: " << f.f2 << ", f3: " << f.f3 << ", f4: " << f.f4 << ", f5: " << f.f5 << std::endl;
+
+    if (!rs.findStar(rhoR, uR, vR, wR, aR, pR, rhoL, uL, vL, wL, aL, pL, f))
+        return false;
+    std::cout << "f1: " << f.f1 << ", f2: " << f.f2 << ", f3: " << f.f3 << ", f4: " << f.f4 << ", f5: " << f.f5 << std::endl;
+    std::cout << "----------------" << std::endl;
+
+    rhoL = 1.0;
+    uL = 0.0;
+    vL = 0.0;
+    wL = 0.0;
+    pL = 0.01;
+    aL = sqrt(G * pL / rhoL);
+    rhoR = 1.0;
+    uR = 0.0;
+    vR = 0.0;
+    wR = 0.0;
+    pR = 100.0;
+    aR = sqrt(G * pR / rhoR);
+    if (!rs.findStar(rhoL, uL, vL, wL, aL, pL, rhoR, uR, vR, wR, aR, pR, f))
+        return false;
+    std::cout << "f1: " << f.f1 << ", f2: " << f.f2 << ", f3: " << f.f3 << ", f4: " << f.f4 << ", f5: " << f.f5 << std::endl;
+
+    if (!rs.findStar(rhoR, uR, vR, wR, aR, pR, rhoL, uL, vL, wL, aL, pL, f))
+        return false;
+    std::cout << "f1: " << f.f1 << ", f2: " << f.f2 << ", f3: " << f.f3 << ", f4: " << f.f4 << ", f5: " << f.f5 << std::endl;
+    std::cout << "----------------" << std::endl;
+
+    rhoL = 5.99924;
+    uL = 19.5975;
+    vL = 0.0;
+    wL = 0.0;
+    pL = 460.894;
+    aL = sqrt(G * pL / rhoL);
+    rhoR = 5.99242;
+    uR = -6.19633;
+    vR = 0.0;
+    wR = 0.0;
+    pR = 46.0950;
+    aR = sqrt(G * pR / rhoR);
+    if (!rs.findStar(rhoL, -uL, vL, wL, aL, pL, rhoR, -uR, vR, wR, aR, pR, f))
+        return false;
+    std::cout << "f1: " << f.f1 << ", f2: " << f.f2 << ", f3: " << f.f3 << ", f4: " << f.f4 << ", f5: " << f.f5 << std::endl;
+
+    if (!rs.findStar(rhoR, uR, vR, wR, aR, pR, rhoL, uL, vL, wL, aL, pL, f))
+        return false;
+    std::cout << "f1: " << f.f1 << ", f2: " << f.f2 << ", f3: " << f.f3 << ", f4: " << f.f4 << ", f5: " << f.f5 << std::endl;
+    std::cout << "----------------" << std::endl;
+
+    rhoL = 1.0;
+    uL = 0.0;
+    vL = 0.0;
+    wL = 0.0;
+    pL = 1.0;
+    aL = sqrt(G * pL / rhoL);
+    rhoR = 0.0;
+    uR = 0.0;
+    vR = 0.0;
+    wR = 0.0;
+    pR = 0.0;
+    aR = 0.0;
+    if (!rs.findStar(rhoL, uL, vL, wL, aL, pL, rhoR, uR, vR, wR, aR, pR, f))
+        return false;
+    std::cout << "f1: " << f.f1 << ", f2: " << f.f2 << ", f3: " << f.f3 << ", f4: " << f.f4 << ", f5: " << f.f5 << std::endl;
+
+    if (!rs.findStar(rhoR, uR, vR, wR, aR, pR, rhoL, uL, vL, wL, aL, pL, f))
+        return false;
+    std::cout << "f1: " << f.f1 << ", f2: " << f.f2 << ", f3: " << f.f3 << ", f4: " << f.f4 << ", f5: " << f.f5 << std::endl;
+    std::cout << "----------------" << std::endl;
+
+    return true;
+}
+
 int main()
 {
     std::vector<Domain> domains(2);
     State s(1.0, 0.0, 0.0, 0.0, 1.0);
-    domains[0].setup(1, 1, 1, 5, s);
     State s2(0.125, 0.0, 0.0, 0.0, 0.1);
-    domains[1].setup(1, 1, 1, 5, s2);
+    domains[0].setup(1, 1, 1, 5, s2);
+    domains[1].setup(1, 1, 1, 5, s);
     domains[0].sides[0] = &domains[1];
     domains[1].sides[1] = &domains[0];
     DomainSolver ds(0.5);

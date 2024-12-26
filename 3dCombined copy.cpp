@@ -443,6 +443,7 @@ int main()
         }
         findStar(bD);
         std::cout << "caseNum: " << caseNum << ", p: " << bD.f.p << ", u: " << bD.f.u << ", rho: " << bD.f.rho << std::endl;
+        std::cout << "caseNum: " << caseNum << ", f1: " << bD.f.rho * bD.f.u << ", f2: " << bD.f.rho * bD.f.u * bD.f.u + bD.f.p << ", f3: " << bD.f.rho * bD.f.v * bD.f.u << ", f4: " << bD.f.rho * bD.f.w * bD.f.u << ", f5: " << bD.f.u * (bD.f.rho * (0.5 * (bD.f.u * bD.f.u + bD.f.v * bD.f.v + bD.f.w * bD.f.w) + bD.f.p / ((gma - 1) * bD.f.rho) + bD.f.p)) << std::endl;
     }
     return 0;
 }

@@ -91,4 +91,5 @@ int main()
         rSolver.findStar(rhoL, uL, vL, wL, aL, pL, rhoR, uR, vR, wR, aR, pR, rho, u, v, w, a, p);
         std::cout << "case: " << caseTest << ", rho: " << rho << ", u: " << u << ", v: " << v << ", a: " << a << ", p: " << p << std::endl;
     }
+    return 0;
 }
