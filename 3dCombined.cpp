@@ -719,7 +719,7 @@ public:
             {
                 for (int k = 1; k < d.nz - 1; k++)
                 {
-                    BoxConserved b(d.rho(i, j, k), d.u(i, j, k), d.v(i, j, k), d.w(i, j, k), d.p(i, j, k), d.a(i, j, k));
+                    BoxConserved b(d.rho(i, j, k), d.v(i, j, k), d.u(i, j, k), d.w(i, j, k), d.p(i, j, k), d.a(i, j, k));
                     double u1 = b.u1() + minT * (d.yfAt(i, j - 1, k).f1 - d.yfAt(i, j, k).f1) / d.boxDims;
                     double u2 = b.u2() + minT * (d.yfAt(i, j - 1, k).f2 - d.yfAt(i, j, k).f2) / d.boxDims;
                     double u3 = b.u3() + minT * (d.yfAt(i, j - 1, k).f3 - d.yfAt(i, j, k).f3) / d.boxDims;
@@ -740,7 +740,7 @@ public:
             {
                 for (int k = 1; k < d.nz - 1; k++)
                 {
-                    BoxConserved b(d.rho(i, j, k), d.u(i, j, k), d.v(i, j, k), d.w(i, j, k), d.p(i, j, k), d.a(i, j, k));
+                    BoxConserved b(d.rho(i, j, k), d.w(i, j, k), d.v(i, j, k), d.u(i, j, k), d.p(i, j, k), d.a(i, j, k));
                     double u1 = b.u1() + minT * (d.zfAt(i, j, k - 1).f1 - d.zfAt(i, j, k).f1) / d.boxDims;
                     double u2 = b.u2() + minT * (d.zfAt(i, j, k - 1).f2 - d.zfAt(i, j, k).f2) / d.boxDims;
                     double u3 = b.u3() + minT * (d.zfAt(i, j, k - 1).f3 - d.zfAt(i, j, k).f3) / d.boxDims;
@@ -1170,8 +1170,48 @@ bool testRiemannSolver()
     return true;
 }
 
+bool testDomainSolver()
+{
+    std::vector<Domain> domains(1);
+    Domain &d = domains[0];
+    State s(0.125, 0.0, 0.0, 0.0, 0.1);
+    d.setup(1.5, 1.5, 1.5, 2, s);
+    
+    d.rho(2, 2, 2) = 1.0;
+    d.u(2, 2, 2) = 0.0;
+    d.v(2, 2, 2) = 0.0;
+    d.w(2, 2, 2) = 0.0;
+    d.p(2, 2, 2) = 1.0;
+    d.a(2, 2, 2) = sqrt(G * d.p(2, 2, 2) / d.rho(2, 2, 2));
+
+    std::cout << "pressure centre: " << d.p(2, 2, 2) << std::endl;
+
+    DomainSolver ds(0.5);
+    std::vector<double> t(1, 0.0);
+    double tEnd = 1;
+    int iteration = 0;
+    FileHandler fh("test");
+    fh.writeTimestep(domains, t.back(), iteration);
+    while (t.back() < tEnd)
+    {
+        if (!(ds.updateDomains(domains)))
+            break;
+        t.push_back(t.back() + 2 * ds.minT);
+        iteration++;
+        std::cout << "Time elapsed: " << t.back() << std::endl;
+        fh.writeTimestep(domains, t.back(), iteration);
+    }
+    XDMFHandler xh(domains, "test", t);
+    std::cout << "done" << std::endl;
+    std::cout << "pressure centre: " << d.p(2, 2, 2) << std::endl;
+    return true;
+}
+
 int main()
 {
+    testDomainSolver();
+    return 0;
+
     std::vector<Domain> domains(2);
     State s(1.0, 0.0, 0.0, 0.0, 1.0);
     State s2(0.125, 0.0, 0.0, 0.0, 0.1);

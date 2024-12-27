@@ -24,7 +24,7 @@ function extract_pressure_data(h5_file::String)
                 dims = size(pressure)
                 println("Dimensions of pressure dataset: ", dims)
                 # Extract values along the 1D portion (line_indices)
-                line_pressures = pressure[:, :, 2]
+                line_pressures = pressure[:, :, 3]
                 push!(domain_pressures, line_pressures)
             end
             push!(pressures_over_time, domain_pressures)
@@ -48,11 +48,11 @@ function plot_pressures_over_time(pressures_over_time, time_steps, domain_labels
             f[i, j, :, :] .= pressures_over_time[i][j]
         end
     end
-    println("domain 0 data: ", f[:, 1, :,3])
-    println("domain 1 data: ", f[:, 2, :,3])
-    p1 = heatmap(f[:, 1, :,3], c=:viridis, title="Domain 0", xlabel="Distance", ylabel="Time")
-    p2 = heatmap(f[:, 2, :,3], c=:viridis, title="Domain 1", xlabel="Distance", ylabel="Time")
-    plot(p1, p2, layout=(1, 2), size=(1000, 500))
+    #println("domain 0 data: ", f[:, 1, :,3])
+    #println("domain 1 data: ", f[:, 2, :,3])
+    #p1 = heatmap(f[:, 1, :,3], c=:viridis, title="Domain 0", xlabel="Distance", ylabel="Time")
+    #p2 = heatmap(f[:, 2, :,3], c=:viridis, title="Domain 1", xlabel="Distance", ylabel="Time")
+    #plot(p1, p2, layout=(1, 2), size=(1000, 500))
 
     p3 = heatmap(f[1,1,:,:], c=:viridis, title="D 0, T 0")
     p4 = heatmap(f[2,1,:,:], c=:viridis, title="D 0, T 1")
