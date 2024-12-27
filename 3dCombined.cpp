@@ -4,7 +4,7 @@
 #include "H5Cpp.h"
 #include <fstream>
 
-const double G = 1.4;
+static constexpr double G = 1.4;
 
 struct State
 {
@@ -50,15 +50,15 @@ struct Flux
 class RiemannSolver
 {
     // check if these should be static
-    const double TOL = 0.000001;
-    const double G1 = (G - 1) / (2 * G);
-    const double G2 = (G + 1) / (2 * G);
-    const double G3 = 2 * G / (G - 1);
-    const double G4 = 2 / (G - 1);
-    const double G5 = 2 / (G + 1);
-    const double G6 = (G - 1) / (G + 1);
-    const double G7 = (G - 1) / 2;
-    const double G8 = G - 1;
+    static constexpr double TOL = 0.000001;
+    static constexpr double G1 = (G - 1) / (2 * G);
+    static constexpr double G2 = (G + 1) / (2 * G);
+    static constexpr double G3 = 2 * G / (G - 1);
+    static constexpr double G4 = 2 / (G - 1);
+    static constexpr double G5 = 2 / (G + 1);
+    static constexpr double G6 = (G - 1) / (G + 1);
+    static constexpr double G7 = (G - 1) / 2;
+    static constexpr double G8 = G - 1;
 
     bool pickSide(const double &rhoL, const double &vL, const double &wL, const double &pL, const double &rhoR, const double &vR, const double &wR, const double &pR, Flux &fl, double &tempP, double &tempU)
     {
@@ -404,7 +404,7 @@ struct BoxConserved
         else
             return rho * (0.5 * (u * u + v * v + w * w) + p / ((G - 1) * rho));
     }
-    void updateFromConservatives(double u1, double u2, double u3, double u4, double u5) // update the primatives from new conservative values
+    bool updateFromConservatives(double u1, double u2, double u3, double u4, double u5) // update the primatives from new conservative values
     {
         if (u1 == 0)
         {
@@ -426,9 +426,11 @@ struct BoxConserved
             if (std::isnan(p))
             {
                 std::cout << "p error, " << p << ", " << u << ", " << rho << ", " << u1 << ", " << u2 << ", " << u3 << ", " << u4 << std::endl;
+                return false;
             }
         }
         fixVacuum();
+        return true;
     }
 
 private:
@@ -702,7 +704,8 @@ public:
                     double u3 = b.u3() + minT * (d.xfAt(i - 1, j, k).f3 - d.xfAt(i, j, k).f3) / d.boxDims;
                     double u4 = b.u4() + minT * (d.xfAt(i - 1, j, k).f4 - d.xfAt(i, j, k).f4) / d.boxDims;
                     double u5 = b.u5() + minT * (d.xfAt(i - 1, j, k).f5 - d.xfAt(i, j, k).f5) / d.boxDims;
-                    b.updateFromConservatives(u1, u2, u3, u4, u5);
+                    if (!b.updateFromConservatives(u1, u2, u3, u4, u5))
+                        return false;
                 }
             }
         }
@@ -722,7 +725,8 @@ public:
                     double u3 = b.u3() + minT * (d.yfAt(i, j - 1, k).f3 - d.yfAt(i, j, k).f3) / d.boxDims;
                     double u4 = b.u4() + minT * (d.yfAt(i, j - 1, k).f4 - d.yfAt(i, j, k).f4) / d.boxDims;
                     double u5 = b.u5() + minT * (d.yfAt(i, j - 1, k).f5 - d.yfAt(i, j, k).f5) / d.boxDims;
-                    b.updateFromConservatives(u1, u2, u3, u4, u5);
+                    if (!b.updateFromConservatives(u1, u2, u3, u4, u5))
+                        return false;
                 }
             }
         }
@@ -742,7 +746,8 @@ public:
                     double u3 = b.u3() + minT * (d.zfAt(i, j, k - 1).f3 - d.zfAt(i, j, k).f3) / d.boxDims;
                     double u4 = b.u4() + minT * (d.zfAt(i, j, k - 1).f4 - d.zfAt(i, j, k).f4) / d.boxDims;
                     double u5 = b.u5() + minT * (d.zfAt(i, j, k - 1).f5 - d.zfAt(i, j, k).f5) / d.boxDims;
-                    b.updateFromConservatives(u1, u2, u3, u4, u5);
+                    if (!b.updateFromConservatives(u1, u2, u3, u4, u5))
+                        return false;
                 }
             }
         }
@@ -1170,13 +1175,13 @@ int main()
     std::vector<Domain> domains(2);
     State s(1.0, 0.0, 0.0, 0.0, 1.0);
     State s2(0.125, 0.0, 0.0, 0.0, 0.1);
-    domains[0].setup(1, 1, 1, 5, s2);
-    domains[1].setup(1, 1, 1, 5, s);
+    domains[0].setup(1.5, 1.5, 1.5, 2, s2);
+    domains[1].setup(1.5, 1.5, 1.5, 2, s);
     domains[0].sides[0] = &domains[1];
     domains[1].sides[1] = &domains[0];
     DomainSolver ds(0.5);
     std::vector<double> t(1, 0.0);
-    double tEnd = 50;
+    double tEnd = 1;
     int iteration = 0;
 
     std::string filename("test");
