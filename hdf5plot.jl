@@ -10,6 +10,9 @@ function extract_pressure_data(h5_file::String)
     h5open(h5_file, "r") do file
         # Assuming a structure where time steps are indexed (adjust as necessary)
         for timestep in keys(file)
+            if  occursin("coordinates", timestep)
+                continue
+            end
             push!(time_steps, timestep)
 
             # Access each domain for the current time step
@@ -24,7 +27,7 @@ function extract_pressure_data(h5_file::String)
                 dims = size(pressure)
                 println("Dimensions of pressure dataset: ", dims)
                 # Extract values along the 1D portion (line_indices)
-                line_pressures = pressure[:, :, 3]
+                line_pressures = pressure[3, :, :]
                 push!(domain_pressures, line_pressures)
             end
             push!(pressures_over_time, domain_pressures)
