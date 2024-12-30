@@ -474,33 +474,33 @@ public:
     }
     double &rho(const int &x, const int &y, const int &z)
     {
-        return rho_[x + nx * (y + ny * z)];
+        return rho_[z + nz * (y + ny * x)];
     }
     double &u(const int &x, const int &y, const int &z)
     {
-        return u_[x + nx * (y + ny * z)];
+        return u_[z + nz * (y + ny * x)];
     }
     double &v(const int &x, const int &y, const int &z)
     {
-        return v_[x + nx * (y + ny * z)];
+        return v_[z + nz * (y + ny * x)];
     }
     double &w(const int &x, const int &y, const int &z)
     {
-        return w_[x + nx * (y + ny * z)];
+        return w_[z + nz * (y + ny * x)];
     }
     double &p(const int &x, const int &y, const int &z)
     {
-        return p_[x + nx * (y + ny * z)];
+        return p_[z + nz * (y + ny * x)];
     }
     double &a(const int &x, const int &y, const int &z)
     {
         if (rho(x, y, z) == 0.0)
         {
-            return a_[x + nx * (y + ny * z)] = 0.0;
+            return a_[z + nz * (y + ny * x)] = 0.0;
         }
         else
         {
-            return a_[x + nx * (y + ny * z)] = sqrt(G * p(x, y, z) / rho(x, y, z));
+            return a_[z + nz * (y + ny * x)] = sqrt(G * p(x, y, z) / rho(x, y, z));
         }
     }
     Flux &xfAt(const int &x, const int &y, const int &z)
@@ -530,24 +530,24 @@ private:
             {
                 for (int j = 0; j < ny; j++)
                 {
-                    ghostCellMask[i + nx * (j + ny * 0)] = 1;
-                    ghostCellMask[i + nx * (j + ny * (nz - 1))] = 1;
+                    ghostCellMask[0 + nz * (j + ny * i)] = 1;
+                    ghostCellMask[(nz - 1) + nz * (j + ny * i)] = 1;
                 }
             }
             for (int i = 0; i < nx; i++)
             {
                 for (int k = 0; k < nz; k++)
                 {
-                    ghostCellMask[i + nx * (0 + ny * k)] = 1;
-                    ghostCellMask[i + nx * ((ny - 1) + ny * k)] = 1;
+                    ghostCellMask[k + nz * (0 + ny * i)] = 1;
+                    ghostCellMask[k + nz * ((ny - 1) + ny * i)] = 1;
                 }
             }
             for (int j = 0; j < ny; j++)
             {
                 for (int k = 0; k < nz; k++)
                 {
-                    ghostCellMask[0 + nx * (j + ny * k)] = 1;
-                    ghostCellMask[(nx - 1) + nx * (j + ny * k)] = 1;
+                    ghostCellMask[k + nz * (j + ny * 0)] = 1;
+                    ghostCellMask[k + nz * (j + ny * (nx - 1))] = 1;
                 }
             }
         }
@@ -561,22 +561,40 @@ public:
     double minT;
     bool updateDomains(std::vector<Domain> &domains)
     {
+        if (!updateGhostCells(domains))
+            return false;
         if (!fetchTimeStep(domains))
             return false;
         if (!updateX(domains))
             return false;
+        if (!updateGhostCells(domains))
+            return false;
         if (!updateY(domains))
+            return false;
+        if (!updateGhostCells(domains))
             return false;
         if (!updateZ(domains))
             return false;
+        if (!updateGhostCells(domains))
+            return false;
         if (!updateZ(domains))
             return false;
+        if (!updateGhostCells(domains))
+            return false;
         if (!updateY(domains))
+            return false;
+        if (!updateGhostCells(domains))
             return false;
         if (!updateX(domains))
             return false;
+        if (!updateGhostCells(domains))
+            return false;
         return true;
     }
+
+private:
+    RiemannSolver rs;
+    double clf;
     bool fetchTimeStep(std::vector<Domain> &domains)
     {
         minT = 1e10;
@@ -614,8 +632,8 @@ public:
                 return false;
             if (!xBoxes(d))
                 return false;
-            if (!xGhosts(d))
-                return false;
+            // if (!xGhosts(d))
+            // return false;
         }
         return true;
     }
@@ -627,8 +645,8 @@ public:
                 return false;
             if (!yBoxes(d))
                 return false;
-            if (!yGhosts(d))
-                return false;
+            // if (!yGhosts(d))
+            // return false;
         }
         return true;
     }
@@ -640,8 +658,8 @@ public:
                 return false;
             if (!zBoxes(d))
                 return false;
-            if (!zGhosts(d))
-                return false;
+            // if (!zGhosts(d))
+            // return false;
         }
         return true;
     }
@@ -753,6 +771,19 @@ public:
         }
         return true;
     }
+    bool updateGhostCells(std::vector<Domain> &domains)
+    {
+        for (auto &d : domains)
+        {
+            if (!xGhosts(d))
+                return false;
+            if (!yGhosts(d))
+                return false;
+            if (!zGhosts(d))
+                return false;
+        }
+        return true;
+    }
     bool xGhosts(Domain &d)
     {
         // side 0 is the +x side
@@ -762,7 +793,7 @@ public:
             {
                 for (int k = 1; k < d.nz - 1; k++)
                 {
-                    d.at(d.nx - 1, j, k) = d.sides[0]->at(0, j, k);
+                    d.at(d.nx - 1, j, k) = d.sides[0]->at(1, j, k);
                 }
             }
         }
@@ -784,7 +815,7 @@ public:
             {
                 for (int k = 1; k < d.nz - 1; k++)
                 {
-                    d.at(0, j, k) = d.sides[1]->at(d.sides[1]->nx - 1, j, k);
+                    d.at(0, j, k) = d.sides[1]->at(d.sides[1]->nx - 2, j, k);
                 }
             }
         }
@@ -810,7 +841,7 @@ public:
             {
                 for (int k = 1; k < d.nz - 1; k++)
                 {
-                    d.at(i, d.ny - 1, k) = d.sides[2]->at(i, 0, k);
+                    d.at(i, d.ny - 1, k) = d.sides[2]->at(i, 1, k);
                 }
             }
         }
@@ -832,7 +863,7 @@ public:
             {
                 for (int k = 1; k < d.nz - 1; k++)
                 {
-                    d.at(i, 0, k) = d.sides[3]->at(i, d.sides[3]->ny - 1, k);
+                    d.at(i, 0, k) = d.sides[3]->at(i, d.sides[3]->ny - 2, k);
                 }
             }
         }
@@ -858,7 +889,7 @@ public:
             {
                 for (int j = 1; j < d.ny - 1; j++)
                 {
-                    d.at(i, j, d.nz - 1) = d.sides[4]->at(i, j, 0);
+                    d.at(i, j, d.nz - 1) = d.sides[4]->at(i, j, 1);
                 }
             }
         }
@@ -880,7 +911,7 @@ public:
             {
                 for (int j = 1; j < d.ny - 1; j++)
                 {
-                    d.at(i, j, 0) = d.sides[5]->at(i, j, d.sides[5]->nz - 1);
+                    d.at(i, j, 0) = d.sides[5]->at(i, j, d.sides[5]->nz - 2);
                 }
             }
         }
@@ -897,10 +928,6 @@ public:
         }
         return true;
     }
-
-private:
-    RiemannSolver rs;
-    double clf;
 };
 
 class FileHandler
@@ -912,6 +939,48 @@ public:
     }
     std::string filename;
     H5::H5File file;
+    void writeCoordinates(std::vector<Domain> &domains)
+    {
+        for (int i = 0; i < domains.size(); i++)
+        {
+            // start offset such that the domain is centered at 0,0,0
+            double x_offset = -0.5 * domains[0].boxDims * domains[0].nx;
+            double y_offset = -0.5 * domains[0].boxDims * domains[0].ny;
+            double z_offset = -0.5 * domains[0].boxDims * domains[0].nz;
+            if (i == 1)
+            {
+                x_offset += domains[0].boxDims * (domains[0].nx-2); // only works if all domains are the same size
+            }
+            else if (i == 2)
+            {
+                x_offset -= domains[0].boxDims * (domains[0].nx-2); // only works if all domains are the same size
+            }
+            writeDomainCoordinates(domains[i], i, x_offset, y_offset, z_offset);
+        }
+    }
+    void writeDomainCoordinates(Domain &d, const int &d_i, const double &x_offset, const double &y_offset, const double &z_offset)
+    {
+        std::vector<double> node_coords;
+        node_coords.reserve((d.nx + 1) * (d.ny + 1) * (d.nz + 1) * 3);
+
+        for (int i = 0; i < d.nx + 1; i++)
+        {
+            for (int j = 0; j < d.ny + 1; j++)
+            {
+                for (int k = 0; k < d.nz + 1; k++)
+                {
+                    node_coords.push_back(x_offset + i * d.boxDims);
+                    node_coords.push_back(y_offset + j * d.boxDims);
+                    node_coords.push_back(z_offset + k * d.boxDims);
+                }
+            }
+        }
+        std::cout << "writing domain " << d_i << " with " << node_coords.size() << " nodes" << std::endl;
+        hsize_t dims[1] = {node_coords.size()};
+        H5::DataSpace dataspace = H5::DataSpace(1, dims);
+        H5::DataSet dataset = file.createDataSet("domain_" + std::to_string(d_i) + "_coordinates", H5::PredType::NATIVE_DOUBLE, dataspace);
+        dataset.write(node_coords.data(), H5::PredType::NATIVE_DOUBLE);
+    }
     void writeTimestep(std::vector<Domain> &domains, const double &time, const int &iteration)
     {
         std::string groupname = "timestep_" + std::to_string(iteration);
@@ -975,7 +1044,7 @@ private:
     {
         file << "<?xml version=\"1.0\" ?>\n";
         file << "<!DOCTYPE Xdmf SYSTEM \"Xdmf.dtd\" []>\n";
-        file << "<Xdmf Version=\"2.0\">\n";
+        file << "<Xdmf Version=\"3.0\">\n";
         file << "  <Domain>\n";
     }
     void writeGrids(std::vector<Domain> &domains, std::vector<double> &time)
@@ -1001,17 +1070,9 @@ private:
         for (auto &d : domains)
         {
             file << "        <Grid Name=\"Domain_" << i << "\" GridType=\"Uniform\">\n";
-            file << "          <Topology TopologyType=\"3DCoRectMesh\" NumberOfElements=\"" << d.nx + 1 << " " << d.ny + 1 << " " << d.nz + 1 << "\"/>\n";
-            file << "          <Geometry GeometryType=\"ORIGIN_DXDYDZ\">\n";
-            file << "            <DataItem Dimensions=\"3\" NumberType=\"Float\" Precision=\"4\" Format=\"XML\">\n";
-            if (i == 0)
-                file << "              0 0 0\n";
-            else
-                file << "              " << 2 << " 0 0\n"; // temp
-            file << "            </DataItem>\n";
-            file << "            <DataItem Dimensions=\"3\" NumberType=\"Float\" Precision=\"4\" Format=\"XML\">\n";
-            file << "              " << d.boxDims << " " << d.boxDims << " " << d.boxDims << "\n";
-            file << "            </DataItem>\n";
+            file << "          <Topology TopologyType=\"3DSMesh\" NumberOfElements=\"" << d.nx + 1 << " " << d.ny + 1 << " " << d.nz + 1 << "\"/>\n";
+            file << "          <Geometry GeometryType=\"XYZ\">\n";
+            file << "            <DataItem Format=\"HDF\" Dimensions=\"" << (d.nx + 1) * (d.ny + 1) * (d.nz + 1) << " 3\" NumberType=\"Float\" Precision=\"8\">" << filename << ".h5:/domain_" << i << "_coordinates</DataItem>\n";
             file << "          </Geometry>\n";
             file << "          <Attribute Name=\"rho\" AttributeType=\"Scalar\" Center=\"Cell\">\n";
             file << "            <DataItem Format=\"HDF\" Dimensions=\"" << d.nx << " " << d.ny << " " << d.nz << "\" NumberType=\"Float\" Precision=\"8\">" << filename << ".h5:/timestep_" << it << "/domain_" << i << "/rho</DataItem>\n";
@@ -1176,7 +1237,7 @@ bool testDomainSolver()
     Domain &d = domains[0];
     State s(0.125, 0.0, 0.0, 0.0, 0.1);
     d.setup(1.5, 1.5, 1.5, 2, s);
-    
+
     d.rho(2, 2, 2) = 1.0;
     d.u(2, 2, 2) = 0.0;
     d.v(2, 2, 2) = 0.0;
@@ -1188,7 +1249,7 @@ bool testDomainSolver()
 
     DomainSolver ds(0.5);
     std::vector<double> t(1, 0.0);
-    double tEnd = 1;
+    double tEnd = 2;
     int iteration = 0;
     FileHandler fh("test");
     fh.writeTimestep(domains, t.back(), iteration);
@@ -1209,24 +1270,28 @@ bool testDomainSolver()
 
 int main()
 {
-    testDomainSolver();
-    return 0;
+    // testDomainSolver();
+    // return 0;
 
     std::vector<Domain> domains(2);
     State s(1.0, 0.0, 0.0, 0.0, 1.0);
     State s2(0.125, 0.0, 0.0, 0.0, 0.1);
-    domains[0].setup(1.5, 1.5, 1.5, 2, s2);
-    domains[1].setup(1.5, 1.5, 1.5, 2, s);
+    domains[0].setup(1.5, 1.5, 1.5, 4, s2);
+    domains[1].setup(1.5, 1.5, 1.5, 4, s);
+    // domains[2].setup(1.5, 1.5, 1.5, 2, s);
     domains[0].sides[0] = &domains[1];
+    // domains[0].sides[1] = &domains[2];
     domains[1].sides[1] = &domains[0];
-    DomainSolver ds(0.5);
+    // domains[2].sides[0] = &domains[0];
+    DomainSolver ds(0.4);
     std::vector<double> t(1, 0.0);
-    double tEnd = 1;
+    double tEnd = 5;
     int iteration = 0;
 
     std::string filename("test");
 
     FileHandler fh(filename);
+    fh.writeCoordinates(domains);
     fh.writeTimestep(domains, t.back(), iteration);
 
     while (t.back() < tEnd)

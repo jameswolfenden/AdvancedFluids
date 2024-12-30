@@ -53,12 +53,28 @@ function plot_pressures_over_time(pressures_over_time, time_steps, domain_labels
     #p1 = heatmap(f[:, 1, :,3], c=:viridis, title="Domain 0", xlabel="Distance", ylabel="Time")
     #p2 = heatmap(f[:, 2, :,3], c=:viridis, title="Domain 1", xlabel="Distance", ylabel="Time")
     #plot(p1, p2, layout=(1, 2), size=(1000, 500))
+    println("time 0 data: ", f[1, 1, :, :])
+    println("time 1 data: ", f[2, 1, :, :])
+    println("time 2 data: ", f[3, 1, :, :])
+    #println("time 3 data: ", f[4, 1, :, :])
 
-    p3 = heatmap(f[1,1,:,:], c=:viridis, title="D 0, T 0")
-    p4 = heatmap(f[2,1,:,:], c=:viridis, title="D 0, T 1")
-    p5 = heatmap(f[3,1,:,:], c=:viridis, title="D 0, T 2")
-    p6 = heatmap(f[4,1,:,:], c=:viridis, title="D 0, T 3")
-    plot(p3, p4, p5, p6, layout=(2, 2), size=(1000, 1000))
+    #p3 = heatmap(f[1,1,:,:], c=:viridis, title="D 0, T 0")
+    #p4 = heatmap(f[2,1,:,:], c=:viridis, title="D 0, T 1")
+    #p5 = heatmap(f[3,1,:,:], c=:viridis, title="D 0, T 2")
+    #p6 = heatmap(f[4,1,:,:], c=:viridis, title="D 0, T 3")
+    #plot(p3, p4, p5, p6, layout=(2, 2), size=(1000, 1000))
+
+    p4 = heatmap(f[1,1,:,:], c=:viridis, title="D 0, T 0")
+    p5 = heatmap(f[1,2,:,:], c=:viridis, title="D 1, T 0")
+    #p6 = heatmap(f[1,3,:,:], c=:viridis, title="D 2, T 0")
+    p7 = heatmap(f[2,1,:,:], c=:viridis, title="D 0, T 1")
+    p8 = heatmap(f[2,2,:,:], c=:viridis, title="D 1, T 1")
+    #p9 = heatmap(f[2,3,:,:], c=:viridis, title="D 2, T 1")
+    p10 = heatmap(f[3,1,:,:], c=:viridis, title="D 0, T 2")
+    p11 = heatmap(f[3,2,:,:], c=:viridis, title="D 1, T 2")
+    #p12 = heatmap(f[3,3,:,:], c=:viridis, title="D 2, T 2")
+    #plot(p4, p5, p6, p7, p8, p9, p10, p11, p12, layout=(3, 3), size=(1000, 1000))
+    plot(p4, p5, p7, p8, p10, p11, layout=(3, 2), size=(1000, 1000))
 
 end
 
