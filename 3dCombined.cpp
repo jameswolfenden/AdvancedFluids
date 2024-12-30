@@ -3,6 +3,7 @@
 #include <vector>
 #include "H5Cpp.h"
 #include <fstream>
+#include <unordered_set>
 
 static constexpr double G = 1.4;
 
@@ -442,6 +443,7 @@ class Domain
 public:
     int nx, ny, nz;
     int nxFaces, nyFaces, nzFaces;
+    double xOrigin, yOrigin, zOrigin;
     std::vector<double> rho_;
     std::vector<double> u_;
     std::vector<double> v_;
@@ -944,21 +946,22 @@ public:
         for (int i = 0; i < domains.size(); i++)
         {
             // start offset such that the domain is centered at 0,0,0
-            double x_offset = -0.5 * domains[0].boxDims * domains[0].nx;
+           /* double x_offset = -0.5 * domains[0].boxDims * domains[0].nx;
             double y_offset = -0.5 * domains[0].boxDims * domains[0].ny;
             double z_offset = -0.5 * domains[0].boxDims * domains[0].nz;
             if (i == 1)
             {
-                x_offset += domains[0].boxDims * (domains[0].nx-2); // only works if all domains are the same size
+                x_offset += domains[0].boxDims * (domains[0].nx - 2); // only works if all domains are the same size
             }
             else if (i == 2)
             {
-                x_offset -= domains[0].boxDims * (domains[0].nx-2); // only works if all domains are the same size
+                x_offset -= domains[0].boxDims * (domains[0].nx - 2); // only works if all domains are the same size
             }
-            writeDomainCoordinates(domains[i], i, x_offset, y_offset, z_offset);
+            writeDomainCoordinates(domains[i], i, x_offset, y_offset, z_offset);*/
+            writeDomainCoordinates(domains[i], i);
         }
     }
-    void writeDomainCoordinates(Domain &d, const int &d_i, const double &x_offset, const double &y_offset, const double &z_offset)
+    void writeDomainCoordinates(Domain &d, const int &d_i)
     {
         std::vector<double> node_coords;
         node_coords.reserve((d.nx + 1) * (d.ny + 1) * (d.nz + 1) * 3);
@@ -969,9 +972,9 @@ public:
             {
                 for (int k = 0; k < d.nz + 1; k++)
                 {
-                    node_coords.push_back(x_offset + i * d.boxDims);
-                    node_coords.push_back(y_offset + j * d.boxDims);
-                    node_coords.push_back(z_offset + k * d.boxDims);
+                    node_coords.push_back(d.xOrigin + i * d.boxDims);
+                    node_coords.push_back(d.yOrigin + j * d.boxDims);
+                    node_coords.push_back(d.zOrigin + k * d.boxDims);
                 }
             }
         }
@@ -1094,6 +1097,69 @@ private:
             file << "          </Attribute>\n";
             file << "        </Grid>\n";
             i++;
+        }
+    }
+};
+
+class DomainOrigin
+{
+public:
+    DomainOrigin(Domain *d) : domain0(d)
+    {
+        d->xOrigin = -0.5 * d->boxDims * d->nx;
+        d->yOrigin = -0.5 * d->boxDims * d->ny;
+        d->zOrigin = -0.5 * d->boxDims * d->nz;
+        passed.insert(d);
+        findOffsets(d);
+        for (auto &d : passed)
+        {
+            std::cout << "Domain has origin (" << d->xOrigin << ", " << d->yOrigin << ", " << d->zOrigin << ")" << std::endl;
+        }
+    }
+
+private:
+    Domain *domain0;
+    std::unordered_set<Domain *> passed;
+    void findOffsets(Domain *d)
+    {
+        for (int si = 0; si < 6; si++)
+        {
+            if (d->sides[si] && !passed.contains(d->sides[si]))
+            {
+                passed.insert(d->sides[si]);
+                d->sides[si]->xOrigin = d->xOrigin;
+                d->sides[si]->yOrigin = d->yOrigin;
+                d->sides[si]->zOrigin = d->zOrigin;
+                switch (si)
+                {
+                case 0:
+                    d->sides[si]->xOrigin += d->boxDims * (d->nx - 1);
+                    d->sides[si]->xOrigin -= d->sides[si]->boxDims;
+                    break;
+                case 1:
+                    d->sides[si]->xOrigin -= d->boxDims * (d->nx - 1);
+                    d->sides[si]->xOrigin += d->sides[si]->boxDims;
+                    break;
+                case 2:
+                    d->sides[si]->yOrigin += d->boxDims * (d->ny - 1);
+                    d->sides[si]->yOrigin -= d->sides[si]->boxDims;
+                    break;
+                case 3:
+                    d->sides[si]->yOrigin -= d->boxDims * (d->ny - 1);
+                    d->sides[si]->yOrigin += d->sides[si]->boxDims;
+                    break;
+                case 4:
+                    d->sides[si]->zOrigin += d->boxDims * (d->nz - 1);
+                    d->sides[si]->zOrigin -= d->sides[si]->boxDims;
+                    break;
+                case 5:
+                    d->sides[si]->zOrigin -= d->boxDims * (d->nz - 1);
+                    d->sides[si]->zOrigin += d->sides[si]->boxDims;
+                    break;
+                }
+
+                findOffsets(d->sides[si]);
+            }
         }
     }
 };
@@ -1270,22 +1336,22 @@ bool testDomainSolver()
 
 int main()
 {
-    // testDomainSolver();
-    // return 0;
-
     std::vector<Domain> domains(2);
     State s(1.0, 0.0, 0.0, 0.0, 1.0);
     State s2(0.125, 0.0, 0.0, 0.0, 0.1);
-    domains[0].setup(1.5, 1.5, 1.5, 4, s2);
-    domains[1].setup(1.5, 1.5, 1.5, 4, s);
+    domains[0].setup(1.5, 1.5, 1.5, 2, s2);
+    domains[1].setup(1.5, 1.5, 1.5, 2, s);
     // domains[2].setup(1.5, 1.5, 1.5, 2, s);
     domains[0].sides[0] = &domains[1];
     // domains[0].sides[1] = &domains[2];
     domains[1].sides[1] = &domains[0];
     // domains[2].sides[0] = &domains[0];
+
+    DomainOrigin origin(&domains[0]);
+
     DomainSolver ds(0.4);
     std::vector<double> t(1, 0.0);
-    double tEnd = 5;
+    double tEnd = 10;
     int iteration = 0;
 
     std::string filename("test");
