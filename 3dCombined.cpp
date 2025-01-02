@@ -405,7 +405,7 @@ struct BoxConserved
         if (rho == 0.0)
             return 0.0;
         else
-            return rho * (0.5 * (u * u + v * v + w * w) + p / ((G - 1) * rho));
+            return rho * 0.5 * (u * u + v * v + w * w) + p / (G - 1);
     }
     bool updateFromConservatives(double u1, double u2, double u3, double u4, double u5) // update the primatives from new conservative values
     {
@@ -971,25 +971,12 @@ public:
     H5::H5File file;
     void writeCoordinates(std::vector<Domain> &domains)
     {
-        for (int i = 0; i < domains.size(); i++)
+        for (auto &d : domains)
         {
-            // start offset such that the domain is centered at 0,0,0
-            /* double x_offset = -0.5 * domains[0].boxDims * domains[0].nx;
-             double y_offset = -0.5 * domains[0].boxDims * domains[0].ny;
-             double z_offset = -0.5 * domains[0].boxDims * domains[0].nz;
-             if (i == 1)
-             {
-                 x_offset += domains[0].boxDims * (domains[0].nx - 2); // only works if all domains are the same size
-             }
-             else if (i == 2)
-             {
-                 x_offset -= domains[0].boxDims * (domains[0].nx - 2); // only works if all domains are the same size
-             }
-             writeDomainCoordinates(domains[i], i, x_offset, y_offset, z_offset);*/
-            writeDomainCoordinates(domains[i], i);
+            writeDomainCoordinates(d);
         }
     }
-    void writeDomainCoordinates(Domain &d, const int &d_i)
+    void writeDomainCoordinates(Domain &d)
     {
         std::vector<double> node_coords;
         node_coords.reserve((d.nx + 1) * (d.ny + 1) * (d.nz + 1) * 3);
@@ -1006,10 +993,10 @@ public:
                 }
             }
         }
-        std::cout << "writing domain " << d_i << " with " << node_coords.size() << " nodes" << std::endl;
+        std::cout << "writing domain " << d.id << " with " << node_coords.size() << " nodes" << std::endl;
         hsize_t dims[1] = {node_coords.size()};
         H5::DataSpace dataspace = H5::DataSpace(1, dims);
-        H5::DataSet dataset = file.createDataSet("domain_" + std::to_string(d_i) + "_coordinates", H5::PredType::NATIVE_DOUBLE, dataspace);
+        H5::DataSet dataset = file.createDataSet("domain_" + std::to_string(d.id) + "_coordinates", H5::PredType::NATIVE_DOUBLE, dataspace);
         dataset.write(node_coords.data(), H5::PredType::NATIVE_DOUBLE);
     }
     void writeTimestep(std::vector<Domain> &domains, const double &time, const int &iteration)
@@ -1024,11 +1011,11 @@ public:
         timeDataset.write(&time, H5::PredType::NATIVE_DOUBLE);
 
         // write the domain data
-        for (int i = 0; i < domains.size(); i++)
+        for (auto &d : domains)
         {
-            std::string domainGroupname = "domain_" + std::to_string(i);
+            std::string domainGroupname = "domain_" + std::to_string(d.id);
             H5::Group domainGroup = timestepGroup.createGroup(domainGroupname.c_str());
-            writeDomain(domains[i], domainGroup);
+            writeDomain(d, domainGroup);
         }
     }
     void writeDomain(Domain &d, H5::Group &domainGroup)
@@ -1365,10 +1352,10 @@ bool testDomainSolver()
 
 int main()
 {
-    double cellDensity = 20;
+    double cellDensity = 10;
     std::vector<Domain> domains(10);
-    State s(1.0, 0.0, 0.0, 0.0, 1.0);
-    State s2(0.9, 0.0, 0.0, 0.0, 0.85);
+    State s(1.32, 0.0, 0.0, 0.0, 104000);
+    State s2(1.268, 0.0, 0.0, 0.0, 101325);
     double pipex = 0.5;
     double pipey = 1.0;
     double pipez = 0.5;
@@ -1420,7 +1407,7 @@ int main()
 
     DomainSolver ds(0.7);
     std::vector<double> t(1, 0.0);
-    double tEnd = 5;
+    double tEnd = 0.05;
     int iteration = 0;
 
     std::string filename("test");
