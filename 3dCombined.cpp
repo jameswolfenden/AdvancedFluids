@@ -4,6 +4,8 @@
 #include "H5Cpp.h"
 #include <fstream>
 #include <unordered_set>
+#include <omp.h>
+#include <atomic>
 
 static constexpr double G = 1.4;
 
@@ -427,6 +429,7 @@ struct BoxConserved
             if (std::isnan(p))
             {
                 std::cout << "p error, " << p << ", " << u << ", " << rho << ", " << u1 << ", " << u2 << ", " << u3 << ", " << u4 << std::endl;
+                // p=0.0;
                 return false;
             }
         }
@@ -441,7 +444,7 @@ private:
 class Domain
 {
 public:
-    int nx, ny, nz;
+    int nx, ny, nz, id;
     int nxFaces, nyFaces, nzFaces;
     double xOrigin, yOrigin, zOrigin;
     std::vector<double> rho_;
@@ -454,8 +457,9 @@ public:
     double boxDims;
     Domain *sides[6];
     std::vector<uint8_t> ghostCellMask;
-    void setup(const double x, const double y, const double z, const double density, const State &initial)
+    void setup(const int i, const double x, const double y, const double z, const double density, const State &initial)
     {
+        id = i;
         nx = x * density + 2;
         ny = y * density + 2;
         nz = z * density + 2;
@@ -667,57 +671,73 @@ private:
     }
     bool xFaces(Domain &d)
     {
+        std::atomic<bool> errorFlag(false);
+#pragma omp parallel for collapse(3)
         for (int i = 0; i < d.nxFaces; i++)
         {
             for (int j = 0; j < d.ny; j++)
             {
                 for (int k = 0; k < d.nz; k++)
                 {
+                    if (errorFlag.load())
+                        continue;
                     if (!rs.findStar(d.rho(i, j, k), d.u(i, j, k), d.v(i, j, k), d.w(i, j, k), d.a(i, j, k), d.p(i, j, k), d.rho(i + 1, j, k), d.u(i + 1, j, k), d.v(i + 1, j, k), d.w(i + 1, j, k), d.a(i + 1, j, k), d.p(i + 1, j, k), d.xfAt(i, j, k)))
-                        return false;
+                        errorFlag.store(true);
                 }
             }
         }
-        return true;
+        return !errorFlag.load();
     }
     bool yFaces(Domain &d)
     {
+        std::atomic<bool> errorFlag(false);
+#pragma omp parallel for collapse(3)
         for (int i = 0; i < d.nx; i++)
         {
             for (int j = 0; j < d.nyFaces; j++)
             {
                 for (int k = 0; k < d.nz; k++)
                 {
+                    if (errorFlag.load())
+                        continue;
                     if (!rs.findStar(d.rho(i, j, k), d.v(i, j, k), d.u(i, j, k), d.w(i, j, k), d.a(i, j, k), d.p(i, j, k), d.rho(i, j + 1, k), d.v(i, j + 1, k), d.u(i, j + 1, k), d.w(i, j + 1, k), d.a(i, j + 1, k), d.p(i, j + 1, k), d.yfAt(i, j, k)))
-                        return false;
+                        errorFlag.store(true);
                 }
             }
         }
-        return true;
+        return !errorFlag.load();
     }
     bool zFaces(Domain &d)
     {
+        std::atomic<bool> errorFlag(false);
+#pragma omp parallel for collapse(3)
         for (int i = 0; i < d.nx; i++)
         {
             for (int j = 0; j < d.ny; j++)
             {
                 for (int k = 0; k < d.nzFaces; k++)
                 {
+                    if (errorFlag.load())
+                        continue;
                     if (!rs.findStar(d.rho(i, j, k), d.w(i, j, k), d.v(i, j, k), d.u(i, j, k), d.a(i, j, k), d.p(i, j, k), d.rho(i, j, k + 1), d.w(i, j, k + 1), d.v(i, j, k + 1), d.u(i, j, k + 1), d.a(i, j, k + 1), d.p(i, j, k + 1), d.zfAt(i, j, k)))
-                        return false;
+                        errorFlag.store(true);
                 }
             }
         }
-        return true;
+        return !errorFlag.load();
     }
     bool xBoxes(Domain &d)
     {
+        std::atomic<bool> errorFlag(false);
+#pragma omp parallel for collapse(3)
         for (int i = 1; i < d.nx - 1; i++)
         {
             for (int j = 1; j < d.ny - 1; j++)
             {
                 for (int k = 1; k < d.nz - 1; k++)
                 {
+                    if (errorFlag.load())
+                        continue;
                     BoxConserved b(d.rho(i, j, k), d.u(i, j, k), d.v(i, j, k), d.w(i, j, k), d.p(i, j, k), d.a(i, j, k));
                     double u1 = b.u1() + minT * (d.xfAt(i - 1, j, k).f1 - d.xfAt(i, j, k).f1) / d.boxDims;
                     double u2 = b.u2() + minT * (d.xfAt(i - 1, j, k).f2 - d.xfAt(i, j, k).f2) / d.boxDims;
@@ -725,20 +745,24 @@ private:
                     double u4 = b.u4() + minT * (d.xfAt(i - 1, j, k).f4 - d.xfAt(i, j, k).f4) / d.boxDims;
                     double u5 = b.u5() + minT * (d.xfAt(i - 1, j, k).f5 - d.xfAt(i, j, k).f5) / d.boxDims;
                     if (!b.updateFromConservatives(u1, u2, u3, u4, u5))
-                        return false;
+                        errorFlag.store(true);
                 }
             }
         }
-        return true;
+        return !errorFlag.load();
     }
     bool yBoxes(Domain &d)
     {
+        std::atomic<bool> errorFlag(false);
+#pragma omp parallel for collapse(3)
         for (int i = 1; i < d.nx - 1; i++)
         {
             for (int j = 1; j < d.ny - 1; j++)
             {
                 for (int k = 1; k < d.nz - 1; k++)
                 {
+                    if (errorFlag.load())
+                        continue;
                     BoxConserved b(d.rho(i, j, k), d.v(i, j, k), d.u(i, j, k), d.w(i, j, k), d.p(i, j, k), d.a(i, j, k));
                     double u1 = b.u1() + minT * (d.yfAt(i, j - 1, k).f1 - d.yfAt(i, j, k).f1) / d.boxDims;
                     double u2 = b.u2() + minT * (d.yfAt(i, j - 1, k).f2 - d.yfAt(i, j, k).f2) / d.boxDims;
@@ -746,20 +770,24 @@ private:
                     double u4 = b.u4() + minT * (d.yfAt(i, j - 1, k).f4 - d.yfAt(i, j, k).f4) / d.boxDims;
                     double u5 = b.u5() + minT * (d.yfAt(i, j - 1, k).f5 - d.yfAt(i, j, k).f5) / d.boxDims;
                     if (!b.updateFromConservatives(u1, u2, u3, u4, u5))
-                        return false;
+                        errorFlag.store(true);
                 }
             }
         }
-        return true;
+        return !errorFlag.load();
     }
     bool zBoxes(Domain &d)
     {
+        std::atomic<bool> errorFlag(false);
+#pragma omp parallel for collapse(3)
         for (int i = 1; i < d.nx - 1; i++)
         {
             for (int j = 1; j < d.ny - 1; j++)
             {
                 for (int k = 1; k < d.nz - 1; k++)
                 {
+                    if (errorFlag.load())
+                        continue;
                     BoxConserved b(d.rho(i, j, k), d.w(i, j, k), d.v(i, j, k), d.u(i, j, k), d.p(i, j, k), d.a(i, j, k));
                     double u1 = b.u1() + minT * (d.zfAt(i, j, k - 1).f1 - d.zfAt(i, j, k).f1) / d.boxDims;
                     double u2 = b.u2() + minT * (d.zfAt(i, j, k - 1).f2 - d.zfAt(i, j, k).f2) / d.boxDims;
@@ -767,11 +795,11 @@ private:
                     double u4 = b.u4() + minT * (d.zfAt(i, j, k - 1).f4 - d.zfAt(i, j, k).f4) / d.boxDims;
                     double u5 = b.u5() + minT * (d.zfAt(i, j, k - 1).f5 - d.zfAt(i, j, k).f5) / d.boxDims;
                     if (!b.updateFromConservatives(u1, u2, u3, u4, u5))
-                        return false;
+                        errorFlag.store(true);
                 }
             }
         }
-        return true;
+        return !errorFlag.load();
     }
     bool updateGhostCells(std::vector<Domain> &domains)
     {
@@ -946,18 +974,18 @@ public:
         for (int i = 0; i < domains.size(); i++)
         {
             // start offset such that the domain is centered at 0,0,0
-           /* double x_offset = -0.5 * domains[0].boxDims * domains[0].nx;
-            double y_offset = -0.5 * domains[0].boxDims * domains[0].ny;
-            double z_offset = -0.5 * domains[0].boxDims * domains[0].nz;
-            if (i == 1)
-            {
-                x_offset += domains[0].boxDims * (domains[0].nx - 2); // only works if all domains are the same size
-            }
-            else if (i == 2)
-            {
-                x_offset -= domains[0].boxDims * (domains[0].nx - 2); // only works if all domains are the same size
-            }
-            writeDomainCoordinates(domains[i], i, x_offset, y_offset, z_offset);*/
+            /* double x_offset = -0.5 * domains[0].boxDims * domains[0].nx;
+             double y_offset = -0.5 * domains[0].boxDims * domains[0].ny;
+             double z_offset = -0.5 * domains[0].boxDims * domains[0].nz;
+             if (i == 1)
+             {
+                 x_offset += domains[0].boxDims * (domains[0].nx - 2); // only works if all domains are the same size
+             }
+             else if (i == 2)
+             {
+                 x_offset -= domains[0].boxDims * (domains[0].nx - 2); // only works if all domains are the same size
+             }
+             writeDomainCoordinates(domains[i], i, x_offset, y_offset, z_offset);*/
             writeDomainCoordinates(domains[i], i);
         }
     }
@@ -1113,7 +1141,7 @@ public:
         findOffsets(d);
         for (auto &d : passed)
         {
-            std::cout << "Domain has origin (" << d->xOrigin << ", " << d->yOrigin << ", " << d->zOrigin << ")" << std::endl;
+            std::cout << "Domain " << d->id << " has origin (" << d->xOrigin << ", " << d->yOrigin << ", " << d->zOrigin << ")" << std::endl;
         }
     }
 
@@ -1126,6 +1154,7 @@ private:
         {
             if (d->sides[si] && !passed.contains(d->sides[si]))
             {
+                std::cout << "Domain " << d->sides[si]->id << " being found from " << d->id << " with side " << si << std::endl;
                 passed.insert(d->sides[si]);
                 d->sides[si]->xOrigin = d->xOrigin;
                 d->sides[si]->yOrigin = d->yOrigin;
@@ -1137,24 +1166,24 @@ private:
                     d->sides[si]->xOrigin -= d->sides[si]->boxDims;
                     break;
                 case 1:
-                    d->sides[si]->xOrigin -= d->boxDims * (d->nx - 1);
-                    d->sides[si]->xOrigin += d->sides[si]->boxDims;
+                    d->sides[si]->xOrigin -= d->sides[si]->boxDims * (d->sides[si]->nx - 1);
+                    d->sides[si]->xOrigin += d->boxDims;
                     break;
                 case 2:
                     d->sides[si]->yOrigin += d->boxDims * (d->ny - 1);
                     d->sides[si]->yOrigin -= d->sides[si]->boxDims;
                     break;
                 case 3:
-                    d->sides[si]->yOrigin -= d->boxDims * (d->ny - 1);
-                    d->sides[si]->yOrigin += d->sides[si]->boxDims;
+                    d->sides[si]->yOrigin -= d->sides[si]->boxDims * (d->sides[si]->ny - 1);
+                    d->sides[si]->yOrigin += d->boxDims;
                     break;
                 case 4:
                     d->sides[si]->zOrigin += d->boxDims * (d->nz - 1);
                     d->sides[si]->zOrigin -= d->sides[si]->boxDims;
                     break;
                 case 5:
-                    d->sides[si]->zOrigin -= d->boxDims * (d->nz - 1);
-                    d->sides[si]->zOrigin += d->sides[si]->boxDims;
+                    d->sides[si]->zOrigin -= d->sides[si]->boxDims * (d->sides[si]->nz - 1);
+                    d->sides[si]->zOrigin += d->boxDims;
                     break;
                 }
 
@@ -1302,7 +1331,7 @@ bool testDomainSolver()
     std::vector<Domain> domains(1);
     Domain &d = domains[0];
     State s(0.125, 0.0, 0.0, 0.0, 0.1);
-    d.setup(1.5, 1.5, 1.5, 2, s);
+    d.setup(0, 1.5, 1.5, 1.5, 2, s);
 
     d.rho(2, 2, 2) = 1.0;
     d.u(2, 2, 2) = 0.0;
@@ -1336,22 +1365,62 @@ bool testDomainSolver()
 
 int main()
 {
-    std::vector<Domain> domains(2);
+    double cellDensity = 20;
+    std::vector<Domain> domains(10);
     State s(1.0, 0.0, 0.0, 0.0, 1.0);
-    State s2(0.125, 0.0, 0.0, 0.0, 0.1);
-    domains[0].setup(1.5, 1.5, 1.5, 2, s2);
-    domains[1].setup(1.5, 1.5, 1.5, 2, s);
-    // domains[2].setup(1.5, 1.5, 1.5, 2, s);
-    domains[0].sides[0] = &domains[1];
-    // domains[0].sides[1] = &domains[2];
-    domains[1].sides[1] = &domains[0];
-    // domains[2].sides[0] = &domains[0];
+    State s2(0.9, 0.0, 0.0, 0.0, 0.85);
+    double pipex = 0.5;
+    double pipey = 1.0;
+    double pipez = 0.5;
+    double boxx = 2.0;
+    double boxy = 2.0;
+    double boxz = 4.0;
+    domains[0].setup(0, pipex, pipey, pipez, cellDensity, s);
+    domains[1].setup(1, pipex, boxy, pipez, cellDensity, s2);
+    domains[2].setup(2, boxx / 2 - pipex / 2, boxy, pipez, cellDensity, s2);
+    domains[3].setup(3, pipex, boxy, boxz / 2 - pipez / 2, cellDensity, s2);
+    domains[4].setup(4, boxx / 2 - pipex / 2, boxy, pipez, cellDensity, s2);
+    domains[5].setup(5, pipex, boxy, boxz / 2 - pipez / 2, cellDensity, s2);
+    domains[6].setup(6, boxx / 2 - pipex / 2, boxy, boxz / 2 - pipez / 2, cellDensity, s2);
+    domains[7].setup(7, boxx / 2 - pipex / 2, boxy, boxz / 2 - pipez / 2, cellDensity, s2);
+    domains[8].setup(8, boxx / 2 - pipex / 2, boxy, boxz / 2 - pipez / 2, cellDensity, s2);
+    domains[9].setup(9, boxx / 2 - pipex / 2, boxy, boxz / 2 - pipez / 2, cellDensity, s2);
+
+    // 0 is the +x side, 1 is the -x side, 2 is the +y side, 3 is the -y side, 4 is the +z side, 5 is the -z side
+
+    // domain 0 is placed at the bottom, domain 1 above it and the rest of the domains surround domain 1 in the x-z plane
+    domains[1].sides[3] = &domains[0];
+    domains[0].sides[2] = &domains[1];
+    domains[1].sides[0] = &domains[2];
+    domains[2].sides[1] = &domains[1];
+    domains[1].sides[4] = &domains[3];
+    domains[3].sides[5] = &domains[1];
+    domains[1].sides[1] = &domains[4];
+    domains[4].sides[0] = &domains[1];
+    domains[1].sides[5] = &domains[5];
+    domains[5].sides[4] = &domains[1];
+    domains[6].sides[5] = &domains[2];
+    domains[2].sides[4] = &domains[6];
+    domains[6].sides[1] = &domains[3];
+    domains[3].sides[0] = &domains[6];
+    domains[7].sides[0] = &domains[3];
+    domains[3].sides[1] = &domains[7];
+    domains[7].sides[5] = &domains[4];
+    domains[4].sides[4] = &domains[7];
+    domains[8].sides[4] = &domains[4];
+    domains[4].sides[5] = &domains[8];
+    domains[8].sides[0] = &domains[5];
+    domains[5].sides[1] = &domains[8];
+    domains[9].sides[1] = &domains[5];
+    domains[5].sides[0] = &domains[9];
+    domains[9].sides[4] = &domains[2];
+    domains[2].sides[5] = &domains[9];
 
     DomainOrigin origin(&domains[0]);
 
-    DomainSolver ds(0.4);
+    DomainSolver ds(0.7);
     std::vector<double> t(1, 0.0);
-    double tEnd = 10;
+    double tEnd = 5;
     int iteration = 0;
 
     std::string filename("test");

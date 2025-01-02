@@ -3,6 +3,10 @@ CXX = g++
 CXXFLAGS = -Wall -Wextra -std=c++20 -I. -I1D -I2D -I3D -I/usr/include/hdf5/serial
 LDFLAGS = -L/usr/lib/x86_64-linux-gnu/hdf5/serial -lhdf5_cpp -lhdf5
 
+# OpenMP flags
+CXXFLAGS_OMP = -fopenmp
+LDFLAGS_OMP = -fopenmp
+
 # Executable names
 EXEC_1D = 1D_program
 EXEC_2D = 2D_program
@@ -50,14 +54,14 @@ $(EXEC_3D): $(OBJS_3D)
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
 
 $(EXEC_3D_2): $(OBJS_3D_2)
-	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
+	$(CXX) $(CXXFLAGS) $(CXXFLAGS_OMP) -o $@ $^ $(LDFLAGS) $(LDFLAGS_OMP)
 
 $(EXEC_test): $(OBJS_test)
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
 
 # Rule to build object files and generate dependencies
 %.o: %.cpp
-	$(CXX) $(CXXFLAGS) -MMD -MP -c $< -o $@
+	$(CXX) $(CXXFLAGS) $(CXXFLAGS_OMP) -MMD -MP -c $< -o $@
 
 # Include dependency files
 -include $(DEPS_1D) $(DEPS_2D) $(DEPS_3D) $(DEPS_3D_2) $(DEPS_test)
