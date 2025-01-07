@@ -4,6 +4,94 @@
 
 namespace fluid
 {
+    class RiemannSolver::Impl
+    {
+    public:
+        static void sonicRarefaction(const double &rho, const double &u, const double &v, const double &w, const double &a, const double &p, const bool &left, Flux &fl)
+        {
+            const int sign = left ? 1 : -1;
+            const double toPow = G5 + sign * G6 * u / a;
+            fl.updateFromPrimatives(rho * pow(toPow, G4),
+                                    G5 * (sign * a + G7 * u),
+                                    v * pow(toPow, G4),
+                                    w * pow(toPow, G4),
+                                    p * pow(toPow, G3));
+        }
+
+        static void solveVacuumLeft(const double &rhoL, const double &uL, const double &vL, const double &wL,
+                                    const double &aL, const double &pL, const double &rhoR, const double &uR,
+                                    const double &vR, const double &wR, const double &aR, const double &pR,
+                                    Flux &fl)
+        {
+            if (0 >= (uR + aR))
+            {
+                std::cout << "W_R" << std::endl;
+                fl.updateFromPrimatives(rhoR, uR, vR, wR, pR);
+            }
+            else if (0 <= (uR - aR * G4))
+            {
+                std::cout << "W_L" << std::endl;
+                fl.updateFromPrimatives(rhoL, uL, vL, wL, pL);
+            }
+            else
+            {
+                std::cout << "W_RFan" << std::endl;
+                sonicRarefaction(rhoR, uR, vR, wR, aR, pR, false, fl);
+            }
+        }
+
+        static void solveVacuumRight(const double &rhoL, const double &uL, const double &vL, const double &wL,
+                                     const double &aL, const double &pL, const double &rhoR, const double &uR,
+                                     const double &vR, const double &wR, const double &aR, const double &pR,
+                                     Flux &fl)
+        {
+            if (0 <= (uL - aL))
+            {
+                std::cout << "W_L" << std::endl;
+                fl.updateFromPrimatives(rhoL, uL, vL, wL, pL);
+            }
+            else if (0 >= (uL + aL * G4))
+            {
+                std::cout << "W_R" << std::endl;
+                fl.updateFromPrimatives(rhoR, uR, vR, wR, pR);
+            }
+            else
+            {
+                std::cout << "W_LFan" << std::endl;
+                sonicRarefaction(rhoL, uL, vL, wL, aL, pL, true, fl);
+            }
+        }
+
+        static bool checkVacuumGenerated(const double &rhoL, const double &uL, const double &vL, const double &wL,
+                                         const double &aL, const double &pL, const double &rhoR, const double &uR,
+                                         const double &vR, const double &wR, const double &aR, const double &pR,
+                                         Flux &fl)
+        {
+            double sR = uR - aR * G4;
+            double sL = uL + aL * G4;
+            if (sL > sR)
+            {
+                return false;
+            }
+            if (sR > 0 && sL < 0)
+            {
+                std::cout << "W_0" << std::endl;
+                fl.updateFromPrimatives(0.0, 0.5 * (uL + uR), 0.5 * (vL + vR), 0.5 * (wL + wR), 0.0);
+                return true;
+            }
+            else if (sL >= 0)
+            {
+                solveVacuumLeft(rhoL, uL, vL, wL, aL, pL, rhoR, uR, vR, wR, aR, pR, fl);
+                return true;
+            }
+            else if (sR <= 0)
+            {
+                solveVacuumRight(rhoL, uL, vL, wL, aL, pL, rhoR, uR, vR, wR, aR, pR, fl);
+                return true;
+            }
+            return false;
+        }
+    };
 
     bool RiemannSolver::findStar(const double &rhoL, const double &uL, const double &vL, const double &wL,
                                  const double &aL, const double &pL, const double &rhoR, const double &uR,
@@ -29,6 +117,7 @@ namespace fluid
             std::cout << "pick side failed, rho is nan" << std::endl;
             return false; // rho is nan
         }
+        lastP = tempP;
         return true;
     }
 
@@ -60,56 +149,31 @@ namespace fluid
                                    const double &vR, const double &wR, const double &aR, const double &pR,
                                    Flux &fl)
     {
-        if ((rhoL == 0.0 || pL == 0.0) || (rhoR == 0.0 || pR == 0.0))
+
+        bool leftVacuum = pL == 0.0;
+        bool rightVacuum = pR == 0.0;
+
+        if (leftVacuum && rightVacuum)
         {
-            if (((rhoL == 0.0 || pL == 0.0) && (rhoR != 0.0 || pR != 0.0)) || (((rhoR != 0.0 || pR != 0.0) && (rhoL != 0.0 || pL != 0.0)) && 0 >= (uR - aR * G4))) // vacuum left not right
-            {
-                if (0 >= (uR + aR))
-                {
-                    std::cout << "W_R" << std::endl;
-                    fl.updateFromPrimatives(rhoR, uR, vR, wR, pR);
-                    // calca();
-                }
-                else if (0 <= (uR - aR * G4))
-                {
-                    std::cout << "W_L" << std::endl;
-                    fl.updateFromPrimatives(rhoL, uL, vL, wL, pL);
-                }
-                else
-                {
-                    std::cout << "W_RFan" << std::endl;
-                    fl.updateFromPrimatives(rhoR * pow(G5 - G6 * uR / aR, G4), G5 * (-aR + G7 * uR), vR * pow(G5 - G6 * uR / aR, G4), wR * pow(G5 - G6 * uR / aR, G4), pR * pow(G5 - G6 * uR / aR, G3));
-                    // calca();
-                }
-                return true;
-            }
-            else if (((rhoR == 0.0 || pR == 0.0) && (rhoL != 0.0 || pL != 0.0)) || (((rhoR != 0.0 || pR != 0.0) && (rhoL != 0.0 || pL != 0.0)) && 0 <= (uL + aL * G4))) // vacuum right not left
-            {
-                if (0 <= (uL - aL))
-                {
-                    std::cout << "W_L" << std::endl;
-                    fl.updateFromPrimatives(rhoL, uL, vL, wL, pL);
-                    // calca();
-                }
-                else if (0 >= (uL + aL * G4))
-                {
-                    std::cout << "W_R" << std::endl;
-                    fl.updateFromPrimatives(rhoR, uR, vR, wR, pR);
-                }
-                else
-                {
-                    std::cout << "W_LFan" << std::endl;
-                    fl.updateFromPrimatives(rhoL * pow(G5 + G6 * uL / aL, G4), G5 * (aL + G7 * uL), vL * pow(G5 + G6 * uL / aL, G4), wL * pow(G5 + G6 * uL / aL, G4), pL * pow(G5 + G6 * uL / aL, G3));
-                    // calca();
-                }
-                return true;
-            }
-            else if (((rhoR == 0.0 || pR == 0.0) && (rhoL == 0.0 || pL == 0.0)) || ((uL + aL * G4) < 0 && (uR - aR * G4) > 0)) // vacuum left and right
-            {
-                std::cout << "W_0" << std::endl;
-                fl.updateFromPrimatives(0.0, 0.5 * (uL + uR), 0.5 * (vL + vR), 0.5 * (wL + wR), 0.0);
-                return true;
-            }
+            // Vacuum on both sides
+            fl.updateFromPrimatives(0.0, 0.5 * (uL + uR), 0.5 * (vL + vR), 0.5 * (wL + wR), 0.0);
+            return true;
+        }
+        else if (leftVacuum)
+        {
+            // Vacuum on left side
+            Impl::solveVacuumLeft(rhoL, uL, vL, wL, aL, pL, rhoR, uR, vR, wR, aR, pR, fl);
+            return true;
+        }
+        else if (rightVacuum)
+        {
+            // Vacuum on right side
+            Impl::solveVacuumRight(rhoL, uL, vL, wL, aL, pL, rhoR, uR, vR, wR, aR, pR, fl);
+            return true;
+        }
+        else if (Impl::checkVacuumGenerated(rhoL, uL, vL, wL, aL, pL, rhoR, uR, vR, wR, aR, pR, fl))
+        {
+            return true;
         }
         return false;
     }

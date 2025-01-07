@@ -31,13 +31,6 @@ add_executable(fluids ${SRC_DIR}/main.cpp)
 # Find and link HDF5
 find_package(HDF5 REQUIRED COMPONENTS CXX)
 if (HDF5_FOUND)
-    # Print HDF5 information for debugging
-    message(STATUS "HDF5_INCLUDE_DIRS: ${HDF5_INCLUDE_DIRS}")
-    message(STATUS "HDF5_LIBRARIES: ${HDF5_LIBRARIES}")
-    message(STATUS "HDF5_CXX_INCLUDE_DIRS: ${HDF5_CXX_INCLUDE_DIRS}")
-    message(STATUS "HDF5_CXX_LIBRARIES: ${HDF5_CXX_LIBRARIES}")
-
-    # Link to library
     target_include_directories(fluids_lib PUBLIC ${HDF5_INCLUDE_DIRS} ${HDF5_CXX_INCLUDE_DIRS})
     target_link_libraries(fluids_lib PUBLIC ${HDF5_LIBRARIES} ${HDF5_CXX_LIBRARIES})
 endif()
@@ -48,7 +41,16 @@ if (OpenMP_CXX_FOUND)
     target_link_libraries(fluids_lib PUBLIC OpenMP::OpenMP_CXX)
 endif()
 
-# Link executable to our library (dependencies will propagate)
+# Include google test
+include(FetchContent)
+FetchContent_Declare(
+    googletest
+    GIT_REPOSITORY https://github.com/google/googletest.git
+    GIT_TAG v1.15.2
+)
+FetchContent_MakeAvailable(googletest)
+
+# Link executable to library (dependencies will propagate)
 target_link_libraries(fluids PRIVATE fluids_lib)
 
 # Add compiler warnings

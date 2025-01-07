@@ -15,6 +15,8 @@ namespace fluid
                       const double &vR, const double &wR, const double &aR, const double &pR,
                       Flux &fl);
 
+        double getLastP() const { return lastP; }
+
     private:
         static constexpr double TOL = 0.000001;
         static constexpr double G1 = (G - 1) / (2 * G);
@@ -25,6 +27,8 @@ namespace fluid
         static constexpr double G6 = (G - 1) / (G + 1);
         static constexpr double G7 = (G - 1) / 2;
         static constexpr double G8 = G - 1;
+
+        double lastP;
 
         bool pickSide(const double &rhoL, const double &vL, const double &wL, const double &pL,
                       const double &rhoR, const double &vR, const double &wR, const double &pR,
@@ -42,6 +46,8 @@ namespace fluid
         bool iterateP(const double &rhoL, const double &uL, const double &aL, const double &pL,
                       const double &rhoR, const double &uR, const double &aR, const double &pR,
                       double &tempP, double &tempU);
+        
+        class Impl;
     };
 
 } // namespace fluid

@@ -31,6 +31,7 @@ namespace fluid
         if (p <= 0.0)
         {
             rho = 0.0;
+            p = 0.0;
         }
         aCalc();
     }
