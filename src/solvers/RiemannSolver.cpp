@@ -82,6 +82,27 @@ namespace fluid
             }
             return false;
         }
+
+        static double calcPVRS(const StateView &left, const StateView &right)
+        {
+            return 0.5 * (left.p + right.p) + 0.5 * (left.u - right.u) * 0.25 * (left.rho + right.rho) * (left.a + right.a);
+        }
+
+        static double calcTwoRarefaction(const StateView &left, const StateView &right)
+        {
+            double p_q = pow(left.p / right.p, G1);
+            double u_m = (p_q * left.u / left.a + right.u / right.a + G4 * (p_q - 1.0)) / (p_q / left.a + 1 / right.a);
+            double p_TL = 1 + G7 * (left.u - u_m) / left.a;
+            double p_TR = 1 + G7 * (u_m - right.u) / right.a;
+            return 0.5 * (left.p * pow(p_TL, G3) + right.p * pow(p_TR, G3));
+        }
+
+        static double calcTwoShock(const StateView &left, const StateView &right, double p_PV)
+        {
+            double ge_L = sqrt((G5 / left.rho) / (G6 * left.p + p_PV));
+            double ge_R = sqrt((G5 / right.rho) / (G6 * right.p + p_PV));
+            return (ge_L * left.p + ge_R * right.p - (right.u - left.u)) / (ge_L + ge_R);
+        }
     };
 
     bool RiemannSolver::findStar(const StateView &left, const StateView &right, Flux &fl)
@@ -165,106 +186,60 @@ namespace fluid
     bool RiemannSolver::pickStartVal(const int errorStage, const StateView &left, const StateView &right, double &tempP)
     {
         // Implementation of pickStartVal...
-        double p_PV = 0.5 * (left.p + right.p) + 0.5 * (left.u - right.u) * 0.25 * (left.rho + right.rho) * (left.a + right.a);
-        p_PV = std::max(0.0, p_PV);
 
         switch (errorStage)
         {
         case 0:
         {
-            double p_min = std::min(left.p, right.p);
-            double p_max = std::max(left.p, right.p);
-            double q_max = p_max / p_min;
-            if (q_max < 2.0 && (p_min < p_PV && p_PV < p_max))
+            double p_PV = std::max(TOL, Impl::calcPVRS(left, right));
+            double minP = std::min(left.p, right.p);
+            double maxP = std::max(left.p, right.p);
+            double maxPressureRatio = maxP / minP;
+            if (maxPressureRatio < 2.0 && (minP < p_PV && p_PV < maxP))
             {
                 // Select PVRS Riemann solver
                 tempP = p_PV;
             }
-            else if (p_PV < p_min)
+            else if (p_PV < minP)
             {
                 // Select Two-Rarefaction Riemann solver
-                double p_q = pow(left.p / right.p, G1);
-                double u_m = (p_q * left.u / left.a + right.u / right.a + G4 * (p_q - 1.0)) / (p_q / left.a + 1 / right.a);
-                double p_TL = 1 + G7 * (left.u - u_m) / left.a;
-                double p_TR = 1 + G7 * (u_m - right.u) / right.a;
-                tempP = 0.5 * (left.p * pow(p_TL, G3) + right.p * pow(p_TR, G3));
+                tempP = Impl::calcTwoRarefaction(left, right);
             }
             else
             {
                 // Select Two-Shock Riemann solver with
                 // PVRS as estimate
-                double ge_L = sqrt((G5 / left.rho) / (G6 * left.p + p_PV));
-                double ge_R = sqrt((G5 / right.rho) / (G6 * right.p + p_PV));
-                tempP = (ge_L * left.p + ge_R * right.p - (right.u - left.u)) / (ge_L + ge_R);
+                tempP = Impl::calcTwoShock(left, right, p_PV);
             }
             break;
         }
         case 1:
         {
-            std::cout << "went to error stage 1" << std::endl;
-            tempP = pow((left.a + right.a - 0.5 * G8 * (right.u - left.u)) / (left.a / pow(left.p, G1) + right.a / pow(right.p, G1)), G3);
+            tempP = 0.5 * (left.p + right.p);
             break;
         }
         case 2:
         {
-            tempP = 0.5 * (left.p + right.p);
+            tempP = std::max(TOL, Impl::calcPVRS(left, right));
             break;
         }
         case 3:
         {
-            double p_PV = 0.5 * (left.p + right.p) + 0.5 * (left.u - right.u) * 0.5 * (left.rho + right.rho) * 0.5 * (left.a + right.a);
-            tempP = p_PV;
+            // Select Two-Rarefaction Riemann solver
+            tempP = Impl::calcTwoRarefaction(left, right);
             break;
         }
         case 4:
         {
-            double p_PV = 0.5 * (left.p + right.p) + 0.5 * (left.u - right.u) * 0.5 * (left.rho + right.rho) * 0.5 * (left.a + right.a);
-            if (p_PV > TOL)
-                tempP = p_PV;
-            else
-                tempP = TOL;
-            double AL = 2 / ((G + 1) * left.rho);
-            double BL = left.p * (G - 1) / (G + 1);
-            double AR = 2 / ((G + 1) * right.rho);
-            double BR = right.p * (G - 1) / (G + 1);
-            double gL = pow(AL / (tempP + BL), 0.5);
-            double gR = pow(AR / (tempP + BR), 0.5);
-            double p_TS = (gL * left.p + gR * right.p - (right.u - left.u)) / (gL + gR);
-            tempP = p_TS;
+            // Select Two-Shock Riemann solver with
+            // PVRS as estimate
+            double p_PV = std::max(0.0, Impl::calcPVRS(left, right));
+            tempP = Impl::calcTwoShock(left, right, p_PV);
             break;
         }
         case 5:
         {
-            tempP = p_PV;
-            break;
-        }
-        case 6:
-        {
-            // Select Two-Rarefaction Riemann solver
-            double p_q = pow(left.p / right.p, G1);
-            double u_m = (p_q * left.u / left.a + right.u / right.a + G4 * (p_q - 1.0)) / (p_q / left.a + 1 / right.a);
-            double p_TL = 1 + G7 * (left.u - u_m) / left.a;
-            double p_TR = 1 + G7 * (u_m - right.u) / right.a;
-            tempP = 0.5 * (left.p * pow(p_TL, G3) + right.p * pow(p_TR, G3));
-            break;
-        }
-        case 7:
-        {
-            // Select Two-Shock Riemann solver with
-            // PVRS as estimate
-            double ge_L = sqrt((G5 / left.rho) / (G6 * left.p + p_PV));
-            double ge_R = sqrt((G5 / right.rho) / (G6 * right.p + p_PV));
-            tempP = (ge_L * left.p + ge_R * right.p - (right.u - left.u)) / (ge_L + ge_R);
-            break;
-        }
-        case 8:
-        {
-            tempP = 1 / (left.rho * left.a + right.rho * right.a) * (right.rho * right.a * left.p + left.rho * left.a * right.p + left.rho * left.a * right.rho * right.a * (left.u - right.a));
-            break;
-        }
-        case 9:
-        {
-            tempP = 1 * pow(10, -6);
+            tempP = TOL;
             break;
         }
         default:
