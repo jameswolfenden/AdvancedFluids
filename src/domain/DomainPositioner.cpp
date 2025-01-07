@@ -1,4 +1,5 @@
 #include "domain/DomainPositioner.hpp"
+#include "utils/Logger.hpp"
 #include <iostream>
 
 namespace fluid
@@ -20,10 +21,10 @@ namespace fluid
         // Print final positions for debugging
         for (auto &domain : passed)
         {
-            std::cout << "Domain " << domain->id << " has origin ("
-                      << domain->xOrigin << ", "
-                      << domain->yOrigin << ", "
-                      << domain->zOrigin << ")" << std::endl;
+            Logger::debug("Domain " + std::to_string(domain->id) + " has origin (" +
+                          std::to_string(domain->xOrigin) + ", " +
+                          std::to_string(domain->yOrigin) + ", " +
+                          std::to_string(domain->zOrigin) + ")");
         }
     }
 
@@ -35,9 +36,9 @@ namespace fluid
 
             if (neighbor && !passed.contains(neighbor))
             {
-                std::cout << "Domain " << neighbor->id
-                          << " being found from " << domain->id
-                          << " with side " << side_index << std::endl;
+                Logger::debug("Domain " + std::to_string(neighbor->id) +
+                              " being found from " + std::to_string(domain->id) +
+                              " with side " + std::to_string(side_index));
 
                 // Mark as processed
                 passed.insert(neighbor);

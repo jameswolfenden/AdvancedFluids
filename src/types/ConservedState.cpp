@@ -1,5 +1,6 @@
 #include "types/ConservedState.hpp"
 #include "constants.hpp"
+#include "utils/Logger.hpp"
 #include <cmath>
 #include <iostream>
 
@@ -83,13 +84,17 @@ namespace fluid
 
             if (p < 0)
             {
-                std::cout << "p below zero, " << p << ", " << u << ", " << rho
-                          << ", " << u1 << ", " << u2 << ", " << u3 << ", " << u4 << std::endl;
+                Logger::debug("p below zero, " + std::to_string(p) + ", " +
+                              std::to_string(u) + ", " + std::to_string(rho) + ", " +
+                              std::to_string(u1) + ", " + std::to_string(u2) + ", " +
+                              std::to_string(u3) + ", " + std::to_string(u4));
             }
             if (std::isnan(p))
             {
-                std::cout << "p error, " << p << ", " << u << ", " << rho
-                          << ", " << u1 << ", " << u2 << ", " << u3 << ", " << u4 << std::endl;
+                Logger::error("p error, " + std::to_string(p) + ", " +
+                              std::to_string(u) + ", " + std::to_string(rho) + ", " +
+                              std::to_string(u1) + ", " + std::to_string(u2) + ", " +
+                              std::to_string(u3) + ", " + std::to_string(u4));
                 return false;
             }
         }

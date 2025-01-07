@@ -1,4 +1,5 @@
 #include "io/HDF5Writer.hpp"
+#include "utils/Logger.hpp"
 #include <iostream>
 
 namespace fluid
@@ -35,8 +36,8 @@ namespace fluid
             }
         }
 
-        std::cout << "writing domain " << domain.id << " with "
-                  << node_coords.size() << " nodes" << std::endl;
+        Logger::info("Writing domain " + std::to_string(domain.id) + " with " +
+                     std::to_string(node_coords.size()) + " nodes.");
 
         hsize_t dims[1] = {node_coords.size()};
         H5::DataSpace dataspace(1, dims);

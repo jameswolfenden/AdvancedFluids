@@ -6,6 +6,7 @@
 #include "io/HDF5Writer.hpp"
 #include "io/XDMFWriter.hpp"
 #include "types/State.hpp"
+#include "utils/Logger.hpp"
 
 using namespace fluid;
 
@@ -82,6 +83,9 @@ int main()
 {
     try
     {
+        // Set log level
+        Logger::setLevel(LogLevel::DEBUG);
+
         // Create domains
         std::vector<Domain> domains(10);
 
@@ -113,13 +117,13 @@ int main()
         // Main time stepping loop
         while (time.back() < timeEnd)
         {
-            std::cout << "Starting iteration " << iteration
-                      << " at time " << time.back() << std::endl;
+            Logger::info("Starting iteration " + std::to_string(iteration) +
+                         " at time " + std::to_string(time.back()));
 
             // Update solution
             if (!solver.updateDomains(domains))
             {
-                std::cerr << "Error in solver at iteration " << iteration << std::endl;
+                Logger::error("Error in solver at iteration " + std::to_string(iteration));
                 return 1;
             }
 
@@ -130,19 +134,19 @@ int main()
             // Write output
             writer.writeTimestep(domains, time.back(), iteration);
 
-            std::cout << "Completed iteration " << iteration
-                      << ", time = " << time.back() << std::endl;
+            Logger::info("Completed iteration " + std::to_string(iteration) +
+                         " at time " + std::to_string(time.back()));
         }
 
         // Write XDMF metadata
         XDMFWriter xdmfWriter(domains, filename, time);
 
-        std::cout << "Simulation completed successfully!" << std::endl;
+        Logger::info("Simulation completed successfully!");
         return 0;
     }
     catch (const std::exception &e)
     {
-        std::cerr << "Error: " << e.what() << std::endl;
+        Logger::error("Error: " + std::string(e.what()));
         return 1;
     }
 }

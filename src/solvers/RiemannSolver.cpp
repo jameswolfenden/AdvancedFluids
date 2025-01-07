@@ -1,4 +1,5 @@
 #include "solvers/RiemannSolver.hpp"
+#include "utils/Logger.hpp"
 #include <cmath>
 #include <iostream>
 
@@ -22,17 +23,17 @@ namespace fluid
         {
             if (0 >= (right.u + right.a))
             {
-                std::cout << "W_R" << std::endl;
+                Logger::debug("W_R");
                 fl.updateFromPrimatives(right);
             }
             else if (0 <= (right.u - right.a * G4))
             {
-                std::cout << "W_L" << std::endl;
+                Logger::debug("W_L");
                 fl.updateFromPrimatives(left);
             }
             else
             {
-                std::cout << "W_RFan" << std::endl;
+                Logger::debug("W_RFan");
                 sonicRarefaction(right, false, fl);
             }
         }
@@ -41,17 +42,17 @@ namespace fluid
         {
             if (0 <= (left.u - left.a))
             {
-                std::cout << "W_L" << std::endl;
+                Logger::debug("W_L");
                 fl.updateFromPrimatives(left);
             }
             else if (0 >= (left.u + left.a * G4))
             {
-                std::cout << "W_R" << std::endl;
+                Logger::debug("W_R");
                 fl.updateFromPrimatives(right);
             }
             else
             {
-                std::cout << "W_LFan" << std::endl;
+                Logger::debug("W_LFan");
                 sonicRarefaction(left, true, fl);
             }
         }
@@ -66,7 +67,7 @@ namespace fluid
             }
             if (sR > 0 && sL < 0)
             {
-                std::cout << "W_0" << std::endl;
+                Logger::debug("W_0");
                 fl.updateFromPrimatives(0.0, 0.5 * (left.u + right.u), 0.5 * (left.v + right.v), 0.5 * (left.w + right.w), 0.0);
                 return true;
             }
@@ -109,7 +110,7 @@ namespace fluid
     {
         if (testVacuum(left, right, fl))
         {
-            std::cout << "vacuum" << std::endl;
+            Logger::debug("vacuum");
             return true; // a vacuum is generated, values found without iteration required
         }
 
@@ -117,13 +118,13 @@ namespace fluid
         double tempU;
         if (!iterateP(left, right, tempP, tempU))
         {
-            std::cout << "iteration failed" << std::endl;
+            Logger::error("Iteration failed");
             return false; // iteration failed, abort
         }
 
         if (!pickSide(left, right, fl, tempP, tempU))
         {
-            std::cout << "pick side failed, rho is nan" << std::endl;
+            Logger::error("Pick side failed, rho is nan");
             return false; // rho is nan
         }
         lastP = tempP;
@@ -244,8 +245,8 @@ namespace fluid
         }
         default:
         {
-            std::cout << "Error converging on p in x" << std::endl;
-            std::cout << "left.p: " << left.p << ", left.rho: " << left.rho << ", left.u: " << left.u << ", left.a: " << left.a << ", right.p: " << right.p << ", right.rho: " << right.rho << ", right.u: " << right.u << ", right.a: " << right.a << std::endl;
+            Logger::error("Error converging on p in x");
+            Logger::error("left.p: " + std::to_string(left.p) + ", left.rho: " + std::to_string(left.rho) + ", left.u: " + std::to_string(left.u) + ", left.a: " + std::to_string(left.a) + ", right.p: " + std::to_string(right.p) + ", right.rho: " + std::to_string(right.rho) + ", right.u: " + std::to_string(right.u) + ", right.a: " + std::to_string(right.a));
             return false; // the timestep is probably too small
         }
         }
@@ -255,8 +256,6 @@ namespace fluid
     bool RiemannSolver::iterateP(const StateView &left, const StateView &right,
                                  double &tempP, double &tempU)
     {
-
-        const int MAX_ITER = 10000;
 
         struct WaveState
         {
