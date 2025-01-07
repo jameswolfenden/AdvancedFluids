@@ -255,85 +255,57 @@ namespace fluid
     bool RiemannSolver::iterateP(const StateView &left, const StateView &right,
                                  double &tempP, double &tempU)
     {
-        bool iterate = true;
-        double fsL, fsR, d_fsL, d_fsR, change;
-        int errorStage = 0;
 
-        while (iterate) // loop to try all the initial p values
+        const int MAX_ITER = 10000;
+
+        struct WaveState
         {
-            iterate = pickStartVal(errorStage, left, right, tempP);
-            if (!iterate)
-                return false;
-            int count = 0;
-            // std::cout << "p guessed: " << p<< std::endl;
-            while (iterate) // loop to iterate the p value
+            double fs;
+            double d_fs;
+
+            static WaveState calcShockWave(const double &tempP, const double &p, const double &rho)
             {
-                double A1 = 2 / ((G + 1) * left.rho);
-                double B1 = left.p * (G - 1) / (G + 1);
-                double A2 = 2 / ((G + 1) * right.rho);
-                double B2 = right.p * (G - 1) / (G + 1);
-                double p1 = A1 / (tempP + B1);
-                double p2 = tempP / left.p;
-                double p3 = p2;
-                double p4 = tempP / right.p;
-                double p5 = p4;
-                double p6 = A2 / (tempP + B2);
+                double A = G5 / rho;
+                double B = G6 * p;
+                double sqrtTerm = sqrt(A / (B + tempP));
+                return {(tempP - p) * sqrtTerm, sqrtTerm * (1 - (tempP - p) / (2 * (B + tempP)))};
+            }
 
-                if (p1 < 0 || p2 < 0 || p3 < 0 || p4 < 0 || p5 < 0 || p6 < 0)
-                {
-                    errorStage++;
-                    break; // exit the iterate loop to try next p
-                }
+            static WaveState calcExpansionWave(const double &tempP, const double &p, const double &rho, const double &a)
+            {
+                return {a * G4 * (pow(tempP / p, G1) - 1), pow(tempP / p, -G2) / (rho * a)};
+            }
+        };
 
-                p1 = pow(p1, 0.5);
-                p2 = pow(p2, G1);
-                p3 = pow(p3, -G2);
-                p4 = pow(p4, G1);
-                p5 = pow(p5, -G2);
-                p6 = pow(p6, 0.5);
+        // Test different initial p values
+        for (int errorStage = 0; errorStage < 6; errorStage++)
+        {
+            if (!pickStartVal(errorStage, left, right, tempP))
+            {
+                return false;
+            }
 
-                if (tempP > left.p) // shock
-                {
-                    fsL = (tempP - left.p) * p1;
-                    d_fsL = p1 * (1 - (tempP - left.p) / (2 * (B1 + tempP)));
-                }
-                else // expansion
-                {
-                    fsL = left.a * G4 * (p2 - 1);
-                    d_fsL = 1 / (left.rho * left.a) * p3;
-                }
+            // Newton-Raphson iteration
+            for (int iter = 0; iter < MAX_ITER; iter++)
+            {
+                WaveState leftWave = tempP > left.p ? WaveState::calcShockWave(tempP, left.p, left.rho) : WaveState::calcExpansionWave(tempP, left.p, left.rho, left.a);
+                WaveState rightWave = tempP > right.p ? WaveState::calcShockWave(tempP, right.p, right.rho) : WaveState::calcExpansionWave(tempP, right.p, right.rho, right.a);
 
-                if (tempP > right.p) // shock
-                {
-                    fsR = (tempP - right.p) * p6;
-                    d_fsR = p6 * (1 - (tempP - right.p) / (2 * (B2 + tempP)));
-                }
-                else // expansion
-                {
-                    fsR = right.a * G4 * (p4 - 1);
-                    d_fsR = 1 / (right.rho * right.a) * p5;
-                }
+                double f = leftWave.fs + rightWave.fs - left.u + right.u;
+                double d_f = leftWave.d_fs + rightWave.d_fs;
+                double change = f / d_f;
 
-                double f_ = fsL + fsR - left.u + right.u;
-                double d_f = d_fsL + d_fsR;
-                change = f_ / d_f;
-                //    std::cout << f << ", " << d_f << ", " << change << std::endl;
-                tempP = tempP - change; // Update new estimate of p*
-                count++;
+                tempP -= change;
 
-                if (TOL >= 2 * fabs(change / (change + 2 * tempP))) // iteration limit (slightly different to notes as abs of entire rhs)
+                // Test for convergence
+                if (TOL >= 2 * fabs(change / (change + 2 * tempP)))
                 {
-                    iterate = false; // we have converged
-                }
-                if (count > 10000)
-                {
-                    errorStage++;
-                    break;
+                    tempU = 0.5 * (left.u + right.u) + 0.5 * (rightWave.fs - leftWave.fs);
+                    return true;
                 }
             }
         }
-        tempU = 0.5 * (left.u + right.u) + 0.5 * (fsR - fsL); // u*
-        return true;
+        return false;
     }
 
 } // namespace fluid
