@@ -3,6 +3,7 @@
 
 #include "../types/Flux.hpp"
 #include "../constants.hpp"
+#include "../types/State.hpp"
 
 namespace fluid
 {
@@ -10,10 +11,7 @@ namespace fluid
     class RiemannSolver
     {
     public:
-        bool findStar(const double &rhoL, const double &uL, const double &vL, const double &wL,
-                      const double &aL, const double &pL, const double &rhoR, const double &uR,
-                      const double &vR, const double &wR, const double &aR, const double &pR,
-                      Flux &fl);
+        bool findStar(const StateView &left, const StateView &right, Flux &fl);
 
         double getLastP() const { return lastP; }
 
@@ -30,23 +28,16 @@ namespace fluid
 
         double lastP;
 
-        bool pickSide(const double &rhoL, const double &vL, const double &wL, const double &pL,
-                      const double &rhoR, const double &vR, const double &wR, const double &pR,
+        bool pickSide(const StateView &left, const StateView &right,
                       Flux &fl, double &tempP, double &tempU);
 
-        bool testVacuum(const double &rhoL, const double &uL, const double &vL, const double &wL,
-                        const double &aL, const double &pL, const double &rhoR, const double &uR,
-                        const double &vR, const double &wR, const double &aR, const double &pR,
-                        Flux &fl);
+        bool testVacuum(const StateView &left, const StateView &right, Flux &fl);
 
-        bool pickStartVal(const int errorStage, const double &rhoL, const double &uL,
-                          const double &aL, const double &pL, const double &rhoR, const double &uR,
-                          const double &aR, const double &pR, double &tempP);
+        bool pickStartVal(const int errorStage, const StateView &left, const StateView &right, double &tempP);
 
-        bool iterateP(const double &rhoL, const double &uL, const double &aL, const double &pL,
-                      const double &rhoR, const double &uR, const double &aR, const double &pR,
+        bool iterateP(const StateView &left, const StateView &right,
                       double &tempP, double &tempU);
-        
+
         class Impl;
     };
 

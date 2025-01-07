@@ -23,17 +23,17 @@ namespace fluid
                 double aR = std::sqrt(G * pR / rhoR);
 
                 // Zero transverse velocities for 1D tests
-                const double v = 0.0;
-                const double w = 0.0;
+                double v = 0.0;
+                double w = 0.0;
 
                 std::cout << "\nTest input:"
                           << "\nLeft:  rho=" << rhoL << ", u=" << uL << ", p=" << pL << ", a=" << aL
                           << "\nRight: rho=" << rhoR << ", u=" << uR << ", p=" << pR << ", a=" << aR << std::endl;
 
-                bool result = solver.findStar(
-                    rhoL, uL, v, w, aL, pL,
-                    rhoR, uR, v, w, aR, pR,
-                    flux);
+                StateView left(rhoL, uL, v, w, pL, aL);
+                StateView right(rhoR, uR, v, w, pR, aR);
+
+                bool result = solver.findStar(left, right, flux);
 
                 std::cout << "Resulting fluxes:"
                           << "\nf1 (mass flux): " << flux.f1

@@ -7,68 +7,59 @@ namespace fluid
     class RiemannSolver::Impl
     {
     public:
-        static void sonicRarefaction(const double &rho, const double &u, const double &v, const double &w, const double &a, const double &p, const bool &left, Flux &fl)
+        static void sonicRarefaction(const StateView &s, const bool &left, Flux &fl)
         {
             const int sign = left ? 1 : -1;
-            const double toPow = G5 + sign * G6 * u / a;
-            fl.updateFromPrimatives(rho * pow(toPow, G4),
-                                    G5 * (sign * a + G7 * u),
-                                    v * pow(toPow, G4),
-                                    w * pow(toPow, G4),
-                                    p * pow(toPow, G3));
+            const double toPow = G5 + sign * G6 * s.u / s.a;
+            fl.updateFromPrimatives(s.rho * pow(toPow, G4),
+                                    G5 * (sign * s.a + G7 * s.u),
+                                    s.v * pow(toPow, G4),
+                                    s.w * pow(toPow, G4),
+                                    s.p * pow(toPow, G3));
         }
 
-        static void solveVacuumLeft(const double &rhoL, const double &uL, const double &vL, const double &wL,
-                                    const double &aL, const double &pL, const double &rhoR, const double &uR,
-                                    const double &vR, const double &wR, const double &aR, const double &pR,
-                                    Flux &fl)
+        static void solveVacuumLeft(const StateView &left, const StateView &right, Flux &fl)
         {
-            if (0 >= (uR + aR))
+            if (0 >= (right.u + right.a))
             {
                 std::cout << "W_R" << std::endl;
-                fl.updateFromPrimatives(rhoR, uR, vR, wR, pR);
+                fl.updateFromPrimatives(right);
             }
-            else if (0 <= (uR - aR * G4))
+            else if (0 <= (right.u - right.a * G4))
             {
                 std::cout << "W_L" << std::endl;
-                fl.updateFromPrimatives(rhoL, uL, vL, wL, pL);
+                fl.updateFromPrimatives(left);
             }
             else
             {
                 std::cout << "W_RFan" << std::endl;
-                sonicRarefaction(rhoR, uR, vR, wR, aR, pR, false, fl);
+                sonicRarefaction(right, false, fl);
             }
         }
 
-        static void solveVacuumRight(const double &rhoL, const double &uL, const double &vL, const double &wL,
-                                     const double &aL, const double &pL, const double &rhoR, const double &uR,
-                                     const double &vR, const double &wR, const double &aR, const double &pR,
-                                     Flux &fl)
+        static void solveVacuumRight(const StateView &left, const StateView &right, Flux &fl)
         {
-            if (0 <= (uL - aL))
+            if (0 <= (left.u - left.a))
             {
                 std::cout << "W_L" << std::endl;
-                fl.updateFromPrimatives(rhoL, uL, vL, wL, pL);
+                fl.updateFromPrimatives(left);
             }
-            else if (0 >= (uL + aL * G4))
+            else if (0 >= (left.u + left.a * G4))
             {
                 std::cout << "W_R" << std::endl;
-                fl.updateFromPrimatives(rhoR, uR, vR, wR, pR);
+                fl.updateFromPrimatives(right);
             }
             else
             {
                 std::cout << "W_LFan" << std::endl;
-                sonicRarefaction(rhoL, uL, vL, wL, aL, pL, true, fl);
+                sonicRarefaction(left, true, fl);
             }
         }
 
-        static bool checkVacuumGenerated(const double &rhoL, const double &uL, const double &vL, const double &wL,
-                                         const double &aL, const double &pL, const double &rhoR, const double &uR,
-                                         const double &vR, const double &wR, const double &aR, const double &pR,
-                                         Flux &fl)
+        static bool checkVacuumGenerated(const StateView &left, const StateView &right, Flux &fl)
         {
-            double sR = uR - aR * G4;
-            double sL = uL + aL * G4;
+            double sR = right.u - right.a * G4;
+            double sL = left.u + left.a * G4;
             if (sL > sR)
             {
                 return false;
@@ -76,29 +67,26 @@ namespace fluid
             if (sR > 0 && sL < 0)
             {
                 std::cout << "W_0" << std::endl;
-                fl.updateFromPrimatives(0.0, 0.5 * (uL + uR), 0.5 * (vL + vR), 0.5 * (wL + wR), 0.0);
+                fl.updateFromPrimatives(0.0, 0.5 * (left.u + right.u), 0.5 * (left.v + right.v), 0.5 * (left.w + right.w), 0.0);
                 return true;
             }
             else if (sL >= 0)
             {
-                solveVacuumLeft(rhoL, uL, vL, wL, aL, pL, rhoR, uR, vR, wR, aR, pR, fl);
+                solveVacuumLeft(left, right, fl);
                 return true;
             }
             else if (sR <= 0)
             {
-                solveVacuumRight(rhoL, uL, vL, wL, aL, pL, rhoR, uR, vR, wR, aR, pR, fl);
+                solveVacuumRight(left, right, fl);
                 return true;
             }
             return false;
         }
     };
 
-    bool RiemannSolver::findStar(const double &rhoL, const double &uL, const double &vL, const double &wL,
-                                 const double &aL, const double &pL, const double &rhoR, const double &uR,
-                                 const double &vR, const double &wR, const double &aR, const double &pR,
-                                 Flux &fl)
+    bool RiemannSolver::findStar(const StateView &left, const StateView &right, Flux &fl)
     {
-        if (testVacuum(rhoL, uL, vL, wL, aL, pL, rhoR, uR, vR, wR, aR, pR, fl))
+        if (testVacuum(left, right, fl))
         {
             std::cout << "vacuum" << std::endl;
             return true; // a vacuum is generated, values found without iteration required
@@ -106,13 +94,13 @@ namespace fluid
 
         double tempP;
         double tempU;
-        if (!iterateP(rhoL, uL, aL, pL, rhoR, uR, aR, pR, tempP, tempU))
+        if (!iterateP(left, right, tempP, tempU))
         {
             std::cout << "iteration failed" << std::endl;
             return false; // iteration failed, abort
         }
 
-        if (!pickSide(rhoL, vL, wL, pL, rhoR, vR, wR, pR, fl, tempP, tempU))
+        if (!pickSide(left, right, fl, tempP, tempU))
         {
             std::cout << "pick side failed, rho is nan" << std::endl;
             return false; // rho is nan
@@ -121,77 +109,71 @@ namespace fluid
         return true;
     }
 
-    bool RiemannSolver::pickSide(const double &rhoL, const double &vL, const double &wL, const double &pL,
-                                 const double &rhoR, const double &vR, const double &wR, const double &pR,
+    bool RiemannSolver::pickSide(const StateView &left, const StateView &right,
                                  Flux &fl, double &tempP, double &tempU)
     {
         if (tempU >= 0.0)
         { // pick left side
-            if (tempP > pL)
-                fl.updateFromPrimatives(rhoL * (((tempP / pL) + G6) / (G6 * (tempP / pL) + 1)),
-                                        tempU, vL, wL, tempP);
+            if (tempP > left.p)
+                fl.updateFromPrimatives(left.rho * (((tempP / left.p) + G6) / (G6 * (tempP / left.p) + 1)),
+                                        tempU, left.v, left.w, tempP);
             else
-                fl.updateFromPrimatives(rhoL * pow((tempP / pL), 1 / G), tempU, vL, wL, tempP);
+                fl.updateFromPrimatives(left.rho * pow((tempP / left.p), 1 / G), tempU, left.v, left.w, tempP);
         }
         else
         { // pick right side
-            if (tempP > pR)
-                fl.updateFromPrimatives(rhoR * (((tempP / pR) + G6) / (G6 * (tempP / pR) + 1)),
-                                        tempU, vR, wR, tempP);
+            if (tempP > right.p)
+                fl.updateFromPrimatives(right.rho * (((tempP / right.p) + G6) / (G6 * (tempP / right.p) + 1)),
+                                        tempU, right.v, right.w, tempP);
             else
-                fl.updateFromPrimatives(rhoR * pow((tempP / pR), 1 / G), tempU, vR, wR, tempP);
+                fl.updateFromPrimatives(right.rho * pow((tempP / right.p), 1 / G), tempU, right.v, right.w, tempP);
         }
         return true;
     }
 
-    bool RiemannSolver::testVacuum(const double &rhoL, const double &uL, const double &vL, const double &wL,
-                                   const double &aL, const double &pL, const double &rhoR, const double &uR,
-                                   const double &vR, const double &wR, const double &aR, const double &pR,
-                                   Flux &fl)
+    bool RiemannSolver::testVacuum(const StateView &left, const StateView &right, Flux &fl)
     {
 
-        bool leftVacuum = pL == 0.0;
-        bool rightVacuum = pR == 0.0;
+        bool leftVacuum = left.p == 0.0;
+        bool rightVacuum = right.p == 0.0;
 
         if (leftVacuum && rightVacuum)
         {
             // Vacuum on both sides
-            fl.updateFromPrimatives(0.0, 0.5 * (uL + uR), 0.5 * (vL + vR), 0.5 * (wL + wR), 0.0);
+            fl.updateFromPrimatives(0.0, 0.5 * (left.u + right.u), 0.5 * (left.v + right.v), 0.5 * (left.w + right.w), 0.0);
             return true;
         }
         else if (leftVacuum)
         {
             // Vacuum on left side
-            Impl::solveVacuumLeft(rhoL, uL, vL, wL, aL, pL, rhoR, uR, vR, wR, aR, pR, fl);
+            Impl::solveVacuumLeft(left, right, fl);
             return true;
         }
         else if (rightVacuum)
         {
             // Vacuum on right side
-            Impl::solveVacuumRight(rhoL, uL, vL, wL, aL, pL, rhoR, uR, vR, wR, aR, pR, fl);
+            Impl::solveVacuumRight(left, right, fl);
             return true;
         }
-        else if (Impl::checkVacuumGenerated(rhoL, uL, vL, wL, aL, pL, rhoR, uR, vR, wR, aR, pR, fl))
+        else if (Impl::checkVacuumGenerated(left, right, fl))
         {
             return true;
         }
         return false;
     }
 
-    bool RiemannSolver::pickStartVal(const int errorStage, const double &rhoL, const double &uL,
-                                     const double &aL, const double &pL, const double &rhoR, const double &uR,
-                                     const double &aR, const double &pR, double &tempP)
+    bool RiemannSolver::pickStartVal(const int errorStage, const StateView &left, const StateView &right, double &tempP)
     {
         // Implementation of pickStartVal...
-        double p_PV = 0.5 * (pL + pR) + 0.5 * (uL - uR) * 0.25 * (rhoL + rhoR) * (aL + aR);
+        double p_PV = 0.5 * (left.p + right.p) + 0.5 * (left.u - right.u) * 0.25 * (left.rho + right.rho) * (left.a + right.a);
         p_PV = std::max(0.0, p_PV);
 
         switch (errorStage)
         {
         case 0:
         {
-            double p_min = std::min(pL, pR);
-            double p_max = std::max(pL, pR);
+            double p_min = std::min(left.p, right.p);
+            double p_max = std::max(left.p, right.p);
             double q_max = p_max / p_min;
             if (q_max < 2.0 && (p_min < p_PV && p_PV < p_max))
             {
@@ -201,53 +183,53 @@ namespace fluid
             else if (p_PV < p_min)
             {
                 // Select Two-Rarefaction Riemann solver
-                double p_q = pow(pL / pR, G1);
-                double u_m = (p_q * uL / aL + uR / aR + G4 * (p_q - 1.0)) / (p_q / aL + 1 / aR);
-                double p_TL = 1 + G7 * (uL - u_m) / aL;
-                double p_TR = 1 + G7 * (u_m - uR) / aR;
-                tempP = 0.5 * (pL * pow(p_TL, G3) + pR * pow(p_TR, G3));
+                double p_q = pow(left.p / right.p, G1);
+                double u_m = (p_q * left.u / left.a + right.u / right.a + G4 * (p_q - 1.0)) / (p_q / left.a + 1 / right.a);
+                double p_TL = 1 + G7 * (left.u - u_m) / left.a;
+                double p_TR = 1 + G7 * (u_m - right.u) / right.a;
+                tempP = 0.5 * (left.p * pow(p_TL, G3) + right.p * pow(p_TR, G3));
             }
             else
             {
                 // Select Two-Shock Riemann solver with
                 // PVRS as estimate
-                double ge_L = sqrt((G5 / rhoL) / (G6 * pL + p_PV));
-                double ge_R = sqrt((G5 / rhoR) / (G6 * pR + p_PV));
-                tempP = (ge_L * pL + ge_R * pR - (uR - uL)) / (ge_L + ge_R);
+                double ge_L = sqrt((G5 / left.rho) / (G6 * left.p + p_PV));
+                double ge_R = sqrt((G5 / right.rho) / (G6 * right.p + p_PV));
+                tempP = (ge_L * left.p + ge_R * right.p - (right.u - left.u)) / (ge_L + ge_R);
             }
             break;
         }
         case 1:
         {
             std::cout << "went to error stage 1" << std::endl;
-            tempP = pow((aL + aR - 0.5 * G8 * (uR - uL)) / (aL / pow(pL, G1) + aR / pow(pR, G1)), G3);
+            tempP = pow((left.a + right.a - 0.5 * G8 * (right.u - left.u)) / (left.a / pow(left.p, G1) + right.a / pow(right.p, G1)), G3);
             break;
         }
         case 2:
         {
-            tempP = 0.5 * (pL + pR);
+            tempP = 0.5 * (left.p + right.p);
             break;
         }
         case 3:
         {
-            double p_PV = 0.5 * (pL + pR) + 0.5 * (uL - uR) * 0.5 * (rhoL + rhoR) * 0.5 * (aL + aR);
+            double p_PV = 0.5 * (left.p + right.p) + 0.5 * (left.u - right.u) * 0.5 * (left.rho + right.rho) * 0.5 * (left.a + right.a);
             tempP = p_PV;
             break;
         }
         case 4:
         {
-            double p_PV = 0.5 * (pL + pR) + 0.5 * (uL - uR) * 0.5 * (rhoL + rhoR) * 0.5 * (aL + aR);
+            double p_PV = 0.5 * (left.p + right.p) + 0.5 * (left.u - right.u) * 0.5 * (left.rho + right.rho) * 0.5 * (left.a + right.a);
             if (p_PV > TOL)
                 tempP = p_PV;
             else
                 tempP = TOL;
-            double AL = 2 / ((G + 1) * rhoL);
-            double BL = pL * (G - 1) / (G + 1);
-            double AR = 2 / ((G + 1) * rhoR);
-            double BR = pR * (G - 1) / (G + 1);
+            double AL = 2 / ((G + 1) * left.rho);
+            double BL = left.p * (G - 1) / (G + 1);
+            double AR = 2 / ((G + 1) * right.rho);
+            double BR = right.p * (G - 1) / (G + 1);
             double gL = pow(AL / (tempP + BL), 0.5);
             double gR = pow(AR / (tempP + BR), 0.5);
-            double p_TS = (gL * pL + gR * pR - (uR - uL)) / (gL + gR);
+            double p_TS = (gL * left.p + gR * right.p - (right.u - left.u)) / (gL + gR);
             tempP = p_TS;
             break;
         }
@@ -259,25 +241,25 @@ namespace fluid
         case 6:
         {
             // Select Two-Rarefaction Riemann solver
-            double p_q = pow(pL / pR, G1);
-            double u_m = (p_q * uL / aL + uR / aR + G4 * (p_q - 1.0)) / (p_q / aL + 1 / aR);
-            double p_TL = 1 + G7 * (uL - u_m) / aL;
-            double p_TR = 1 + G7 * (u_m - uR) / aR;
-            tempP = 0.5 * (pL * pow(p_TL, G3) + pR * pow(p_TR, G3));
+            double p_q = pow(left.p / right.p, G1);
+            double u_m = (p_q * left.u / left.a + right.u / right.a + G4 * (p_q - 1.0)) / (p_q / left.a + 1 / right.a);
+            double p_TL = 1 + G7 * (left.u - u_m) / left.a;
+            double p_TR = 1 + G7 * (u_m - right.u) / right.a;
+            tempP = 0.5 * (left.p * pow(p_TL, G3) + right.p * pow(p_TR, G3));
             break;
         }
         case 7:
         {
             // Select Two-Shock Riemann solver with
             // PVRS as estimate
-            double ge_L = sqrt((G5 / rhoL) / (G6 * pL + p_PV));
-            double ge_R = sqrt((G5 / rhoR) / (G6 * pR + p_PV));
-            tempP = (ge_L * pL + ge_R * pR - (uR - uL)) / (ge_L + ge_R);
+            double ge_L = sqrt((G5 / left.rho) / (G6 * left.p + p_PV));
+            double ge_R = sqrt((G5 / right.rho) / (G6 * right.p + p_PV));
+            tempP = (ge_L * left.p + ge_R * right.p - (right.u - left.u)) / (ge_L + ge_R);
             break;
         }
         case 8:
         {
-            tempP = 1 / (rhoL * aL + rhoR * aR) * (rhoR * aR * pL + rhoL * aL * pR + rhoL * aL * rhoR * aR * (uL - aR));
+            tempP = 1 / (left.rho * left.a + right.rho * right.a) * (right.rho * right.a * left.p + left.rho * left.a * right.p + left.rho * left.a * right.rho * right.a * (left.u - right.a));
             break;
         }
         case 9:
@@ -288,15 +270,14 @@ namespace fluid
         default:
         {
             std::cout << "Error converging on p in x" << std::endl;
-            std::cout << "pL: " << pL << ", rhoL: " << rhoL << ", uL: " << uL << ", aL: " << aL << ", pR: " << pR << ", rhoR: " << rhoR << ", uR: " << uR << ", aR: " << aR << std::endl;
+            std::cout << "left.p: " << left.p << ", left.rho: " << left.rho << ", left.u: " << left.u << ", left.a: " << left.a << ", right.p: " << right.p << ", right.rho: " << right.rho << ", right.u: " << right.u << ", right.a: " << right.a << std::endl;
             return false; // the timestep is probably too small
         }
         }
         return true;
     }
 
-    bool RiemannSolver::iterateP(const double &rhoL, const double &uL, const double &aL, const double &pL,
-                                 const double &rhoR, const double &uR, const double &aR, const double &pR,
+    bool RiemannSolver::iterateP(const StateView &left, const StateView &right,
                                  double &tempP, double &tempU)
     {
         bool iterate = true;
@@ -305,21 +286,21 @@ namespace fluid
 
         while (iterate) // loop to try all the initial p values
         {
-            iterate = pickStartVal(errorStage, rhoL, uL, aL, pL, rhoR, uR, aR, pR, tempP);
+            iterate = pickStartVal(errorStage, left, right, tempP);
             if (!iterate)
                 return false;
             int count = 0;
             // std::cout << "p guessed: " << p<< std::endl;
             while (iterate) // loop to iterate the p value
             {
-                double A1 = 2 / ((G + 1) * rhoL);
-                double B1 = pL * (G - 1) / (G + 1);
-                double A2 = 2 / ((G + 1) * rhoR);
-                double B2 = pR * (G - 1) / (G + 1);
+                double A1 = 2 / ((G + 1) * left.rho);
+                double B1 = left.p * (G - 1) / (G + 1);
+                double A2 = 2 / ((G + 1) * right.rho);
+                double B2 = right.p * (G - 1) / (G + 1);
                 double p1 = A1 / (tempP + B1);
-                double p2 = tempP / pL;
+                double p2 = tempP / left.p;
                 double p3 = p2;
-                double p4 = tempP / pR;
+                double p4 = tempP / right.p;
                 double p5 = p4;
                 double p6 = A2 / (tempP + B2);
 
@@ -336,29 +317,29 @@ namespace fluid
                 p5 = pow(p5, -G2);
                 p6 = pow(p6, 0.5);
 
-                if (tempP > pL) // shock
+                if (tempP > left.p) // shock
                 {
-                    fsL = (tempP - pL) * p1;
-                    d_fsL = p1 * (1 - (tempP - pL) / (2 * (B1 + tempP)));
+                    fsL = (tempP - left.p) * p1;
+                    d_fsL = p1 * (1 - (tempP - left.p) / (2 * (B1 + tempP)));
                 }
                 else // expansion
                 {
-                    fsL = aL * G4 * (p2 - 1);
-                    d_fsL = 1 / (rhoL * aL) * p3;
+                    fsL = left.a * G4 * (p2 - 1);
+                    d_fsL = 1 / (left.rho * left.a) * p3;
                 }
 
-                if (tempP > pR) // shock
+                if (tempP > right.p) // shock
                 {
-                    fsR = (tempP - pR) * p6;
-                    d_fsR = p6 * (1 - (tempP - pR) / (2 * (B2 + tempP)));
+                    fsR = (tempP - right.p) * p6;
+                    d_fsR = p6 * (1 - (tempP - right.p) / (2 * (B2 + tempP)));
                 }
                 else // expansion
                 {
-                    fsR = aR * G4 * (p4 - 1);
-                    d_fsR = 1 / (rhoR * aR) * p5;
+                    fsR = right.a * G4 * (p4 - 1);
+                    d_fsR = 1 / (right.rho * right.a) * p5;
                 }
 
-                double f_ = fsL + fsR - uL + uR;
+                double f_ = fsL + fsR - left.u + right.u;
                 double d_f = d_fsL + d_fsR;
                 change = f_ / d_f;
                 //    std::cout << f << ", " << d_f << ", " << change << std::endl;
@@ -376,7 +357,7 @@ namespace fluid
                 }
             }
         }
-        tempU = 0.5 * (uL + uR) + 0.5 * (fsR - fsL); // u*
+        tempU = 0.5 * (left.u + right.u) + 0.5 * (fsR - fsL); // u*
         return true;
     }
 
