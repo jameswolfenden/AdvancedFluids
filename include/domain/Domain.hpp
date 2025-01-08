@@ -28,6 +28,8 @@ namespace fluid
         void setup(const int i, const double x, const double y, const double z,
                    const double density, const State &initial);
 
+        int getGlobalIndex(const int &x, const int &y, const int &z);
+
         // Access methods for state variables
         double &rho(const int &x, const int &y, const int &z);
         double &u(const int &x, const int &y, const int &z);

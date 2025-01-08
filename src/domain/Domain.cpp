@@ -31,41 +31,47 @@ namespace fluid
         setGhostCellMasks();
     }
 
+    int Domain::getGlobalIndex(const int &x, const int &y, const int &z)
+    {
+        return z + nz * (y + ny * x);
+    }
+
     double &Domain::rho(const int &x, const int &y, const int &z)
     {
-        return rho_[z + nz * (y + ny * x)];
+        return rho_[getGlobalIndex(x, y, z)];
     }
 
     double &Domain::u(const int &x, const int &y, const int &z)
     {
-        return u_[z + nz * (y + ny * x)];
+        return u_[getGlobalIndex(x, y, z)];
     }
 
     double &Domain::v(const int &x, const int &y, const int &z)
     {
-        return v_[z + nz * (y + ny * x)];
+        return v_[getGlobalIndex(x, y, z)];
     }
 
     double &Domain::w(const int &x, const int &y, const int &z)
     {
-        return w_[z + nz * (y + ny * x)];
+        return w_[getGlobalIndex(x, y, z)];
     }
 
     double &Domain::p(const int &x, const int &y, const int &z)
     {
-        return p_[z + nz * (y + ny * x)];
+        return p_[getGlobalIndex(x, y, z)];
     }
 
     double &Domain::a(const int &x, const int &y, const int &z)
     {
-        if (rho(x, y, z) == 0.0)
+        /*if (rho(x, y, z) == 0.0)
         {
-            return a_[z + nz * (y + ny * x)] = 0.0;
+            return a_[getGlobalIndex(x, y, z)] = 0.0;
         }
         else
         {
-            return a_[z + nz * (y + ny * x)] = sqrt(G * p(x, y, z) / rho(x, y, z));
-        }
+            return a_[getGlobalIndex(x, y, z)] = sqrt(G * p(x, y, z) / rho(x, y, z));
+        }*/
+        return a_[getGlobalIndex(x, y, z)];
     }
 
     Flux &Domain::xfAt(const int &x, const int &y, const int &z)
