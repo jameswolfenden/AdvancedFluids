@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <omp.h>
 #include "domain/Domain.hpp"
 #include "domain/DomainPositioner.hpp"
 #include "solvers/DomainEulerSolver.hpp"
@@ -83,6 +84,9 @@ int main()
 {
     try
     {
+        // Set number of threads
+        omp_set_num_threads(6);
+
         // Set log level
         Logger::setLevel(LogLevel::DEBUG);
 

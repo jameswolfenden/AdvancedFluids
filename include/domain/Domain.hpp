@@ -28,26 +28,25 @@ namespace fluid
         void setup(const int i, const double x, const double y, const double z,
                    const double density, const State &initial);
 
-        int getGlobalIndex(const int &x, const int &y, const int &z);
-
         // Access methods for state variables
-        double &rho(const int &x, const int &y, const int &z);
-        double &u(const int &x, const int &y, const int &z);
-        double &v(const int &x, const int &y, const int &z);
-        double &w(const int &x, const int &y, const int &z);
-        double &p(const int &x, const int &y, const int &z);
-        double &a(const int &x, const int &y, const int &z);
+        double &rho(int x, int y, int z);
+        double &u(int x, int y, int z);
+        double &v(int x, int y, int z);
+        double &w(int x, int y, int z);
+        double &p(int x, int y, int z);
+        double &a(int x, int y, int z);
 
         // Access methods for faces
-        Flux &xfAt(const int &x, const int &y, const int &z);
-        Flux &yfAt(const int &x, const int &y, const int &z);
-        Flux &zfAt(const int &x, const int &y, const int &z);
+        Flux &xfAt(int x, int y, int z);
+        Flux &yfAt(int x, int y, int z);
+        Flux &zfAt(int x, int y, int z);
 
-        StateRef at(const int &x, const int &y, const int &z);
+        StateRef at(int x, int y, int z);
 
     private:
         std::vector<Flux> xFaces, yFaces, zFaces;
 
+        inline int getGlobalIndex(int x, int y, int z);
         void setGhostCellMasks();
     };
 

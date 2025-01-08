@@ -4,6 +4,8 @@ project(fluids VERSION 0.1.0 LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+set(CMAKE_BUILD_TYPE RelWithDebInfo)
+
 set(SRC_DIR "${CMAKE_SOURCE_DIR}/src")
 set(INCLUDE_DIR "${CMAKE_SOURCE_DIR}/include")
 
@@ -50,6 +52,14 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(googletest)
 
+# Include google benchmark
+FetchContent_Declare(
+    benchmark
+    GIT_REPOSITORY https://github.com/google/benchmark.git
+    GIT_TAG v1.9.1
+)
+FetchContent_MakeAvailable(benchmark)
+
 # Link executable to library (dependencies will propagate)
 target_link_libraries(fluids PRIVATE fluids_lib)
 
@@ -66,6 +76,10 @@ endif()
 if(EXISTS "${PROJECT_SOURCE_DIR}/tests/CMakeLists.txt")
     enable_testing()
     add_subdirectory(tests)
+endif()
+
+if(EXISTS "${PROJECT_SOURCE_DIR}/benchmarks/CMakeLists.txt")
+    add_subdirectory(benchmarks)
 endif()
 
 # Print status information

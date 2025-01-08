@@ -31,37 +31,37 @@ namespace fluid
         setGhostCellMasks();
     }
 
-    int Domain::getGlobalIndex(const int &x, const int &y, const int &z)
+    inline int Domain::getGlobalIndex(int x, int y, int z)
     {
         return z + nz * (y + ny * x);
     }
 
-    double &Domain::rho(const int &x, const int &y, const int &z)
+    double &Domain::rho(int x, int y, int z)
     {
         return rho_[getGlobalIndex(x, y, z)];
     }
 
-    double &Domain::u(const int &x, const int &y, const int &z)
+    double &Domain::u(int x, int y, int z)
     {
         return u_[getGlobalIndex(x, y, z)];
     }
 
-    double &Domain::v(const int &x, const int &y, const int &z)
+    double &Domain::v(int x, int y, int z)
     {
         return v_[getGlobalIndex(x, y, z)];
     }
 
-    double &Domain::w(const int &x, const int &y, const int &z)
+    double &Domain::w(int x, int y, int z)
     {
         return w_[getGlobalIndex(x, y, z)];
     }
 
-    double &Domain::p(const int &x, const int &y, const int &z)
+    double &Domain::p(int x, int y, int z)
     {
         return p_[getGlobalIndex(x, y, z)];
     }
 
-    double &Domain::a(const int &x, const int &y, const int &z)
+    double &Domain::a(int x, int y, int z)
     {
         /*if (rho(x, y, z) == 0.0)
         {
@@ -74,22 +74,22 @@ namespace fluid
         return a_[getGlobalIndex(x, y, z)];
     }
 
-    Flux &Domain::xfAt(const int &x, const int &y, const int &z)
+    Flux &Domain::xfAt(int x, int y, int z)
     {
         return xFaces[x + nxFaces * (y + ny * z)];
     }
 
-    Flux &Domain::yfAt(const int &x, const int &y, const int &z)
+    Flux &Domain::yfAt(int x, int y, int z)
     {
         return yFaces[x + nx * (y + nyFaces * z)];
     }
 
-    Flux &Domain::zfAt(const int &x, const int &y, const int &z)
+    Flux &Domain::zfAt(int x, int y, int z)
     {
         return zFaces[x + nx * (y + ny * z)];
     }
 
-    StateRef Domain::at(const int &x, const int &y, const int &z)
+    StateRef Domain::at(int x, int y, int z)
     {
         return StateRef{rho(x, y, z), u(x, y, z), v(x, y, z), w(x, y, z), p(x, y, z), a(x, y, z)};
     }
