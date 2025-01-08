@@ -106,7 +106,7 @@ int main()
         DomainEulerSolver solver(0.7); // CFL number of 0.7
 
         // Setup time stepping
-        std::vector<double> time{0.0};
+        std::vector<double> time = {0.0};
         const double timeEnd = 0.01;
         int iteration = 0;
 

@@ -9,6 +9,8 @@
 namespace fluid
 {
 
+    class DomainEulerSolverBenchmark;
+
     class DomainEulerSolver
     {
     public:
@@ -18,6 +20,7 @@ namespace fluid
         double getMinTimeStep() const { return minT; }
 
     private:
+        friend class DomainEulerSolverBenchmark;
         RiemannSolver rs;
         double clf;
         double minT;

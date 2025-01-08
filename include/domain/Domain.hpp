@@ -25,6 +25,8 @@ namespace fluid
         std::vector<double> a_;
         std::vector<uint8_t> ghostCellMask;
 
+        int getGlobalIndex(int x, int y, int z);
+
         void setup(const int i, const double x, const double y, const double z,
                    const double density, const State &initial);
 
@@ -46,7 +48,6 @@ namespace fluid
     private:
         std::vector<Flux> xFaces, yFaces, zFaces;
 
-        inline int getGlobalIndex(int x, int y, int z);
         void setGhostCellMasks();
     };
 

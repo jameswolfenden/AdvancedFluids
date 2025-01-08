@@ -133,12 +133,15 @@ namespace fluid
                     if (errorFlag.load())
                         continue;
 
-                    StateView left(domain.rho(i, j, k), domain.u(i, j, k),
-                                   domain.v(i, j, k), domain.w(i, j, k),
-                                   domain.p(i, j, k), domain.a(i, j, k));
-                    StateView right(domain.rho(i + 1, j, k), domain.u(i + 1, j, k),
-                                    domain.v(i + 1, j, k), domain.w(i + 1, j, k),
-                                    domain.p(i + 1, j, k), domain.a(i + 1, j, k));
+                    int index = k + domain.nz * (j + domain.ny * i);
+
+                    StateView left(domain.rho_[index], domain.u_[index], domain.v_[index],
+                                   domain.w_[index], domain.p_[index], domain.a_[index]);
+
+                    index += domain.nz * domain.ny;
+
+                    StateView right(domain.rho_[index], domain.u_[index], domain.v_[index],
+                                    domain.w_[index], domain.p_[index], domain.a_[index]);
 
                     if (!rs.findStar(left, right, domain.xfAt(i, j, k)))
                     {
@@ -165,12 +168,15 @@ namespace fluid
                     if (errorFlag.load())
                         continue;
 
-                    StateView left(domain.rho(i, j, k), domain.v(i, j, k),
-                                   domain.u(i, j, k), domain.w(i, j, k),
-                                   domain.p(i, j, k), domain.a(i, j, k));
-                    StateView right(domain.rho(i, j + 1, k), domain.v(i, j + 1, k),
-                                    domain.u(i, j + 1, k), domain.w(i, j + 1, k),
-                                    domain.p(i, j + 1, k), domain.a(i, j + 1, k));
+                    int index = k + domain.nz * (j + domain.ny * i);
+
+                    StateView left(domain.rho_[index], domain.v_[index], domain.u_[index],
+                                   domain.w_[index], domain.p_[index], domain.a_[index]);
+
+                    index += domain.nz;
+
+                    StateView right(domain.rho_[index], domain.v_[index], domain.u_[index],
+                                    domain.w_[index], domain.p_[index], domain.a_[index]);
 
                     if (!rs.findStar(left, right, domain.yfAt(i, j, k)))
                     {
@@ -197,12 +203,15 @@ namespace fluid
                     if (errorFlag.load())
                         continue;
 
-                    StateView left(domain.rho(i, j, k), domain.w(i, j, k),
-                                   domain.v(i, j, k), domain.u(i, j, k),
-                                   domain.p(i, j, k), domain.a(i, j, k));
-                    StateView right(domain.rho(i, j, k + 1), domain.w(i, j, k + 1),
-                                    domain.v(i, j, k + 1), domain.u(i, j, k + 1),
-                                    domain.p(i, j, k + 1), domain.a(i, j, k + 1));
+                    int index = k + domain.nz * (j + domain.ny * i);
+
+                    StateView left(domain.rho_[index], domain.w_[index], domain.v_[index],
+                                   domain.u_[index], domain.p_[index], domain.a_[index]);
+
+                    index++;
+
+                    StateView right(domain.rho_[index], domain.w_[index], domain.v_[index],
+                                    domain.u_[index], domain.p_[index], domain.a_[index]);
 
                     if (!rs.findStar(left, right, domain.zfAt(i, j, k)))
                     {

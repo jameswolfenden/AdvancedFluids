@@ -4,7 +4,9 @@ project(fluids VERSION 0.1.0 LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(CMAKE_BUILD_TYPE RelWithDebInfo)
+#set(CMAKE_BUILD_TYPE RelWithDebInfo)
+
+option(ENABLE_CLANG_TIDY "Enable clang-tidy checks during build" OFF)
 
 set(SRC_DIR "${CMAKE_SOURCE_DIR}/src")
 set(INCLUDE_DIR "${CMAKE_SOURCE_DIR}/include")
@@ -23,6 +25,20 @@ message(STATUS "Found source files:")
 foreach(SOURCE ${SOURCES})
     message(STATUS "  ${SOURCE}")
 endforeach()
+
+if(ENABLE_CLANG_TIDY)
+    find_program(CLANG_TIDY_EXE NAMES clang-tidy)
+    if(CLANG_TIDY_EXE)
+        message(STATUS "Found clang-tidy: ${CLANG_TIDY_EXE}")
+        set(CMAKE_CXX_CLANG_TIDY 
+            ${CLANG_TIDY_EXE};
+            -header-filter=^${CMAKE_SOURCE_DIR}/.*;
+            -config-file=${CMAKE_SOURCE_DIR}/.clang-tidy
+        )
+    else()
+        message(FATAL_ERROR "clang-tidy requested but not found")
+    endif()
+endif()
 
 # Create library from sources
 add_library(fluids_lib STATIC ${SOURCES})
@@ -51,14 +67,6 @@ FetchContent_Declare(
     GIT_TAG v1.15.2
 )
 FetchContent_MakeAvailable(googletest)
-
-# Include google benchmark
-FetchContent_Declare(
-    benchmark
-    GIT_REPOSITORY https://github.com/google/benchmark.git
-    GIT_TAG v1.9.1
-)
-FetchContent_MakeAvailable(benchmark)
 
 # Link executable to library (dependencies will propagate)
 target_link_libraries(fluids PRIVATE fluids_lib)

@@ -31,7 +31,7 @@ namespace fluid
         setGhostCellMasks();
     }
 
-    inline int Domain::getGlobalIndex(int x, int y, int z)
+    int Domain::getGlobalIndex(int x, int y, int z)
     {
         return z + nz * (y + ny * x);
     }
