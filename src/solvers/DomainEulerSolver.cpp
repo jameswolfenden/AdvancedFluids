@@ -337,6 +337,7 @@ namespace fluid
         if (domain.sides[0])
         {
             // Transmissive boundary condition
+#pragma omp parallel for collapse(2)
             for (int j = 1; j < domain.ny - 1; j++)
             {
                 for (int k = 1; k < domain.nz - 1; k++)
@@ -348,6 +349,7 @@ namespace fluid
         else
         {
             // Reflective boundary condition
+#pragma omp parallel for collapse(2)
             for (int j = 1; j < domain.ny - 1; j++)
             {
                 for (int k = 1; k < domain.nz - 1; k++)
@@ -362,6 +364,7 @@ namespace fluid
         if (domain.sides[1])
         {
             // Transmissive boundary condition
+#pragma omp parallel for collapse(2)
             for (int j = 1; j < domain.ny - 1; j++)
             {
                 for (int k = 1; k < domain.nz - 1; k++)
@@ -373,6 +376,7 @@ namespace fluid
         else
         {
             // Reflective boundary condition
+#pragma omp parallel for collapse(2)
             for (int j = 1; j < domain.ny - 1; j++)
             {
                 for (int k = 1; k < domain.nz - 1; k++)
@@ -391,6 +395,7 @@ namespace fluid
         if (domain.sides[2])
         {
             // Transmissive boundary condition
+#pragma omp parallel for collapse(2)
             for (int i = 1; i < domain.nx - 1; i++)
             {
                 for (int k = 1; k < domain.nz - 1; k++)
@@ -402,6 +407,7 @@ namespace fluid
         else
         {
             // Reflective boundary condition
+#pragma omp parallel for collapse(2)
             for (int i = 1; i < domain.nx - 1; i++)
             {
                 for (int k = 1; k < domain.nz - 1; k++)
@@ -416,6 +422,7 @@ namespace fluid
         if (domain.sides[3])
         {
             // Transmissive boundary condition
+#pragma omp parallel for collapse(2)
             for (int i = 1; i < domain.nx - 1; i++)
             {
                 for (int k = 1; k < domain.nz - 1; k++)
@@ -427,6 +434,7 @@ namespace fluid
         else
         {
             // Reflective boundary condition
+#pragma omp parallel for collapse(2)
             for (int i = 1; i < domain.nx - 1; i++)
             {
                 for (int k = 1; k < domain.nz - 1; k++)
@@ -445,6 +453,7 @@ namespace fluid
         if (domain.sides[4])
         {
             // Transmissive boundary condition
+#pragma omp parallel for collapse(2)
             for (int i = 1; i < domain.nx - 1; i++)
             {
                 for (int j = 1; j < domain.ny - 1; j++)
@@ -456,6 +465,7 @@ namespace fluid
         else
         {
             // Reflective boundary condition
+#pragma omp parallel for collapse(2)
             for (int i = 1; i < domain.nx - 1; i++)
             {
                 for (int j = 1; j < domain.ny - 1; j++)
@@ -470,6 +480,7 @@ namespace fluid
         if (domain.sides[5])
         {
             // Transmissive boundary condition
+#pragma omp parallel for collapse(2)
             for (int i = 1; i < domain.nx - 1; i++)
             {
                 for (int j = 1; j < domain.ny - 1; j++)
@@ -481,6 +492,7 @@ namespace fluid
         else
         {
             // Reflective boundary condition
+#pragma omp parallel for collapse(2)
             for (int i = 1; i < domain.nx - 1; i++)
             {
                 for (int j = 1; j < domain.ny - 1; j++)

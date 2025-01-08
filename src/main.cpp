@@ -18,7 +18,7 @@ void setupDomains(std::vector<Domain> &domains)
     State ambient(1.268, 0.0, 0.0, 0.0, 101325);
 
     // Domain dimensions
-    double cellDensity = 10;
+    double cellDensity = 20;
     double pipex = 0.5;
     double pipey = 1.0;
     double pipez = 0.5;
@@ -103,7 +103,7 @@ int main()
 
         // Setup time stepping
         std::vector<double> time{0.0};
-        const double timeEnd = 0.05;
+        const double timeEnd = 0.01;
         int iteration = 0;
 
         // Setup output
