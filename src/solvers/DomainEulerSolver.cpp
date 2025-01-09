@@ -64,9 +64,7 @@ namespace fluid
             {
                 for (int k = 1; k < domain.nz - 1; k++)
                 {
-                    double local_min_t;
-
-                    local_min_t = clf * domain.boxDims /
+                    double local_min_t = clf * domain.boxDims /
                                   (domain.u(i, j, k) + domain.a(i, j, k));
                     minT = std::min(minT, local_min_t);
 

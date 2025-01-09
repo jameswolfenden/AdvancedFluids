@@ -11,7 +11,7 @@ namespace fluid
     class RiemannSolver
     {
     public:
-        RiemannSolver(std::pair<double, int> vals = {1E-6, 10000}) : TOL(vals.first), MAX_ITER(vals.second) {}
+        explicit RiemannSolver(std::pair<double, int> vals = {1E-6, 10000}) : TOL(vals.first), MAX_ITER(vals.second) {}
 
         bool findStar(const StateView &left, const StateView &right, Flux &fl);
 
@@ -27,7 +27,7 @@ namespace fluid
         static constexpr double G7 = (G - 1) / 2;
         static constexpr double G8 = G - 1;
 
-        double lastP;
+        double lastP = -1.0;
         double TOL;
         int MAX_ITER;
 

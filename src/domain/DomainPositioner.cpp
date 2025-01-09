@@ -19,7 +19,7 @@ namespace fluid
         findOffsets(domain0);
 
         // Print final positions for debugging
-        for (auto &domain : passed)
+        for (const auto &domain : passed)
         {
             Logger::debug("Domain " + std::to_string(domain->id) + " has origin (" +
                           std::to_string(domain->xOrigin) + ", " +

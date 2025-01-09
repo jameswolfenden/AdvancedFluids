@@ -13,3 +13,10 @@ target_link_libraries(euler_benchmark
     benchmark::benchmark 
     fluids_lib    # Your main library target
 )
+
+add_executable(flux_benchmark flux_benchmark.cpp)
+target_link_libraries(flux_benchmark 
+    PRIVATE 
+    benchmark::benchmark 
+    fluids_lib    # Your main library target
+)

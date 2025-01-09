@@ -114,8 +114,8 @@ namespace fluid
             return true; // a vacuum is generated, values found without iteration required
         }
 
-        double tempP;
-        double tempU;
+        double tempP = -1.0;
+        double tempU = 0.0;
         if (!iterateP(left, right, tempP, tempU))
         {
             Logger::error("Iteration failed");

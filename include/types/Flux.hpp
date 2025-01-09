@@ -7,7 +7,7 @@
 namespace fluid
 {
 
-    struct Flux
+    struct alignas(64) Flux
     {
         double f1, f2, f3, f4, f5;
 

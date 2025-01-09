@@ -75,9 +75,17 @@ target_link_libraries(fluids PRIVATE fluids_lib)
 if(MSVC)
     target_compile_options(fluids_lib PRIVATE /W4)
     target_compile_options(fluids PRIVATE /W4)
+    target_compile_options(fluids_lib PRIVATE /O2 /fp:fast /arch:AVX2)
 else()
     target_compile_options(fluids_lib PRIVATE -Wall -Wextra)
     target_compile_options(fluids PRIVATE -Wall -Wextra)
+    target_compile_options(fluids_lib PRIVATE 
+    -O3                  # Aggressive optimization
+    -march=native        # Optimize for current CPU
+    -ftree-vectorize     # Enable vectorization (usually on with -O3)
+    -ffast-math          # Allow math optimizations
+    -fopt-info-vec      # Report vectorization info (GCC)
+    )
 endif()
 
 # Optional: Add tests if they exist
