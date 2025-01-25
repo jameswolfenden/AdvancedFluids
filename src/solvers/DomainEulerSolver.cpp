@@ -83,45 +83,51 @@ namespace fluid
 
     bool DomainEulerSolver::updateX(std::vector<Domain> &domains)
     {
+        std::atomic<bool> errorFlag(false);
+        #pragma omp parallel for
         for (auto &domain : domains)
         {
             if (!xFaces(domain))
-                return false;
+                errorFlag.store(true);
             if (!xBoxes(domain))
-                return false;
+                errorFlag.store(true);
         }
-        return true;
+        return !errorFlag.load();
     }
 
     bool DomainEulerSolver::updateY(std::vector<Domain> &domains)
     {
+        std::atomic<bool> errorFlag(false);
+        #pragma omp parallel for
         for (auto &domain : domains)
         {
             if (!yFaces(domain))
-                return false;
+                errorFlag.store(true);
             if (!yBoxes(domain))
-                return false;
+                errorFlag.store(true);
         }
-        return true;
+        return !errorFlag.load();
     }
 
     bool DomainEulerSolver::updateZ(std::vector<Domain> &domains)
     {
+        std::atomic<bool> errorFlag(false);
+        #pragma omp parallel for
         for (auto &domain : domains)
         {
             if (!zFaces(domain))
-                return false;
+                errorFlag.store(true);
             if (!zBoxes(domain))
-                return false;
+                errorFlag.store(true);
         }
-        return true;
+        return !errorFlag.load();
     }
 
     bool DomainEulerSolver::xFaces(Domain &domain)
     {
         std::atomic<bool> errorFlag(false);
 
-#pragma omp parallel for collapse(3)
+//#pragma omp parallel for collapse(3)
         for (int i = 0; i < domain.nxFaces; i++)
         {
             for (int j = 0; j < domain.ny; j++)
@@ -156,7 +162,7 @@ namespace fluid
     {
         std::atomic<bool> errorFlag(false);
 
-#pragma omp parallel for collapse(3)
+//#pragma omp parallel for collapse(3)
         for (int i = 0; i < domain.nx; i++)
         {
             for (int j = 0; j < domain.nyFaces; j++)
@@ -191,7 +197,7 @@ namespace fluid
     {
         std::atomic<bool> errorFlag(false);
 
-#pragma omp parallel for collapse(3)
+//#pragma omp parallel for collapse(3)
         for (int i = 0; i < domain.nx; i++)
         {
             for (int j = 0; j < domain.ny; j++)
@@ -226,7 +232,7 @@ namespace fluid
     {
         std::atomic<bool> errorFlag(false);
 
-#pragma omp parallel for collapse(3)
+//#pragma omp parallel for collapse(3)
         for (int i = 1; i < domain.nx - 1; i++)
         {
             for (int j = 1; j < domain.ny - 1; j++)
@@ -260,7 +266,7 @@ namespace fluid
     {
         std::atomic<bool> errorFlag(false);
 
-#pragma omp parallel for collapse(3)
+//#pragma omp parallel for collapse(3)
         for (int i = 1; i < domain.nx - 1; i++)
         {
             for (int j = 1; j < domain.ny - 1; j++)
@@ -294,7 +300,7 @@ namespace fluid
     {
         std::atomic<bool> errorFlag(false);
 
-#pragma omp parallel for collapse(3)
+//#pragma omp parallel for collapse(3)
         for (int i = 1; i < domain.nx - 1; i++)
         {
             for (int j = 1; j < domain.ny - 1; j++)
@@ -344,7 +350,7 @@ namespace fluid
         if (domain.sides[0])
         {
             // Transmissive boundary condition
-#pragma omp parallel for collapse(2)
+//#pragma omp parallel for collapse(2)
             for (int j = 1; j < domain.ny - 1; j++)
             {
                 for (int k = 1; k < domain.nz - 1; k++)
@@ -356,7 +362,7 @@ namespace fluid
         else
         {
             // Reflective boundary condition
-#pragma omp parallel for collapse(2)
+//#pragma omp parallel for collapse(2)
             for (int j = 1; j < domain.ny - 1; j++)
             {
                 for (int k = 1; k < domain.nz - 1; k++)
@@ -371,7 +377,7 @@ namespace fluid
         if (domain.sides[1])
         {
             // Transmissive boundary condition
-#pragma omp parallel for collapse(2)
+//#pragma omp parallel for collapse(2)
             for (int j = 1; j < domain.ny - 1; j++)
             {
                 for (int k = 1; k < domain.nz - 1; k++)
@@ -383,7 +389,7 @@ namespace fluid
         else
         {
             // Reflective boundary condition
-#pragma omp parallel for collapse(2)
+//#pragma omp parallel for collapse(2)
             for (int j = 1; j < domain.ny - 1; j++)
             {
                 for (int k = 1; k < domain.nz - 1; k++)
@@ -402,7 +408,7 @@ namespace fluid
         if (domain.sides[2])
         {
             // Transmissive boundary condition
-#pragma omp parallel for collapse(2)
+//#pragma omp parallel for collapse(2)
             for (int i = 1; i < domain.nx - 1; i++)
             {
                 for (int k = 1; k < domain.nz - 1; k++)
@@ -414,7 +420,7 @@ namespace fluid
         else
         {
             // Reflective boundary condition
-#pragma omp parallel for collapse(2)
+//#pragma omp parallel for collapse(2)
             for (int i = 1; i < domain.nx - 1; i++)
             {
                 for (int k = 1; k < domain.nz - 1; k++)
@@ -429,7 +435,7 @@ namespace fluid
         if (domain.sides[3])
         {
             // Transmissive boundary condition
-#pragma omp parallel for collapse(2)
+//#pragma omp parallel for collapse(2)
             for (int i = 1; i < domain.nx - 1; i++)
             {
                 for (int k = 1; k < domain.nz - 1; k++)
@@ -441,7 +447,7 @@ namespace fluid
         else
         {
             // Reflective boundary condition
-#pragma omp parallel for collapse(2)
+//#pragma omp parallel for collapse(2)
             for (int i = 1; i < domain.nx - 1; i++)
             {
                 for (int k = 1; k < domain.nz - 1; k++)
@@ -460,7 +466,7 @@ namespace fluid
         if (domain.sides[4])
         {
             // Transmissive boundary condition
-#pragma omp parallel for collapse(2)
+//#pragma omp parallel for collapse(2)
             for (int i = 1; i < domain.nx - 1; i++)
             {
                 for (int j = 1; j < domain.ny - 1; j++)
@@ -472,7 +478,7 @@ namespace fluid
         else
         {
             // Reflective boundary condition
-#pragma omp parallel for collapse(2)
+//#pragma omp parallel for collapse(2)
             for (int i = 1; i < domain.nx - 1; i++)
             {
                 for (int j = 1; j < domain.ny - 1; j++)
@@ -487,7 +493,7 @@ namespace fluid
         if (domain.sides[5])
         {
             // Transmissive boundary condition
-#pragma omp parallel for collapse(2)
+//#pragma omp parallel for collapse(2)
             for (int i = 1; i < domain.nx - 1; i++)
             {
                 for (int j = 1; j < domain.ny - 1; j++)
@@ -499,7 +505,7 @@ namespace fluid
         else
         {
             // Reflective boundary condition
-#pragma omp parallel for collapse(2)
+//#pragma omp parallel for collapse(2)
             for (int i = 1; i < domain.nx - 1; i++)
             {
                 for (int j = 1; j < domain.ny - 1; j++)
