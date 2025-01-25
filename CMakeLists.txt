@@ -4,7 +4,7 @@ project(fluids VERSION 0.1.0 LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-#set(CMAKE_BUILD_TYPE RelWithDebInfo)
+set(CMAKE_BUILD_TYPE RelWithDebInfo)
 
 option(ENABLE_CLANG_TIDY "Enable clang-tidy checks during build" OFF)
 
@@ -101,3 +101,4 @@ endif()
 # Print status information
 message(STATUS "HDF5 libs: ${HDF5_LIBRARIES}")
 message(STATUS "HDF5 includes: ${HDF5_INCLUDE_DIRS}")
+message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")

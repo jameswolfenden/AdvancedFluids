@@ -20,3 +20,10 @@ target_link_libraries(flux_benchmark
     benchmark::benchmark 
     fluids_lib    # Your main library target
 )
+
+add_executable(euler_benchmark_parallel parallelDomainEulerSolver_benchmark.cpp)
+target_link_libraries(euler_benchmark_parallel 
+    PRIVATE 
+    benchmark::benchmark 
+    fluids_lib    # Your main library target
+)
