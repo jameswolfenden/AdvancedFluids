@@ -6,7 +6,7 @@
 
 namespace fluid
 {
-
+    // Enum class to represent the log level
     enum class LogLevel
     {
         DEBUG,
@@ -24,7 +24,7 @@ namespace fluid
 
     private:
         static void log(LogLevel level, const std::string &msg);
-        static std::mutex mutex_;
+        static std::mutex mutex_; // Ensure thread safety
         static LogLevel current_level_;
     };
 

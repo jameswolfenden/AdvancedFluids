@@ -5,7 +5,7 @@ namespace fluid
 {
 
     std::mutex Logger::mutex_;
-    LogLevel Logger::current_level_ = LogLevel::INFO;
+    LogLevel Logger::current_level_ = LogLevel::INFO; // Uses the enum value of INFO
 
     void Logger::setLevel(LogLevel level)
     {
@@ -32,10 +32,10 @@ namespace fluid
     {
         if (level < current_level_)
         {
-            return;
+            return; // Don't output messages e.g. if the level is set to ERROR and the message is INFO
         }
 
-        std::lock_guard<std::mutex> lock(mutex_);
+        std::lock_guard<std::mutex> lock(mutex_); // Lock the mutex to prevent multiple threads from writing to the console at the same time
 
         switch (level)
         {
