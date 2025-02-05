@@ -39,6 +39,7 @@ namespace fluid
         Logger::info("Writing domain " + std::to_string(domain.id) + " with " +
                      std::to_string(node_coords.size()) + " nodes.");
 
+        // Add the 1D array of coordinates to the HDF5 file
         hsize_t dims[1] = {node_coords.size()};
         H5::DataSpace dataspace(1, dims);
 
@@ -75,14 +76,15 @@ namespace fluid
 
     void HDF5Writer::writeDomain(Domain &domain, H5::Group &domainGroup)
     {
+        // Create a 3D dataspace for the domain although the data is stored in 1D arrays
         hsize_t dims[3] = {
             static_cast<hsize_t>(domain.nx),
             static_cast<hsize_t>(domain.ny),
             static_cast<hsize_t>(domain.nz)};
         H5::DataSpace dataspace(3, dims);
 
-        // Write each field
-        auto writeField = [&](const char *name, const std::vector<double> &data)
+        // Lambda function to write a field to the HDF5 file with the given name
+        auto writeField = [&](const std::string name, const std::vector<double> &data)
         {
             H5::DataSet dataset = domainGroup.createDataSet(name,
                                                             H5::PredType::NATIVE_DOUBLE,
@@ -96,7 +98,8 @@ namespace fluid
         writeField("w", domain.w_);
         writeField("p", domain.p_);
 
-        // Write ghost cell mask with different type
+        // Write ghost cell mask as UINT8. Bool is not supported by HDF5.
+        // Saved every timestep for ease of use with visualisation tools
         H5::DataSet ghostDataset = domainGroup.createDataSet("ghostCellMask",
                                                              H5::PredType::NATIVE_UINT8,
                                                              dataspace);
