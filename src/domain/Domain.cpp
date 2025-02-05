@@ -63,14 +63,6 @@ namespace fluid
 
     double &Domain::a(int x, int y, int z)
     {
-        /*if (rho(x, y, z) == 0.0)
-        {
-            return a_[getGlobalIndex(x, y, z)] = 0.0;
-        }
-        else
-        {
-            return a_[getGlobalIndex(x, y, z)] = sqrt(G * p(x, y, z) / rho(x, y, z));
-        }*/
         return a_[getGlobalIndex(x, y, z)];
     }
 
@@ -89,11 +81,13 @@ namespace fluid
         return zFaces[x + nx * (y + ny * z)];
     }
 
+    // Creates a StateRef object that references the state at the given indices, used for setting reflective boundary conditions
     StateRef Domain::at(int x, int y, int z)
     {
         return StateRef{rho(x, y, z), u(x, y, z), v(x, y, z), w(x, y, z), p(x, y, z), a(x, y, z)};
     }
 
+    // Sets the ghost cell masks for the domain - used to exclude ghost cells in visualisations
     void Domain::setGhostCellMasks()
     {
         ghostCellMask.resize(nx * ny * nz, 0);

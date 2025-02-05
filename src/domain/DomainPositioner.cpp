@@ -7,7 +7,7 @@ namespace fluid
 
     DomainPositioner::DomainPositioner(Domain *root_domain) : domain0(root_domain)
     {
-        // Initialize the root domain's position
+        // Initialise the root domain's position
         domain0->xOrigin = -0.5 * domain0->boxDims * domain0->nx;
         domain0->yOrigin = -0.5 * domain0->boxDims * domain0->ny;
         domain0->zOrigin = -0.5 * domain0->boxDims * domain0->nz;
@@ -30,55 +30,56 @@ namespace fluid
 
     void DomainPositioner::findOffsets(Domain *domain)
     {
+        // Loop through all sides 6 sides of the (3D) domain
         for (int side_index = 0; side_index < 6; side_index++)
         {
-            Domain *neighbor = domain->sides[side_index];
+            Domain *neighbour = domain->sides[side_index];
 
-            if (neighbor && !passed.contains(neighbor))
+            if (neighbour && !passed.contains(neighbour))
             {
-                Logger::debug("Domain " + std::to_string(neighbor->id) +
+                Logger::debug("Domain " + std::to_string(neighbour->id) +
                               " being found from " + std::to_string(domain->id) +
                               " with side " + std::to_string(side_index));
 
                 // Mark as processed
-                passed.insert(neighbor);
+                passed.insert(neighbour);
 
                 // Set initial position same as parent
-                neighbor->xOrigin = domain->xOrigin;
-                neighbor->yOrigin = domain->yOrigin;
-                neighbor->zOrigin = domain->zOrigin;
+                neighbour->xOrigin = domain->xOrigin;
+                neighbour->yOrigin = domain->yOrigin;
+                neighbour->zOrigin = domain->zOrigin;
 
                 // Adjust position based on which side it connects to
                 switch (side_index)
                 {
                 case 0: // +x side
-                    neighbor->xOrigin += domain->boxDims * (domain->nx - 1);
-                    neighbor->xOrigin -= neighbor->boxDims;
+                    neighbour->xOrigin += domain->boxDims * (domain->nx - 1);
+                    neighbour->xOrigin -= neighbour->boxDims;
                     break;
                 case 1: // -x side
-                    neighbor->xOrigin -= neighbor->boxDims * (neighbor->nx - 1);
-                    neighbor->xOrigin += domain->boxDims;
+                    neighbour->xOrigin -= neighbour->boxDims * (neighbour->nx - 1);
+                    neighbour->xOrigin += domain->boxDims;
                     break;
                 case 2: // +y side
-                    neighbor->yOrigin += domain->boxDims * (domain->ny - 1);
-                    neighbor->yOrigin -= neighbor->boxDims;
+                    neighbour->yOrigin += domain->boxDims * (domain->ny - 1);
+                    neighbour->yOrigin -= neighbour->boxDims;
                     break;
                 case 3: // -y side
-                    neighbor->yOrigin -= neighbor->boxDims * (neighbor->ny - 1);
-                    neighbor->yOrigin += domain->boxDims;
+                    neighbour->yOrigin -= neighbour->boxDims * (neighbour->ny - 1);
+                    neighbour->yOrigin += domain->boxDims;
                     break;
                 case 4: // +z side
-                    neighbor->zOrigin += domain->boxDims * (domain->nz - 1);
-                    neighbor->zOrigin -= neighbor->boxDims;
+                    neighbour->zOrigin += domain->boxDims * (domain->nz - 1);
+                    neighbour->zOrigin -= neighbour->boxDims;
                     break;
                 case 5: // -z side
-                    neighbor->zOrigin -= neighbor->boxDims * (neighbor->nz - 1);
-                    neighbor->zOrigin += domain->boxDims;
+                    neighbour->zOrigin -= neighbour->boxDims * (neighbour->nz - 1);
+                    neighbour->zOrigin += domain->boxDims;
                     break;
                 }
 
                 // Recursively position connected domains
-                findOffsets(neighbor);
+                findOffsets(neighbour);
             }
         }
     }
