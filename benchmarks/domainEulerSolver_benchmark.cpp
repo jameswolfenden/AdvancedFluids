@@ -1,7 +1,6 @@
 #include <benchmark/benchmark.h>
 #include <omp.h>
 #include "solvers/DomainEulerSolver.hpp"
-#include "domain/DomainPositioner.hpp"
 #include "types/State.hpp"
 
 namespace fluid
@@ -47,11 +46,11 @@ namespace fluid
     private:
         static void setupBenchmarkDomains(std::vector<Domain> &domains)
         {
-            // Create simple test case with 4 domains in a 2x2 configuration
+            // Create simple test case with 4 domains
             domains.resize(4);
 
-            // Initial conditions
-            State initial(1.0, 0.0, 0.0, 0.0, 101325.0); // Standard atmospheric pressure
+            // Initial conditions, atmospheric conditions
+            State initial(1.0, 0.0, 0.0, 0.0, 101325.0);
 
             // Setup domains with 50x50x50 cells each
             double cellDensity = 50;
@@ -78,9 +77,6 @@ namespace fluid
             // Domain 3 connects to 1 above and 2 on left
             domains[3].sides[3] = &domains[1]; // -y side
             domains[3].sides[1] = &domains[2]; // -x side
-
-            // Position domains
-            DomainPositioner positioner(&domains[0]);
         }
         DomainEulerSolver solver;
     };

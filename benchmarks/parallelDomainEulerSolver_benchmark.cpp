@@ -414,11 +414,11 @@ namespace fluid
                 domains[i].setup(i, 1.0, 1.0, 1.0, cellsPerDim, initial);
             }
 
-            // Connect domains in a line for simplicity
+            // Connect domains in the x-direction
             for (int i = 0; i < numDomains - 1; i++)
             {
-                domains[i].sides[0] = &domains[i + 1]; // Connect to next
-                domains[i + 1].sides[1] = &domains[i]; // Connect to previous
+                domains[i].sides[0] = &domains[i + 1];
+                domains[i + 1].sides[1] = &domains[i];
             }
 
         }

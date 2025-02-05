@@ -1,8 +1,7 @@
-// benchmarks/flux_benchmark.cpp
 #include <benchmark/benchmark.h>
 #include "types/Flux.hpp"
 
-// Original 8-byte aligned version
+// Original version
 struct FluxOriginal
 {
     double f1, f2, f3, f4, f5;
