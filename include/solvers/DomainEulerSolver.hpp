@@ -26,8 +26,8 @@ namespace fluid
         double minT;
 
         // Time step calculation
-        bool fetchTimeStep(std::vector<Domain> &domains);
-        bool timeStep(Domain &domain);
+        void fetchTimeStep(std::vector<Domain> &domains);
+        void timeStep(Domain &domain);
 
         // Domain updates
         bool updateX(std::vector<Domain> &domains);
@@ -45,10 +45,10 @@ namespace fluid
         bool zBoxes(Domain &domain);
 
         // Ghost cell handling
-        bool updateGhostCells(std::vector<Domain> &domains);
-        bool xGhosts(Domain &domain);
-        bool yGhosts(Domain &domain);
-        bool zGhosts(Domain &domain);
+        void updateGhostCells(std::vector<Domain> &domains);
+        void xGhosts(Domain &domain);
+        void yGhosts(Domain &domain);
+        void zGhosts(Domain &domain);
     };
 
 } // namespace fluid

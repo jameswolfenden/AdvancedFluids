@@ -1,6 +1,5 @@
 #include "solvers/DomainEulerSolver.hpp"
 #include "types/ConservedState.hpp"
-#include <algorithm>
 
 namespace fluid
 {
@@ -9,55 +8,48 @@ namespace fluid
 
     bool DomainEulerSolver::updateDomains(std::vector<Domain> &domains)
     {
-        if (!updateGhostCells(domains))
-            return false;
-        if (!fetchTimeStep(domains))
-            return false;
+        // Update ghost cells first for safety
+        updateGhostCells(domains);
+        fetchTimeStep(domains);
 
-        // First order splitting scheme
+        // First order splitting scheme (see Toro, 2009)
         if (!updateX(domains))
             return false;
-        if (!updateGhostCells(domains))
-            return false;
+        updateGhostCells(domains);
         if (!updateY(domains))
             return false;
-        if (!updateGhostCells(domains))
-            return false;
+        updateGhostCells(domains);
         if (!updateZ(domains))
             return false;
-        if (!updateGhostCells(domains))
-            return false;
+        updateGhostCells(domains);
 
         // Second order correction
         if (!updateZ(domains))
             return false;
-        if (!updateGhostCells(domains))
-            return false;
+        updateGhostCells(domains);
         if (!updateY(domains))
             return false;
-        if (!updateGhostCells(domains))
-            return false;
+        updateGhostCells(domains);
         if (!updateX(domains))
             return false;
-        if (!updateGhostCells(domains))
-            return false;
+        updateGhostCells(domains);
 
         return true;
     }
 
-    bool DomainEulerSolver::fetchTimeStep(std::vector<Domain> &domains)
+    void DomainEulerSolver::fetchTimeStep(std::vector<Domain> &domains)
     {
         minT = 1e10;
         for (auto &domain : domains)
         {
-            if (!timeStep(domain))
-                return false;
+            timeStep(domain);
         }
-        return true;
     }
 
-    bool DomainEulerSolver::timeStep(Domain &domain)
+    void DomainEulerSolver::timeStep(Domain &domain)
     {
+        // Only runs once per timestep but could be optimised
+        // Checks the CFL condition for each cell and returns the minimum
         for (int i = 1; i < domain.nx - 1; i++)
         {
             for (int j = 1; j < domain.ny - 1; j++)
@@ -78,13 +70,12 @@ namespace fluid
                 }
             }
         }
-        return true;
     }
 
     bool DomainEulerSolver::updateX(std::vector<Domain> &domains)
     {
-        std::atomic<bool> errorFlag(false);
-        #pragma omp parallel for
+        std::atomic<bool> errorFlag(false); // Atomic for thread safety
+        #pragma omp parallel for // Parallelise the loop, see the parallelDomainEulerSolver benchmark for performance comparison
         for (auto &domain : domains)
         {
             if (!xFaces(domain))
@@ -97,8 +88,8 @@ namespace fluid
 
     bool DomainEulerSolver::updateY(std::vector<Domain> &domains)
     {
-        std::atomic<bool> errorFlag(false);
-        #pragma omp parallel for
+        std::atomic<bool> errorFlag(false); // Atomic for thread safety
+        #pragma omp parallel for // Parallelise the loop
         for (auto &domain : domains)
         {
             if (!yFaces(domain))
@@ -111,8 +102,8 @@ namespace fluid
 
     bool DomainEulerSolver::updateZ(std::vector<Domain> &domains)
     {
-        std::atomic<bool> errorFlag(false);
-        #pragma omp parallel for
+        std::atomic<bool> errorFlag(false); // Atomic for thread safety
+        #pragma omp parallel for // Parallelise the loop
         for (auto &domain : domains)
         {
             if (!zFaces(domain))
@@ -126,8 +117,6 @@ namespace fluid
     bool DomainEulerSolver::xFaces(Domain &domain)
     {
         std::atomic<bool> errorFlag(false);
-
-//#pragma omp parallel for collapse(3)
         for (int i = 0; i < domain.nxFaces; i++)
         {
             for (int j = 0; j < domain.ny; j++)
@@ -135,7 +124,7 @@ namespace fluid
                 for (int k = 0; k < domain.nz; k++)
                 {
                     if (errorFlag.load())
-                        continue;
+                        continue; // Keep skipping if an error has been found
 
                     int index = k + domain.nz * (j + domain.ny * i);
 
@@ -147,9 +136,9 @@ namespace fluid
                     StateView right(domain.rho_[index], domain.u_[index], domain.v_[index],
                                     domain.w_[index], domain.p_[index], domain.a_[index]);
 
+                    // Find the state at the x face from the left and right states
                     if (!rs.findStar(left, right, domain.xfAt(i, j, k)))
                     {
-
                         errorFlag.store(true);
                     }
                 }
@@ -161,8 +150,6 @@ namespace fluid
     bool DomainEulerSolver::yFaces(Domain &domain)
     {
         std::atomic<bool> errorFlag(false);
-
-//#pragma omp parallel for collapse(3)
         for (int i = 0; i < domain.nx; i++)
         {
             for (int j = 0; j < domain.nyFaces; j++)
@@ -170,10 +157,11 @@ namespace fluid
                 for (int k = 0; k < domain.nz; k++)
                 {
                     if (errorFlag.load())
-                        continue;
+                        continue; // Keep skipping if an error has been found
 
                     int index = k + domain.nz * (j + domain.ny * i);
 
+                    // Note the order of the arguments is different to xFaces so the velocities are transformed onto the correct axis for 'left' and 'right'
                     StateView left(domain.rho_[index], domain.v_[index], domain.u_[index],
                                    domain.w_[index], domain.p_[index], domain.a_[index]);
 
@@ -182,9 +170,9 @@ namespace fluid
                     StateView right(domain.rho_[index], domain.v_[index], domain.u_[index],
                                     domain.w_[index], domain.p_[index], domain.a_[index]);
 
+                    // Find the state at the y face from the left and right states
                     if (!rs.findStar(left, right, domain.yfAt(i, j, k)))
                     {
-
                         errorFlag.store(true);
                     }
                 }
@@ -196,8 +184,6 @@ namespace fluid
     bool DomainEulerSolver::zFaces(Domain &domain)
     {
         std::atomic<bool> errorFlag(false);
-
-//#pragma omp parallel for collapse(3)
         for (int i = 0; i < domain.nx; i++)
         {
             for (int j = 0; j < domain.ny; j++)
@@ -205,10 +191,11 @@ namespace fluid
                 for (int k = 0; k < domain.nzFaces; k++)
                 {
                     if (errorFlag.load())
-                        continue;
+                        continue; // Keep skipping if an error has been found
 
                     int index = k + domain.nz * (j + domain.ny * i);
 
+                    // Note the order of the arguments is different to xFaces so the velocities are transformed onto the correct axis for 'left' and 'right'
                     StateView left(domain.rho_[index], domain.w_[index], domain.v_[index],
                                    domain.u_[index], domain.p_[index], domain.a_[index]);
 
@@ -217,9 +204,9 @@ namespace fluid
                     StateView right(domain.rho_[index], domain.w_[index], domain.v_[index],
                                     domain.u_[index], domain.p_[index], domain.a_[index]);
 
+                    // Find the state at the z face from the left and right states
                     if (!rs.findStar(left, right, domain.zfAt(i, j, k)))
                     {
-
                         errorFlag.store(true);
                     }
                 }
@@ -231,8 +218,6 @@ namespace fluid
     bool DomainEulerSolver::xBoxes(Domain &domain)
     {
         std::atomic<bool> errorFlag(false);
-
-//#pragma omp parallel for collapse(3)
         for (int i = 1; i < domain.nx - 1; i++)
         {
             for (int j = 1; j < domain.ny - 1; j++)
@@ -242,6 +227,8 @@ namespace fluid
                     if (errorFlag.load())
                         continue;
 
+                    // Conserved State is a helper class to convert between primitive and conserved variables
+                    // Conserved variables are needed for updating based on fluxes generated by the Riemann solver
                     ConservedState state(domain.rho(i, j, k), domain.u(i, j, k),
                                          domain.v(i, j, k), domain.w(i, j, k),
                                          domain.p(i, j, k), domain.a(i, j, k));
@@ -265,8 +252,6 @@ namespace fluid
     bool DomainEulerSolver::yBoxes(Domain &domain)
     {
         std::atomic<bool> errorFlag(false);
-
-//#pragma omp parallel for collapse(3)
         for (int i = 1; i < domain.nx - 1; i++)
         {
             for (int j = 1; j < domain.ny - 1; j++)
@@ -276,6 +261,7 @@ namespace fluid
                     if (errorFlag.load())
                         continue;
 
+                    // Note that again the order of the arguments is different to xBoxes to transform the velocities back to the correct axis
                     ConservedState state(domain.rho(i, j, k), domain.v(i, j, k),
                                          domain.u(i, j, k), domain.w(i, j, k),
                                          domain.p(i, j, k), domain.a(i, j, k));
@@ -299,8 +285,6 @@ namespace fluid
     bool DomainEulerSolver::zBoxes(Domain &domain)
     {
         std::atomic<bool> errorFlag(false);
-
-//#pragma omp parallel for collapse(3)
         for (int i = 1; i < domain.nx - 1; i++)
         {
             for (int j = 1; j < domain.ny - 1; j++)
@@ -310,6 +294,7 @@ namespace fluid
                     if (errorFlag.load())
                         continue;
 
+                    // Note that again the order of the arguments is different to xBoxes to transform the velocities back to the correct axis
                     ConservedState state(domain.rho(i, j, k), domain.w(i, j, k),
                                          domain.v(i, j, k), domain.u(i, j, k),
                                          domain.p(i, j, k), domain.a(i, j, k));
@@ -330,27 +315,23 @@ namespace fluid
         return !errorFlag.load();
     }
 
-    bool DomainEulerSolver::updateGhostCells(std::vector<Domain> &domains)
+    void DomainEulerSolver::updateGhostCells(std::vector<Domain> &domains)
     {
+        #pragma omp parallel for // Do each domain in parallel
         for (auto &domain : domains)
         {
-            if (!xGhosts(domain))
-                return false;
-            if (!yGhosts(domain))
-                return false;
-            if (!zGhosts(domain))
-                return false;
+            xGhosts(domain);
+            yGhosts(domain);
+            zGhosts(domain);
         }
-        return true;
     }
 
-    bool DomainEulerSolver::xGhosts(Domain &domain)
+    void DomainEulerSolver::xGhosts(Domain &domain)
     {
         // Handle +x side (side 0)
         if (domain.sides[0])
         {
             // Transmissive boundary condition
-//#pragma omp parallel for collapse(2)
             for (int j = 1; j < domain.ny - 1; j++)
             {
                 for (int k = 1; k < domain.nz - 1; k++)
@@ -362,7 +343,6 @@ namespace fluid
         else
         {
             // Reflective boundary condition
-//#pragma omp parallel for collapse(2)
             for (int j = 1; j < domain.ny - 1; j++)
             {
                 for (int k = 1; k < domain.nz - 1; k++)
@@ -377,7 +357,6 @@ namespace fluid
         if (domain.sides[1])
         {
             // Transmissive boundary condition
-//#pragma omp parallel for collapse(2)
             for (int j = 1; j < domain.ny - 1; j++)
             {
                 for (int k = 1; k < domain.nz - 1; k++)
@@ -389,7 +368,6 @@ namespace fluid
         else
         {
             // Reflective boundary condition
-//#pragma omp parallel for collapse(2)
             for (int j = 1; j < domain.ny - 1; j++)
             {
                 for (int k = 1; k < domain.nz - 1; k++)
@@ -399,16 +377,14 @@ namespace fluid
                 }
             }
         }
-        return true;
     }
 
-    bool DomainEulerSolver::yGhosts(Domain &domain)
+    void DomainEulerSolver::yGhosts(Domain &domain)
     {
         // Handle +y side (side 2)
         if (domain.sides[2])
         {
             // Transmissive boundary condition
-//#pragma omp parallel for collapse(2)
             for (int i = 1; i < domain.nx - 1; i++)
             {
                 for (int k = 1; k < domain.nz - 1; k++)
@@ -420,7 +396,6 @@ namespace fluid
         else
         {
             // Reflective boundary condition
-//#pragma omp parallel for collapse(2)
             for (int i = 1; i < domain.nx - 1; i++)
             {
                 for (int k = 1; k < domain.nz - 1; k++)
@@ -435,7 +410,6 @@ namespace fluid
         if (domain.sides[3])
         {
             // Transmissive boundary condition
-//#pragma omp parallel for collapse(2)
             for (int i = 1; i < domain.nx - 1; i++)
             {
                 for (int k = 1; k < domain.nz - 1; k++)
@@ -447,7 +421,6 @@ namespace fluid
         else
         {
             // Reflective boundary condition
-//#pragma omp parallel for collapse(2)
             for (int i = 1; i < domain.nx - 1; i++)
             {
                 for (int k = 1; k < domain.nz - 1; k++)
@@ -457,16 +430,14 @@ namespace fluid
                 }
             }
         }
-        return true;
     }
 
-    bool DomainEulerSolver::zGhosts(Domain &domain)
+    void DomainEulerSolver::zGhosts(Domain &domain)
     {
         // Handle +z side (side 4)
         if (domain.sides[4])
         {
             // Transmissive boundary condition
-//#pragma omp parallel for collapse(2)
             for (int i = 1; i < domain.nx - 1; i++)
             {
                 for (int j = 1; j < domain.ny - 1; j++)
@@ -478,7 +449,6 @@ namespace fluid
         else
         {
             // Reflective boundary condition
-//#pragma omp parallel for collapse(2)
             for (int i = 1; i < domain.nx - 1; i++)
             {
                 for (int j = 1; j < domain.ny - 1; j++)
@@ -493,7 +463,6 @@ namespace fluid
         if (domain.sides[5])
         {
             // Transmissive boundary condition
-//#pragma omp parallel for collapse(2)
             for (int i = 1; i < domain.nx - 1; i++)
             {
                 for (int j = 1; j < domain.ny - 1; j++)
@@ -505,7 +474,6 @@ namespace fluid
         else
         {
             // Reflective boundary condition
-//#pragma omp parallel for collapse(2)
             for (int i = 1; i < domain.nx - 1; i++)
             {
                 for (int j = 1; j < domain.ny - 1; j++)
@@ -515,7 +483,6 @@ namespace fluid
                 }
             }
         }
-        return true;
     }
 
 } // namespace fluid

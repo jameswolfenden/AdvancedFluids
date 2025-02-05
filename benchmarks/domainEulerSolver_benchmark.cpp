@@ -20,12 +20,14 @@ namespace fluid
         // Methods to directly access private functions for benchmarking
         bool benchmarkTimeStep()
         {
-            return solver.fetchTimeStep(domains);
+            solver.fetchTimeStep(domains);
+            return true;
         }
 
         bool benchmarkGhostCells()
         {
-            return solver.updateGhostCells(domains);
+            solver.updateGhostCells(domains);
+            return true;
         }
 
         bool benchmarkXFaces(Domain &domain)
