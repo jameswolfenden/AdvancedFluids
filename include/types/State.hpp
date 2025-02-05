@@ -11,7 +11,6 @@ namespace fluid
     {
         double rho, u, v, w, p, a;
 
-        State();
         State(double rho, double u, double v, double w, double p);
     };
 
