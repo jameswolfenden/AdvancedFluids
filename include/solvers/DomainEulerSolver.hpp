@@ -20,7 +20,7 @@ namespace fluid
         double getMinTimeStep() const { return minT; }
 
     private:
-        friend class DomainEulerSolverBenchmark;
+        friend class DomainEulerSolverBenchmark; // Allows the benchmark to access private members
         RiemannSolver rs;
         double clf;
         double minT;

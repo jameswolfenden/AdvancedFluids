@@ -1,9 +1,9 @@
 #ifndef RIEMANN_SOLVER_HPP
 #define RIEMANN_SOLVER_HPP
 
-#include "../types/Flux.hpp"
-#include "../constants.hpp"
-#include "../types/State.hpp"
+#include "types/Flux.hpp"
+#include "constants.hpp"
+#include "types/State.hpp"
 
 namespace fluid
 {
@@ -18,6 +18,7 @@ namespace fluid
         double getLastP() const { return lastP; }
 
     private:
+        // Constants used in the Riemann solver
         static constexpr double G1 = (G - 1) / (2 * G);
         static constexpr double G2 = (G + 1) / (2 * G);
         static constexpr double G3 = 2 * G / (G - 1);
@@ -27,9 +28,9 @@ namespace fluid
         static constexpr double G7 = (G - 1) / 2;
         static constexpr double G8 = G - 1;
 
-        double lastP = -1.0;
-        double TOL;
-        int MAX_ITER;
+        double lastP = -1.0; // Last pressure value calculated, used for testing
+        double TOL; // Tolerance for the solver to converge
+        int MAX_ITER; // Maximum number of iterations for the solver
 
         bool pickSide(const StateView &left, const StateView &right,
                       Flux &fl, double &tempP, double &tempU);
@@ -41,7 +42,7 @@ namespace fluid
         bool iterateP(const StateView &left, const StateView &right,
                       double &tempP, double &tempU);
 
-        class Impl;
+        class Impl; // Class to hold the implementation details of the Riemann solver
     };
 
 } // namespace fluid

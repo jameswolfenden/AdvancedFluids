@@ -9,8 +9,8 @@ namespace fluid
     public:
         ConservedState(double &rho, double &u, double &v, double &w, double &p, double &a);
 
-        double aCalc();
-        void fixVacuum();
+        double aCalc(); // Calculate the speed of sound
+        void fixVacuum(); // Make sure the state doesn't have negative density or pressure
 
         double u1() const;
         double u2() const;
