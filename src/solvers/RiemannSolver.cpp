@@ -5,6 +5,8 @@
 
 namespace fluid
 {
+    // Implementation class to hold reusable functions of the solver
+    // Methods based on Toro (2009) "Riemann Solvers and Numerical Methods for Fluid Dynamics: A Practical Introduction"
     class RiemannSolver::Impl
     {
     public:
@@ -106,6 +108,7 @@ namespace fluid
         }
     };
 
+    // Method called to solve the Riemann problem
     bool RiemannSolver::findStar(const StateView &left, const StateView &right, Flux &fl)
     {
         if (testVacuum(left, right, fl))
@@ -114,6 +117,7 @@ namespace fluid
             return true; // a vacuum is generated, values found without iteration required
         }
 
+        // Temp values used throughout the iteration process to find the state and for testing
         double tempP = -1.0;
         double tempU = 0.0;
         if (!iterateP(left, right, tempP, tempU))
@@ -155,7 +159,7 @@ namespace fluid
 
     bool RiemannSolver::testVacuum(const StateView &left, const StateView &right, Flux &fl)
     {
-
+        // Vacuum here is defined as a state with zero pressure (which is enforced by the solver when a vacuum is generated)
         bool leftVacuum = left.p == 0.0;
         bool rightVacuum = right.p == 0.0;
 
@@ -179,15 +183,17 @@ namespace fluid
         }
         else if (Impl::checkVacuumGenerated(left, right, fl))
         {
+            // If the 2 states are 'moving away' from each other, a vacuum can be generated
             return true;
         }
         return false;
     }
 
+    // Method to select the initial p value for the iteration process, see Toro for more details
+    // The aim is to select a value that will converge quickly
+    // Most of the time case 0 is fine and the other cases are only used when the iteration fails as a fallback
     bool RiemannSolver::pickStartVal(const int errorStage, const StateView &left, const StateView &right, double &tempP)
     {
-        // Implementation of pickStartVal...
-
         switch (errorStage)
         {
         case 0:
@@ -260,7 +266,7 @@ namespace fluid
         struct WaveState
         {
             double fs;
-            double d_fs;
+            double d_fs; // derivative of fs
 
             static WaveState calcShockWave(const double &tempP, const double &p, const double &rho)
             {
@@ -281,7 +287,7 @@ namespace fluid
         {
             if (!pickStartVal(errorStage, left, right, tempP))
             {
-                return false;
+                return false; // All start values failed to converge
             }
 
             // Newton-Raphson iteration
@@ -304,7 +310,7 @@ namespace fluid
                 }
             }
         }
-        return false;
+        return false; // Failed to converge within MAX_ITER
     }
 
 } // namespace fluid
