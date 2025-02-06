@@ -18,7 +18,7 @@ void setupDomains(std::vector<Domain> &domains)
     State highPressure(1.32, 0.0, 0.0, 0.0, 104000);
     State ambient(1.268, 0.0, 0.0, 0.0, 101325);
 
-    // Domain dimensions
+    // Domain dimensions. SI units so density is cells per metre, x, y, z are in metres.
     double cellDensity = 20;
     double pipex = 0.5;
     double pipey = 1.0;
@@ -28,6 +28,7 @@ void setupDomains(std::vector<Domain> &domains)
     double boxz = 4.0;
 
     // Setup each domain
+    // There are 10 domains. One is a 'pipe' entering into the middle of 9 others in a plane.
     domains[0].setup(0, pipex, pipey, pipez, cellDensity, highPressure);
     domains[1].setup(1, pipex, boxy, pipez, cellDensity, ambient);
     domains[2].setup(2, boxx / 2 - pipex / 2, boxy, pipez, cellDensity, ambient);
@@ -99,16 +100,16 @@ int main()
         // Connect domains
         connectDomains(domains);
 
-        // Position domains in space
+        // Position domains in space for visualisation
         DomainPositioner positioner(&domains[0]);
 
         // Setup solver
-        DomainEulerSolver solver(0.7); // CFL number of 0.7
+        DomainEulerSolver solver(0.7); // CFL number
 
         // Setup time stepping
-        std::vector<double> time = {0.0};
-        const double timeEnd = 0.01;
-        int iteration = 0;
+        std::vector<double> time = {0.0}; // We want to save an initial state
+        const double timeEnd = 0.01; // How long to run the simulation for
+        int iteration = 0; // Iteration count
 
         // Setup output
         std::string filename("simulation");
@@ -127,12 +128,11 @@ int main()
             // Update solution
             if (!solver.updateDomains(domains))
             {
-                Logger::error("Error in solver at iteration " + std::to_string(iteration));
-                return 1;
+                throw std::runtime_error("Error in solver at iteration " + std::to_string(iteration));
             }
 
             // Update time and iteration count
-            time.push_back(time.back() + 2 * solver.getMinTimeStep());
+            time.push_back(time.back() + 2 * solver.getMinTimeStep()); // 2x timestep as we are using a 2nd order method
             iteration++;
 
             // Write output
