@@ -3,7 +3,7 @@ add_executable(fluids_tests
     solvers/RiemannSolverTest.cpp
 )
 
-# Link against Google Test and your library
+# Link against Google Test and fluids_lib
 target_link_libraries(fluids_tests
     PRIVATE
     GTest::gtest_main

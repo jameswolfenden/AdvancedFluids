@@ -51,6 +51,8 @@ namespace fluid
             }
         };
 
+        // Tests are from Toro's Riemann Solvers and Numerical Methods for Fluid Dynamics: A Practical Introduction
+
         // Test 1: Moderate pressure ratio
         TEST_F(RiemannSolverTest, Test1)
         {

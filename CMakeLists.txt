@@ -80,20 +80,21 @@ else()
     target_compile_options(fluids_lib PRIVATE -Wall -Wextra)
     target_compile_options(fluids PRIVATE -Wall -Wextra)
     target_compile_options(fluids_lib PRIVATE 
-    -O3                  # Aggressive optimization
+    -O3                  # Aggressive optimisation
     -march=native        # Optimize for current CPU
-    -ftree-vectorize     # Enable vectorization (usually on with -O3)
-    -ffast-math          # Allow math optimizations
-    -fopt-info-vec      # Report vectorization info (GCC)
+    -ftree-vectorize     # Enable vectorisation (usually on with -O3)
+    -ffast-math          # Allow math optimisations
+    -fopt-info-vec       # Report vectorisation info (GCC)
     )
 endif()
 
-# Optional: Add tests if they exist
+# Add tests if they exist
 if(EXISTS "${PROJECT_SOURCE_DIR}/tests/CMakeLists.txt")
     enable_testing()
     add_subdirectory(tests)
 endif()
 
+# Add benchmarks if they exist
 if(EXISTS "${PROJECT_SOURCE_DIR}/benchmarks/CMakeLists.txt")
     add_subdirectory(benchmarks)
 endif()
