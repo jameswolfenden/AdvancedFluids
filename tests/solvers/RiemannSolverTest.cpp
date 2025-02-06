@@ -30,8 +30,8 @@ namespace fluid
                           << "\nLeft:  rho=" << rhoL << ", u=" << uL << ", p=" << pL << ", a=" << aL
                           << "\nRight: rho=" << rhoR << ", u=" << uR << ", p=" << pR << ", a=" << aR << std::endl;
 
-                StateView left(rhoL, uL, v, w, pL, aL);
-                StateView right(rhoR, uR, v, w, pR, aR);
+                StateRef left(rhoL, uL, v, w, pL, aL);
+                StateRef right(rhoR, uR, v, w, pR, aR);
 
                 bool result = solver.findStar(left, right, flux);
 

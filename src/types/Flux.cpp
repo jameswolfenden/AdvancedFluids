@@ -18,7 +18,7 @@ namespace fluid
         f5 = u * (rho * (0.5 * (u * u + v * v + w * w) + p / ((G - 1) * rho) + p));
     }
 
-    void Flux::updateFromPrimatives(const StateView &state)
+    void Flux::updateFromPrimatives(const StateRef &state)
     {
         updateFromPrimatives(state.rho, state.u, state.v, state.w, state.p);
     }

@@ -128,12 +128,12 @@ namespace fluid
 
                     int index = k + domain.nz * (j + domain.ny * i);
 
-                    StateView left(domain.rho_[index], domain.u_[index], domain.v_[index],
+                    StateRef left(domain.rho_[index], domain.u_[index], domain.v_[index],
                                    domain.w_[index], domain.p_[index], domain.a_[index]);
 
                     index += domain.nz * domain.ny;
 
-                    StateView right(domain.rho_[index], domain.u_[index], domain.v_[index],
+                    StateRef right(domain.rho_[index], domain.u_[index], domain.v_[index],
                                     domain.w_[index], domain.p_[index], domain.a_[index]);
 
                     // Find the state at the x face from the left and right states
@@ -162,12 +162,12 @@ namespace fluid
                     int index = k + domain.nz * (j + domain.ny * i);
 
                     // Note the order of the arguments is different to xFaces so the velocities are transformed onto the correct axis for 'left' and 'right'
-                    StateView left(domain.rho_[index], domain.v_[index], domain.u_[index],
+                    StateRef left(domain.rho_[index], domain.v_[index], domain.u_[index],
                                    domain.w_[index], domain.p_[index], domain.a_[index]);
 
                     index += domain.nz;
 
-                    StateView right(domain.rho_[index], domain.v_[index], domain.u_[index],
+                    StateRef right(domain.rho_[index], domain.v_[index], domain.u_[index],
                                     domain.w_[index], domain.p_[index], domain.a_[index]);
 
                     // Find the state at the y face from the left and right states
@@ -196,12 +196,12 @@ namespace fluid
                     int index = k + domain.nz * (j + domain.ny * i);
 
                     // Note the order of the arguments is different to xFaces so the velocities are transformed onto the correct axis for 'left' and 'right'
-                    StateView left(domain.rho_[index], domain.w_[index], domain.v_[index],
+                    StateRef left(domain.rho_[index], domain.w_[index], domain.v_[index],
                                    domain.u_[index], domain.p_[index], domain.a_[index]);
 
                     index++;
 
-                    StateView right(domain.rho_[index], domain.w_[index], domain.v_[index],
+                    StateRef right(domain.rho_[index], domain.w_[index], domain.v_[index],
                                     domain.u_[index], domain.p_[index], domain.a_[index]);
 
                     // Find the state at the z face from the left and right states

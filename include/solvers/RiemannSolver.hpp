@@ -13,7 +13,7 @@ namespace fluid
     public:
         explicit RiemannSolver(std::pair<double, int> vals = {1E-6, 10000}) : TOL(vals.first), MAX_ITER(vals.second) {}
 
-        bool findStar(const StateView &left, const StateView &right, Flux &fl);
+        bool findStar(const StateRef &left, const StateRef &right, Flux &fl);
 
         double getLastP() const { return lastP; }
 
@@ -32,14 +32,14 @@ namespace fluid
         double TOL; // Tolerance for the solver to converge
         int MAX_ITER; // Maximum number of iterations for the solver
 
-        bool pickSide(const StateView &left, const StateView &right,
+        bool pickSide(const StateRef &left, const StateRef &right,
                       Flux &fl, double &tempP, double &tempU);
 
-        bool testVacuum(const StateView &left, const StateView &right, Flux &fl);
+        bool testVacuum(const StateRef &left, const StateRef &right, Flux &fl);
 
-        bool pickStartVal(const int errorStage, const StateView &left, const StateView &right, double &tempP);
+        bool pickStartVal(const int errorStage, const StateRef &left, const StateRef &right, double &tempP);
 
-        bool iterateP(const StateView &left, const StateView &right,
+        bool iterateP(const StateRef &left, const StateRef &right,
                       double &tempP, double &tempU);
 
         class Impl; // Class to hold the implementation details of the Riemann solver

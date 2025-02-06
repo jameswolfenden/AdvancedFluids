@@ -10,7 +10,7 @@ namespace fluid
     class RiemannSolver::Impl
     {
     public:
-        static void sonicRarefaction(const StateView &s, const bool &left, Flux &fl)
+        static void sonicRarefaction(const StateRef &s, const bool &left, Flux &fl)
         {
             const int sign = left ? 1 : -1;
             const double toPow = G5 + sign * G6 * s.u / s.a;
@@ -21,7 +21,7 @@ namespace fluid
                                     s.p * pow(toPow, G3));
         }
 
-        static void solveVacuumLeft(const StateView &left, const StateView &right, Flux &fl)
+        static void solveVacuumLeft(const StateRef &left, const StateRef &right, Flux &fl)
         {
             if (0 >= (right.u + right.a))
             {
@@ -40,7 +40,7 @@ namespace fluid
             }
         }
 
-        static void solveVacuumRight(const StateView &left, const StateView &right, Flux &fl)
+        static void solveVacuumRight(const StateRef &left, const StateRef &right, Flux &fl)
         {
             if (0 <= (left.u - left.a))
             {
@@ -59,7 +59,7 @@ namespace fluid
             }
         }
 
-        static bool checkVacuumGenerated(const StateView &left, const StateView &right, Flux &fl)
+        static bool checkVacuumGenerated(const StateRef &left, const StateRef &right, Flux &fl)
         {
             double sR = right.u - right.a * G4;
             double sL = left.u + left.a * G4;
@@ -86,12 +86,12 @@ namespace fluid
             return false;
         }
 
-        static double calcPVRS(const StateView &left, const StateView &right)
+        static double calcPVRS(const StateRef &left, const StateRef &right)
         {
             return 0.5 * (left.p + right.p) + 0.5 * (left.u - right.u) * 0.25 * (left.rho + right.rho) * (left.a + right.a);
         }
 
-        static double calcTwoRarefaction(const StateView &left, const StateView &right)
+        static double calcTwoRarefaction(const StateRef &left, const StateRef &right)
         {
             double p_q = pow(left.p / right.p, G1);
             double u_m = (p_q * left.u / left.a + right.u / right.a + G4 * (p_q - 1.0)) / (p_q / left.a + 1 / right.a);
@@ -100,7 +100,7 @@ namespace fluid
             return 0.5 * (left.p * pow(p_TL, G3) + right.p * pow(p_TR, G3));
         }
 
-        static double calcTwoShock(const StateView &left, const StateView &right, double p_PV)
+        static double calcTwoShock(const StateRef &left, const StateRef &right, double p_PV)
         {
             double ge_L = sqrt((G5 / left.rho) / (G6 * left.p + p_PV));
             double ge_R = sqrt((G5 / right.rho) / (G6 * right.p + p_PV));
@@ -109,7 +109,7 @@ namespace fluid
     };
 
     // Method called to solve the Riemann problem
-    bool RiemannSolver::findStar(const StateView &left, const StateView &right, Flux &fl)
+    bool RiemannSolver::findStar(const StateRef &left, const StateRef &right, Flux &fl)
     {
         if (testVacuum(left, right, fl))
         {
@@ -135,7 +135,7 @@ namespace fluid
         return true;
     }
 
-    bool RiemannSolver::pickSide(const StateView &left, const StateView &right,
+    bool RiemannSolver::pickSide(const StateRef &left, const StateRef &right,
                                  Flux &fl, double &tempP, double &tempU)
     {
         if (tempU >= 0.0)
@@ -157,7 +157,7 @@ namespace fluid
         return true;
     }
 
-    bool RiemannSolver::testVacuum(const StateView &left, const StateView &right, Flux &fl)
+    bool RiemannSolver::testVacuum(const StateRef &left, const StateRef &right, Flux &fl)
     {
         // Vacuum here is defined as a state with zero pressure (which is enforced by the solver when a vacuum is generated)
         bool leftVacuum = left.p == 0.0;
@@ -192,7 +192,7 @@ namespace fluid
     // Method to select the initial p value for the iteration process, see Toro for more details
     // The aim is to select a value that will converge quickly
     // Most of the time case 0 is fine and the other cases are only used when the iteration fails as a fallback
-    bool RiemannSolver::pickStartVal(const int errorStage, const StateView &left, const StateView &right, double &tempP)
+    bool RiemannSolver::pickStartVal(const int errorStage, const StateRef &left, const StateRef &right, double &tempP)
     {
         switch (errorStage)
         {
@@ -259,7 +259,7 @@ namespace fluid
         return true;
     }
 
-    bool RiemannSolver::iterateP(const StateView &left, const StateView &right,
+    bool RiemannSolver::iterateP(const StateRef &left, const StateRef &right,
                                  double &tempP, double &tempU)
     {
 
